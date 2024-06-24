@@ -11,8 +11,12 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+fn strlen(string: &Vec<char>) -> (length: usize)
+    ensures
+        length == string.len(), // The length returned is equal to the length of the string
+{
+    string.len()
+}
 
 } // verus!
 
