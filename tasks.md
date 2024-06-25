@@ -1,17 +1,17 @@
 ## Current Task Status
 
-- [x] 000 - lorch
-- [x] 001 - lorch
-- [ ] 002
+- [x] 000 - jaylorch
+- [x] 001 - jaylorch
+- [x] 002 - <span style="color:red">impossible (floating point)</span>
 - [ ] 003
 - [ ] 004
 - [ ] 005
 - [ ] 006
 - [ ] 007
 - [ ] 008
-- [x] 009 - lorch
+- [x] 009 - jaylorch
 - [ ] 010
-- [x] 011 - lorch
+- [x] 011 - jaylorch
 - [ ] 012
 - [ ] 013
 - [ ] 014
@@ -23,17 +23,17 @@
 - [ ] 020
 - [ ] 021
 - [ ] 022
-- [x] 023 - lorch
+- [x] 023 - jaylorch
 - [ ] 024
 - [ ] 025
 - [ ] 026
 - [ ] 027
 - [ ] 028
 - [ ] 029
-- [x] 030 - lorch
+- [x] 030 - jaylorch
 - [ ] 031
 - [ ] 032
-- [x] 033 - lorch
+- [x] 033 - jaylorch
 - [ ] 034
 - [ ] 035
 - [ ] 036
@@ -42,17 +42,17 @@
 - [ ] 039
 - [ ] 040
 - [ ] 041
-- [x] 042 - lorch
+- [x] 042 - jaylorch
 - [ ] 043
 - [ ] 044
-- [x] 045 - lorch
+- [x] 045 - jaylorch
 - [ ] 046
 - [ ] 047
-- [x] 048 - lorch
+- [x] 048 - jaylorch
 - [ ] 049
 - [ ] 050
 - [ ] 051
-- [x] 052 - lorch
+- [x] 052 - jaylorch
 - [ ] 053
 - [ ] 054
 - [ ] 055
