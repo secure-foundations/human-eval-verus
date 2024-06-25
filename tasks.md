@@ -2,7 +2,7 @@
 
 - [x] 000 - jaylorch
 - [x] 001 - jaylorch
-- [x] 002 - <span style="color:red">impossible (floating point)</span>
+- [x] 002 - *impossible (floating point)*
 - [ ] 003
 - [ ] 004
 - [ ] 005
