@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/87
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -35,7 +31,7 @@ def get_row(lst, x):
     each tuple is a coordinate - (row, columns), starting with 0.
     Sort coordinates initially by rows in ascending order.
     Also, sort coordinates of the row by columns in descending order.
-    
+
     Examples:
     get_row([
       [1,2,3,4,5,6],
@@ -96,4 +92,3 @@ def check(candidate):
 
 
 */
-

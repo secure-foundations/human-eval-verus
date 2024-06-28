@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/115
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -30,25 +26,25 @@ def max_fill(grid, capacity):
     """
     You are given a rectangular grid of wells. Each row represents a single well,
     and each 1 in a row represents a single unit of water.
-    Each well has a corresponding bucket that can be used to extract water from it, 
+    Each well has a corresponding bucket that can be used to extract water from it,
     and all buckets have the same capacity.
     Your task is to use the buckets to empty the wells.
     Output the number of times you need to lower the buckets.
 
     Example 1:
-        Input: 
+        Input:
             grid : [[0,0,1,0], [0,1,0,0], [1,1,1,1]]
             bucket_capacity : 1
         Output: 6
 
     Example 2:
-        Input: 
+        Input:
             grid : [[0,0,1,1], [0,0,0,0], [1,1,1,1], [0,1,1,1]]
             bucket_capacity : 2
         Output: 5
-    
+
     Example 3:
-        Input: 
+        Input:
             grid : [[0,0,0], [0,0,0]]
             bucket_capacity : 5
         Output: 0
@@ -92,4 +88,3 @@ def check(candidate):
 
 
 */
-

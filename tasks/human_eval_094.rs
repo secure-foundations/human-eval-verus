@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/94
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -81,7 +77,7 @@ def check(candidate):
 
     # Check some edge cases that are easy to work out by hand.
     assert candidate([0,724,32,71,99,32,6,0,5,91,83,0,5,6]) == 11, "This prints if this assert fails 4 (also good for debugging!)"
-    
+
     # Check some edge cases that are easy to work out by hand.
     assert candidate([0,81,12,3,1,21]) == 3, "This prints if this assert fails 5 (also good for debugging!)"
 
@@ -93,4 +89,3 @@ def check(candidate):
     assert candidate([127, 97, 8192]) == 10, "This prints if this assert fails 9 (also good for debugging!)"
 
 */
-

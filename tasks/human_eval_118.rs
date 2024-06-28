@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/118
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -26,11 +22,11 @@ fn main() {}
 ### PROMPT
 
 def get_closest_vowel(word):
-    """You are given a word. Your task is to find the closest vowel that stands between 
+    """You are given a word. Your task is to find the closest vowel that stands between
     two consonants from the right side of the word (case sensitive).
-    
+
     Vowels in the beginning and ending doesn't count. Return empty string if you didn't
-    find any vowel met the above condition. 
+    find any vowel met the above condition.
 
     You may assume that the given string contains English letter only.
 
@@ -86,4 +82,3 @@ def check(candidate):
 
 
 */
-

@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/89
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -27,8 +23,8 @@ fn main() {}
 
 def encrypt(s):
     """Create a function encrypt that takes a string as an argument and
-    returns a string encrypted with the alphabet being rotated. 
-    The alphabet should be rotated in a manner such that the letters 
+    returns a string encrypted with the alphabet being rotated.
+    The alphabet should be rotated in a manner such that the letters
     shift down by two multiplied to two places.
     For example:
     encrypt('hi') returns 'lm'
@@ -76,4 +72,3 @@ def check(candidate):
 
 
 */
-

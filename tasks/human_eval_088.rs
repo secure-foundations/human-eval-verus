@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/88
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -50,7 +46,7 @@ sort_array
 
 /*
 ### CANONICAL SOLUTION
-    return [] if len(array) == 0 else sorted(array, reverse= (array[0]+array[-1]) % 2 == 0) 
+    return [] if len(array) == 0 else sorted(array, reverse= (array[0]+array[-1]) % 2 == 0)
 
 */
 
@@ -73,4 +69,3 @@ def check(candidate):
 
 
 */
-

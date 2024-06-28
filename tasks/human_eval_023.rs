@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/23
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -13,13 +11,13 @@ verus! {
 
 fn strlen(string: &Vec<char>) -> (length: usize)
     ensures
-        length == string.len(), // The length returned is equal to the length of the string
+        length
+            == string.len(),  // The length returned is equal to the length of the string
 {
     string.len()
 }
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -67,4 +65,3 @@ def check(candidate):
     assert candidate('asdasnakj') == 9
 
 */
-

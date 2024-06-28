@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/76
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -47,12 +43,12 @@ is_simple_power
 
 /*
 ### CANONICAL SOLUTION
-    if (n == 1): 
-        return (x == 1) 
+    if (n == 1):
+        return (x == 1)
     power = 1
-    while (power < x): 
-        power = power * n 
-    return (power == x) 
+    while (power < x):
+        power = power * n
+    return (power == x)
 
 */
 
@@ -76,4 +72,3 @@ def check(candidate):
 
 
 */
-

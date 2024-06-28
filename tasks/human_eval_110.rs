@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/110
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -59,7 +55,7 @@ exchange
     if even >= odd:
         return "YES"
     return "NO"
-            
+
 
 */
 
@@ -70,9 +66,9 @@ def check(candidate):
     # Check some simple cases
     assert candidate([1, 2, 3, 4], [1, 2, 3, 4]) == "YES"
     assert candidate([1, 2, 3, 4], [1, 5, 3, 4]) == "NO"
-    assert candidate([1, 2, 3, 4], [2, 1, 4, 3]) == "YES" 
+    assert candidate([1, 2, 3, 4], [2, 1, 4, 3]) == "YES"
     assert candidate([5, 7, 3], [2, 6, 4]) == "YES"
-    assert candidate([5, 7, 3], [2, 6, 3]) == "NO" 
+    assert candidate([5, 7, 3], [2, 6, 3]) == "NO"
     assert candidate([3, 2, 6, 1, 8, 9], [3, 5, 5, 1, 1, 1]) == "NO"
 
     # Check some edge cases that are easy to work out by hand.
@@ -80,4 +76,3 @@ def check(candidate):
 
 
 */
-

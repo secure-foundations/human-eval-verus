@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/15
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -63,4 +59,3 @@ def check(candidate):
     assert candidate(10) == '0 1 2 3 4 5 6 7 8 9 10'
 
 */
-

@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/104
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -26,11 +22,11 @@ fn main() {}
 ### PROMPT
 
 def unique_digits(x):
-    """Given a list of positive integers x. return a sorted list of all 
+    """Given a list of positive integers x. return a sorted list of all
     elements that hasn't any even digit.
 
     Note: Returned list should be sorted in increasing order.
-    
+
     For example:
     >>> unique_digits([15, 33, 1422, 1])
     [1, 15, 33]
@@ -70,4 +66,3 @@ def check(candidate):
 
 
 */
-

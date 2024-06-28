@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/121
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -27,7 +23,7 @@ fn main() {}
 
 def solution(lst):
     """Given a non-empty list of integers, return the sum of all of the odd elements that are in even positions.
-    
+
 
     Examples
     solution([5, 8, 7, 1]) ==> 12
@@ -65,4 +61,3 @@ def check(candidate):
 
 
 */
-

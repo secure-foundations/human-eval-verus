@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/148
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -27,15 +23,15 @@ fn main() {}
 
 def bf(planet1, planet2):
     '''
-    There are eight planets in our solar system: the closerst to the Sun 
-    is Mercury, the next one is Venus, then Earth, Mars, Jupiter, Saturn, 
+    There are eight planets in our solar system: the closerst to the Sun
+    is Mercury, the next one is Venus, then Earth, Mars, Jupiter, Saturn,
     Uranus, Neptune.
-    Write a function that takes two planet names as strings planet1 and planet2. 
-    The function should return a tuple containing all planets whose orbits are 
-    located between the orbit of planet1 and the orbit of planet2, sorted by 
-    the proximity to the sun. 
+    Write a function that takes two planet names as strings planet1 and planet2.
+    The function should return a tuple containing all planets whose orbits are
+    located between the orbit of planet1 and the orbit of planet2, sorted by
+    the proximity to the sun.
     The function should return an empty tuple if planet1 or planet2
-    are not correct planet names. 
+    are not correct planet names.
     Examples
     bf("Jupiter", "Neptune") ==> ("Saturn", "Uranus")
     bf("Earth", "Mercury") ==> ("Venus")
@@ -68,10 +64,10 @@ bf
 def check(candidate):
 
     # Check some simple cases
-    assert candidate("Jupiter", "Neptune") == ("Saturn", "Uranus"), "First test error: " + str(len(candidate("Jupiter", "Neptune")))      
-    assert candidate("Earth", "Mercury") == ("Venus",), "Second test error: " + str(candidate("Earth", "Mercury"))  
-    assert candidate("Mercury", "Uranus") == ("Venus", "Earth", "Mars", "Jupiter", "Saturn"), "Third test error: " + str(candidate("Mercury", "Uranus"))      
-    assert candidate("Neptune", "Venus") == ("Earth", "Mars", "Jupiter", "Saturn", "Uranus"), "Fourth test error: " + str(candidate("Neptune", "Venus"))  
+    assert candidate("Jupiter", "Neptune") == ("Saturn", "Uranus"), "First test error: " + str(len(candidate("Jupiter", "Neptune")))
+    assert candidate("Earth", "Mercury") == ("Venus",), "Second test error: " + str(candidate("Earth", "Mercury"))
+    assert candidate("Mercury", "Uranus") == ("Venus", "Earth", "Mars", "Jupiter", "Saturn"), "Third test error: " + str(candidate("Mercury", "Uranus"))
+    assert candidate("Neptune", "Venus") == ("Earth", "Mars", "Jupiter", "Saturn", "Uranus"), "Fourth test error: " + str(candidate("Neptune", "Venus"))
 
 
     # Check some edge cases that are easy to work out by hand.
@@ -81,4 +77,3 @@ def check(candidate):
 
 
 */
-

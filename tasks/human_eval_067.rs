@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/67
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -27,10 +23,10 @@ fn main() {}
 
 def fruit_distribution(s,n):
     """
-    In this task, you will be given a string that represents a number of apples and oranges 
-    that are distributed in a basket of fruit this basket contains 
-    apples, oranges, and mango fruits. Given the string that represents the total number of 
-    the oranges and apples and an integer that represent the total number of the fruits 
+    In this task, you will be given a string that represents a number of apples and oranges
+    that are distributed in a basket of fruit this basket contains
+    apples, oranges, and mango fruits. Given the string that represents the total number of
+    the oranges and apples and an integer that represent the total number of the fruits
     in the basket return the number of the mango fruits in the basket.
     for examble:
     fruit_distribution("5 apples and 6 oranges", 19) ->19 - 5 - 6 = 8
@@ -70,4 +66,3 @@ def check(candidate):
     assert candidate("1 apples and 100 oranges",120) == 19
 
 */
-

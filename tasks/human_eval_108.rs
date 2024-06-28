@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/108
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -47,7 +43,7 @@ count_nums
 ### CANONICAL SOLUTION
     def digits_sum(n):
         neg = 1
-        if n < 0: n, neg = -1 * n, -1 
+        if n < 0: n, neg = -1 * n, -1
         n = [int(i) for i in str(n)]
         n[0] = n[0] * neg
         return sum(n)
@@ -74,4 +70,3 @@ def check(candidate):
 
 
 */
-

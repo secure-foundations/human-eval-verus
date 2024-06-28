@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/25
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -85,4 +81,3 @@ def check(candidate):
     assert candidate(3 * 2 * 3) == [2, 3, 3]
 
 */
-

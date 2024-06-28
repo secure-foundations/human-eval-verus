@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/161
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -27,7 +23,7 @@ fn main() {}
 
 def solve(s):
     """You are given a string s.
-    if s[i] is a letter, reverse its case from lower to upper or vise versa, 
+    if s[i] is a letter, reverse its case from lower to upper or vise versa,
     otherwise keep it as it is.
     If the string contains no letters, reverse the string.
     The function should return the resulted string.
@@ -82,4 +78,3 @@ def check(candidate):
     # Don't remove this line:
 
 */
-

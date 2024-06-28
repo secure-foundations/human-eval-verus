@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/33
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -13,23 +11,24 @@ verus! {
 
 // This function counts the number of elements of `s` that are equal to `x`.
 spec fn count<T>(s: Seq<T>, x: T) -> int
-    decreases
-        s.len()
+    decreases s.len(),
 {
     if s.len() == 0 {
         0
-    }
-    else {
-        count(s.skip(1), x) + if s[0] == x { 1int } else { 0int }
+    } else {
+        count(s.skip(1), x) + if s[0] == x {
+            1int
+        } else {
+            0int
+        }
     }
 }
 
 // This function defines what it means for two sequences to be
 // permutations of each other: for every value `x`, each of the two
 // sequences has the same number of instances of `x`.
-spec fn permutes<T>(s1: Seq<T>, s2: Seq<T>) -> bool
-{
-    forall |x: T| count(s1, x) == count(s2, x)
+spec fn permutes<T>(s1: Seq<T>, s2: Seq<T>) -> bool {
+    forall|x: T| count(s1, x) == count(s2, x)
 }
 
 // This lemma establishes the effect of an `update` operation on the
@@ -40,27 +39,22 @@ proof fn lemma_update_effect_on_count<T>(s: Seq<T>, i: int, v: T, x: T)
     requires
         0 <= i < s.len(),
     ensures
-        count(s.update(i, v), x) ==
-            if v == x && s[i] != x {
-                count(s, x) + 1
-            }
-            else if v != x && s[i] == x {
-                count(s, x) - 1
-            }
-            else {
-                count(s, x)
-            }
-    decreases
-        s.len()
+        count(s.update(i, v), x) == if v == x && s[i] != x {
+            count(s, x) + 1
+        } else if v != x && s[i] == x {
+            count(s, x) - 1
+        } else {
+            count(s, x)
+        },
+    decreases s.len(),
 {
     if s.len() == 0 {
-        return;
+        return ;
     }
     if i == 0 {
         assert(s.update(i, v) =~= seq![v] + s.skip(1));
         assert(s.update(i, v).skip(1) =~= s.skip(1));
-    }
-    else {
+    } else {
         assert(s.update(i, v) =~= seq![s[0]] + s.skip(1).update(i - 1, v));
         assert(s.update(i, v).skip(1) =~= s.skip(1).update(i - 1, v));
         lemma_update_effect_on_count(s.skip(1), i - 1, v, x);
@@ -76,7 +70,7 @@ proof fn lemma_swapping_produces_a_permutation<T>(s: Seq<T>, i: int, j: int)
     ensures
         permutes(s.update(i, s[j]).update(j, s[i]), s),
 {
-    assert forall |x: T| #[trigger] count(s.update(i, s[j]).update(j, s[i]), x) == count(s, x) by {
+    assert forall|x: T| #[trigger] count(s.update(i, s[j]).update(j, s[i]), x) == count(s, x) by {
         lemma_update_effect_on_count(s, i, s[j], x);
         lemma_update_effect_on_count(s.update(i, s[j]), j, s[i], x);
     }
@@ -86,34 +80,33 @@ proof fn lemma_swapping_produces_a_permutation<T>(s: Seq<T>, i: int, j: int)
 fn sort_third(l: Vec<i32>) -> (l_prime: Vec<i32>)
     ensures
         l_prime.len() == l.len(),
-        forall |i: int| 0 <= i < l.len() && i % 3 != 0 ==> l_prime[i] == l[i], // unchanged if index not divisible by three
-        forall |i: int, j: int| 0 <= i < j < l.len() && i % 3 == 0 && j % 3 == 0 ==> l_prime[i] <= l_prime[j],
-                                                                     // indexes divisible by three are ordered
-        permutes(l_prime@, l@),                                      // new vec is a permutation of old vec
+        forall|i: int| 0 <= i < l.len() && i % 3 != 0 ==> l_prime[i] == l[i],  // unchanged if index not divisible by three
+        forall|i: int, j: int|
+            0 <= i < j < l.len() && i % 3 == 0 && j % 3 == 0 ==> l_prime[i] <= l_prime[j],
+        // indexes divisible by three are ordered
+        permutes(l_prime@, l@),  // new vec is a permutation of old vec
 {
     let ghost old_l = l@;
     let l_len = l.len();
     let mut pos_being_set_to_smallest: usize = 0;
     let mut l_prime: Vec<i32> = l;
-
     // Iterate `pos_being_set_to_smallest` by 3 from 0 to `l_len`. Each time,
     // look for the smallest element at a position divisible by three in the
     // part of the vector at or past `pos_being_set_to_smallest`. Swap that
     // element with the one at `pos_being_set_to_smallest`.
-    
     while pos_being_set_to_smallest < l_len
         invariant
             l_len == l.len() == l_prime.len(),
             pos_being_set_to_smallest % 3 == 0,
-            forall |i: int| 0 <= i < l_len && i % 3 != 0 ==> l_prime[i] == l[i],
+            forall|i: int| 0 <= i < l_len && i % 3 != 0 ==> l_prime[i] == l[i],
             permutes(l_prime@, l@),
-            forall |i: int, j: int| 0 <= i < pos_being_set_to_smallest && i < j < l_len && i % 3 == 0 && j % 3 == 0
-                ==> l_prime[i] <= l_prime[j],
+            forall|i: int, j: int|
+                0 <= i < pos_being_set_to_smallest && i < j < l_len && i % 3 == 0 && j % 3 == 0
+                    ==> l_prime[i] <= l_prime[j],
     {
         // Iterate `pos_during_scan_for_smallest` by 3 from `pos_being_set_to_smallest`
         // to `l_len`. Keep track of the position of the smallest element found so far
         // in `pos_of_smallest_found_so_far`.
-        
         let mut pos_of_smallest_found_so_far: usize = pos_being_set_to_smallest;
         let mut pos_during_scan_for_smallest: usize = pos_being_set_to_smallest;
         while pos_during_scan_for_smallest < l_len
@@ -124,42 +117,42 @@ fn sort_third(l: Vec<i32>) -> (l_prime: Vec<i32>)
                 pos_of_smallest_found_so_far % 3 == 0,
                 pos_being_set_to_smallest <= pos_during_scan_for_smallest,
                 pos_being_set_to_smallest <= pos_of_smallest_found_so_far < l_len,
-                forall |i: int| 0 <= i < l_len && i % 3 != 0 ==> l_prime[i] == l[i],
+                forall|i: int| 0 <= i < l_len && i % 3 != 0 ==> l_prime[i] == l[i],
                 permutes(l_prime@, l@),
-                forall |i: int| pos_being_set_to_smallest <= i < pos_during_scan_for_smallest && i % 3 == 0
-                    ==> l_prime[pos_of_smallest_found_so_far as int] <= l_prime[i],
-                forall |i: int, j: int| 0 <= i < pos_being_set_to_smallest && i < j < l_len && i % 3 == 0 && j % 3 == 0
-                    ==> l_prime[i] <= l_prime[j],
+                forall|i: int|
+                    pos_being_set_to_smallest <= i < pos_during_scan_for_smallest && i % 3 == 0
+                        ==> l_prime[pos_of_smallest_found_so_far as int] <= l_prime[i],
+                forall|i: int, j: int|
+                    0 <= i < pos_being_set_to_smallest && i < j < l_len && i % 3 == 0 && j % 3 == 0
+                        ==> l_prime[i] <= l_prime[j],
         {
             if l_prime[pos_during_scan_for_smallest] < l_prime[pos_of_smallest_found_so_far] {
                 pos_of_smallest_found_so_far = pos_during_scan_for_smallest;
             }
             pos_during_scan_for_smallest = pos_during_scan_for_smallest + 3;
         }
-
         // Invoke a lemma to show that swapping two elements, as we're
         // about to do, doesn't change the count of each element.
 
         proof {
-            lemma_swapping_produces_a_permutation(l_prime@, pos_being_set_to_smallest as int,
-                                                  pos_of_smallest_found_so_far as int);
+            lemma_swapping_produces_a_permutation(
+                l_prime@,
+                pos_being_set_to_smallest as int,
+                pos_of_smallest_found_so_far as int,
+            );
         }
-
         // Swap the elements at positions `pos_being_set_to_smallest`
         // and `pos_of_smallest_found_so_far`.
-
         let v1 = l_prime[pos_being_set_to_smallest];
         let v2 = l_prime[pos_of_smallest_found_so_far];
         l_prime.set(pos_being_set_to_smallest, v2);
         l_prime.set(pos_of_smallest_found_so_far, v1);
-
         pos_being_set_to_smallest = pos_being_set_to_smallest + 3;
     }
     l_prime
 }
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -213,4 +206,3 @@ def check(candidate):
 
 
 */
-

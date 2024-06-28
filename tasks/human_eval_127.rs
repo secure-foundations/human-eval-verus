@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/127
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -31,7 +27,7 @@ def intersection(interval1, interval2):
     The given intervals are closed which means that the interval (start, end)
     includes both start and end.
     For each given interval, it is assumed that its start is less or equal its end.
-    Your task is to determine whether the length of intersection of these two 
+    Your task is to determine whether the length of intersection of these two
     intervals is a prime number.
     Example, the intersection of the intervals (1, 3), (2, 4) is (2, 3)
     which its length is 1, which not a prime number.
@@ -92,4 +88,3 @@ def check(candidate):
 
 
 */
-

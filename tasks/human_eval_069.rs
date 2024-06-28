@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/69
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -27,8 +23,8 @@ fn main() {}
 
 def search(lst):
     '''
-    You are given a non-empty list of positive integers. Return the greatest integer that is greater than 
-    zero, and has a frequency greater than or equal to the value of the integer itself. 
+    You are given a non-empty list of positive integers. Return the greatest integer that is greater than
+    zero, and has a frequency greater than or equal to the value of the integer itself.
     The frequency of an integer is the number of times it appears in the list.
     If no such a value exist, return -1.
     Examples:
@@ -54,7 +50,7 @@ search
     for i in range(1, len(frq)):
         if frq[i] >= i:
             ans = i
-    
+
     return ans
 
 */
@@ -94,4 +90,3 @@ def check(candidate):
 
 
 */
-
