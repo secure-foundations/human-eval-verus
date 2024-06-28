@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/85
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -30,7 +26,7 @@ def add(lst):
 
 
     Examples:
-        add([4, 2, 6, 7]) ==> 2 
+        add([4, 2, 6, 7]) ==> 2
     """
 
 */
@@ -57,7 +53,6 @@ def check(candidate):
     assert candidate([4, 4, 6, 8]) == 12
 
     # Check some edge cases that are easy to work out by hand.
-    
+
 
 */
-

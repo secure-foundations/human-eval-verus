@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/102
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -27,7 +23,7 @@ fn main() {}
 
 def choose_num(x, y):
     """This function takes two positive numbers x and y and returns the
-    biggest even integer number that is in the range [x, y] inclusive. If 
+    biggest even integer number that is in the range [x, y] inclusive. If
     there's no such number, then the function should return -1.
 
     For example:
@@ -72,4 +68,3 @@ def check(candidate):
 
 
 */
-

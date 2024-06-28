@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/159
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -32,13 +28,13 @@ def eat(number, need, remaining):
     you should return an array of [ total number of eaten carrots after your meals,
                                     the number of carrots left after your meals ]
     if there are not enough remaining carrots, you will eat all remaining carrots, but will still be hungry.
-    
+
     Example:
     * eat(5, 6, 10) -> [11, 4]
     * eat(4, 8, 9) -> [12, 1]
     * eat(1, 10, 10) -> [11, 0]
     * eat(2, 11, 5) -> [7, 0]
-    
+
     Variables:
     @number : integer
         the number of carrots that you have eaten.
@@ -46,7 +42,7 @@ def eat(number, need, remaining):
         the number of carrots that you need to eat.
     @remaining : integer
         the number of remaining carrots thet exist in stock
-    
+
     Constrain:
     * 0 <= number <= 1000
     * 0 <= need <= 1000
@@ -89,4 +85,3 @@ def check(candidate):
 
 
 */
-

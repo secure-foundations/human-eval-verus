@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/68
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -43,12 +39,12 @@ def pluck(arr):
     Example 2:
         Input: [1,2,3]
         Output: [2, 1]
-        Explanation: 2 has the smallest even value, and 2 has the smallest index. 
+        Explanation: 2 has the smallest even value, and 2 has the smallest index.
 
     Example 3:
         Input: []
         Output: []
-    
+
     Example 4:
         Input: [5, 0, 3, 0, 4, 2]
         Output: [0, 1]
@@ -96,4 +92,3 @@ def check(candidate):
 
 
 */
-

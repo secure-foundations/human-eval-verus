@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/95
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -27,7 +23,7 @@ fn main() {}
 
 def check_dict_case(dict):
     """
-    Given a dictionary, return True if all keys are strings in lower 
+    Given a dictionary, return True if all keys are strings in lower
     case or all keys are strings in upper case, else return False.
     The function should return False is the given dictionary is empty.
     Examples:
@@ -68,7 +64,7 @@ check_dict_case
                     break
             else:
                 break
-        return state == "upper" or state == "lower" 
+        return state == "upper" or state == "lower"
 
 */
 
@@ -81,8 +77,8 @@ def check(candidate):
     assert candidate({"p":"pineapple", "A":"banana", "B":"banana"}) == False, "Second test error: " + str(candidate({"p":"pineapple", "A":"banana", "B":"banana"}))
     assert candidate({"p":"pineapple", 5:"banana", "a":"apple"}) == False, "Third test error: " + str(candidate({"p":"pineapple", 5:"banana", "a":"apple"}))
     assert candidate({"Name":"John", "Age":"36", "City":"Houston"}) == False, "Fourth test error: " + str(candidate({"Name":"John", "Age":"36", "City":"Houston"}))
-    assert candidate({"STATE":"NC", "ZIP":"12345" }) == True, "Fifth test error: " + str(candidate({"STATE":"NC", "ZIP":"12345" }))      
-    assert candidate({"fruit":"Orange", "taste":"Sweet" }) == True, "Fourth test error: " + str(candidate({"fruit":"Orange", "taste":"Sweet" }))      
+    assert candidate({"STATE":"NC", "ZIP":"12345" }) == True, "Fifth test error: " + str(candidate({"STATE":"NC", "ZIP":"12345" }))
+    assert candidate({"fruit":"Orange", "taste":"Sweet" }) == True, "Fourth test error: " + str(candidate({"fruit":"Orange", "taste":"Sweet" }))
 
 
     # Check some edge cases that are easy to work out by hand.
@@ -90,4 +86,3 @@ def check(candidate):
 
 
 */
-

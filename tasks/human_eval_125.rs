@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/125
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -33,7 +29,7 @@ def split_words(txt):
     Examples
     split_words("Hello world!") ➞ ["Hello", "world!"]
     split_words("Hello,world!") ➞ ["Hello", "world!"]
-    split_words("abcdef") == 3 
+    split_words("abcdef") == 3
     '''
 
 */
@@ -68,4 +64,3 @@ def check(candidate):
     assert candidate("") == 0
 
 */
-

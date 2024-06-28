@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/3
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -47,7 +45,6 @@ fn below_zero(operation: &[i64]) -> (r: bool)
 }
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -108,4 +105,3 @@ def check(candidate):
     assert candidate([1, -2, 2, -2, 5, -5, 4, -4]) == True
 
 */
-

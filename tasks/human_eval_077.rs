@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/77
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -27,7 +23,7 @@ fn main() {}
 
 def iscube(a):
     '''
-    Write a function that takes an integer a and returns True 
+    Write a function that takes an integer a and returns True
     if this ingeger is a cube of some integer number.
     Note: you may assume the input is always valid.
     Examples:
@@ -72,4 +68,3 @@ def check(candidate):
 
 
 */
-

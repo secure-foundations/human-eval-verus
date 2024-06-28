@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/156
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -46,17 +42,17 @@ int_to_mini_roman
 
 /*
 ### CANONICAL SOLUTION
-    num = [1, 4, 5, 9, 10, 40, 50, 90,  
-           100, 400, 500, 900, 1000] 
-    sym = ["I", "IV", "V", "IX", "X", "XL",  
-           "L", "XC", "C", "CD", "D", "CM", "M"] 
+    num = [1, 4, 5, 9, 10, 40, 50, 90,
+           100, 400, 500, 900, 1000]
+    sym = ["I", "IV", "V", "IX", "X", "XL",
+           "L", "XC", "C", "CD", "D", "CM", "M"]
     i = 12
     res = ''
-    while number: 
-        div = number // num[i] 
-        number %= num[i] 
-        while div: 
-            res += sym[i] 
+    while number:
+        div = number // num[i]
+        number %= num[i]
+        while div:
+            res += sym[i]
             div -= 1
         i -= 1
     return res.lower()
@@ -88,4 +84,3 @@ def check(candidate):
 
 
 */
-

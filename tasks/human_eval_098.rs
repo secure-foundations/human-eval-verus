@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/98
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -28,7 +24,7 @@ fn main() {}
 def count_upper(s):
     """
     Given a string s, count the number of uppercase vowels in even indices.
-    
+
     For example:
     count_upper('aBCdEf') returns 1
     count_upper('abcdefg') returns 0
@@ -70,4 +66,3 @@ def check(candidate):
 
 
 */
-

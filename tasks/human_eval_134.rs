@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/134
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -36,7 +32,7 @@ def check_if_last_char_is_a_letter(txt):
     check_if_last_char_is_a_letter("apple pie") ➞ False
     check_if_last_char_is_a_letter("apple pi e") ➞ True
     check_if_last_char_is_a_letter("apple pi e ") ➞ False
-    check_if_last_char_is_a_letter("") ➞ False 
+    check_if_last_char_is_a_letter("") ➞ False
     '''
 
 */
@@ -48,7 +44,7 @@ check_if_last_char_is_a_letter
 
 /*
 ### CANONICAL SOLUTION
- 
+
     check = txt.split(' ')[-1]
     return True if len(check) == 1 and (97 <= ord(check.lower()) <= 122) else False
 
@@ -75,4 +71,3 @@ def check(candidate):
 
 
 */
-

@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/137
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -51,7 +47,7 @@ compare_one
     if isinstance(temp_a, str): temp_a = temp_a.replace(',','.')
     if isinstance(temp_b, str): temp_b = temp_b.replace(',','.')
     if float(temp_a) == float(temp_b): return None
-    return a if float(temp_a) > float(temp_b) else b 
+    return a if float(temp_a) > float(temp_b) else b
 
 */
 
@@ -74,4 +70,3 @@ def check(candidate):
 
 
 */
-

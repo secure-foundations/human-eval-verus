@@ -1,9 +1,7 @@
-
 /*
 ### ID
 HumanEval/124
 */
-
 /*
 ### VERUS BEGIN
 */
@@ -11,11 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-    // TODO: Put your solution (the specification, implementation, and proof) to the task here
- 
+// TODO: Put your solution (the specification, implementation, and proof) to the task here
 
 } // verus!
-
 fn main() {}
 
 /*
@@ -34,7 +30,7 @@ def valid_date(date):
     3. The months should not be less than 1 or higher than 12.
     4. The date should be in the format: mm-dd-yyyy
 
-    for example: 
+    for example:
     valid_date('03-11-2000') => True
 
     valid_date('15-01-2012') => False
@@ -112,4 +108,3 @@ def check(candidate):
     assert candidate('04-2003') == False
 
 */
-
