@@ -2,7 +2,7 @@
 
 - [x] 000 - jaylorch
 - [x] 001 - jaylorch
-- [x] 002 - *impossible (floating point)*
+- [x] 002 - ❌ *impossible (floating point)*
 - [x] 003 - jaylorch (003a), jaybosamiya (003b)
 - [ ] 004
 - [ ] 005
