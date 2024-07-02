@@ -28,7 +28,7 @@ pub open spec fn first_n(s: Seq<i32>, n: int) -> Seq<int>
 pub open spec fn sum_other_way(s: Seq<int>) -> int
     decreases s.len()
 {
-    if s.len() == 0 { 0 } else { s[s.len() - 1] + sum_other_way(s.take(s.len() - 1)) }
+    if s.len() == 0 { 0 } else { s.last() + sum_other_way(s.drop_last()) }
 }
 
 proof fn lemma_sum_equals_sum_other_way(s: Seq<int>)
@@ -38,15 +38,15 @@ proof fn lemma_sum_equals_sum_other_way(s: Seq<int>)
 {
     if s.len() == 1 {
         assert(sum(s.skip(1)) == 0);
-        assert(sum_other_way(s.take(s.len() - 1)) == 0);
+        assert(sum_other_way(s.drop_last()) == 0);
     }
     else if s.len() > 1 {
         let ss = s.skip(1);
         lemma_sum_equals_sum_other_way(ss);
-        assert(sum_other_way(ss) == ss[ss.len() - 1] + sum_other_way(ss.take(ss.len() - 1)));
-        lemma_sum_equals_sum_other_way(ss.take(ss.len() - 1));
-        assert(ss.take(ss.len() - 1) == s.take(s.len() - 1).skip(1));
-        lemma_sum_equals_sum_other_way(s.take(s.len() - 1));
+        assert(sum_other_way(ss) == ss.last() + sum_other_way(ss.drop_last()));
+        lemma_sum_equals_sum_other_way(ss.drop_last());
+        assert(ss.drop_last() == s.drop_last().skip(1));
+        lemma_sum_equals_sum_other_way(s.drop_last());
     }
 }
 
@@ -68,8 +68,8 @@ fn below_zero(operations: Vec<i32>) -> (result: bool)
         assert(sum(first_n(operations@, k as int)) + operations@[k as int] == sum(first_n(operations@, k + 1))) by {
             let q1 = first_n(operations@, k as int);
             let q2 = first_n(operations@, k + 1);
-            assert(q2[q2.len() - 1] == operations@[k as int] as int);
-            assert(q2.take(q2.len() - 1) == q1);
+            assert(q2.last() == operations@[k as int] as int);
+            assert(q2.drop_last() == q1);
             lemma_sum_equals_sum_other_way(q1);
             lemma_sum_equals_sum_other_way(q2);
         }
