@@ -70,22 +70,22 @@ fn below_zero(operations: Vec<i32>) -> (result: bool)
         }
         if operations[k] >= 0 {
             if s > i32::MAX - operations[k] {
-                s = s + (operations[k] - i32::MAX - 1);
-                num_overflows = num_overflows + 1;
+                s += operations[k] - i32::MAX - 1;
+                num_overflows += 1;
             }
             else {
-                s = s + operations[k];
+                s += operations[k];
             }
-        }
-        else if s + operations[k] < 0 {
-            if num_overflows == 0 {
-                return true;
-            }
-            num_overflows = num_overflows - 1;
-            s = s + (operations[k] + i32::MAX + 1);
         }
         else {
-            s = s + operations[k];
+            s += operations[k];
+            if s < 0 {
+                if num_overflows == 0 {
+                    return true;
+                }
+                num_overflows -= 1;
+                s = s + i32::MAX + 1;
+            }
         }
     }
     false
