@@ -68,17 +68,18 @@ fn below_zero(operations: Vec<i32>) -> (result: bool)
             lemma_sum_equals_sum_other_way(q1);
             lemma_sum_equals_sum_other_way(q2);
         }
-        if operations[k] >= 0 {
-            if s > i32::MAX - operations[k] {
-                s += operations[k] - i32::MAX - 1;
+        let op = operations[k];
+        if op >= 0 {
+            if s > i32::MAX - op {
+                s += op - i32::MAX - 1;
                 num_overflows += 1;
             }
             else {
-                s += operations[k];
+                s += op;
             }
         }
         else {
-            s += operations[k];
+            s += op;
             if s < 0 {
                 if num_overflows == 0 {
                     return true;
