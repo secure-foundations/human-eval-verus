@@ -68,30 +68,19 @@ fn below_zero(operations: Vec<i32>) -> (result: bool)
             lemma_sum_equals_sum_other_way(q1);
             lemma_sum_equals_sum_other_way(q2);
         }
-        if operations[k] >= 0 {
-            if s > i32::MAX - operations[k] {
-                s = s + (operations[k] - i32::MAX - 1);
-                assert((num_overflows + 1) * max_plus == num_overflows * max_plus + max_plus) by (nonlinear_arith);
-                num_overflows = num_overflows + 1;
+        if operations[k] >= 0 && s > i32::MAX - operations[k] {
+            s = s + (operations[k] - i32::MAX - 1);
+            num_overflows = num_overflows + 1;
+        }
+        else if s + operations[k] < 0 {
+            if num_overflows == 0 {
+                return true;
             }
-            else {
-                s = s + operations[k];
-            }
+            num_overflows = num_overflows - 1;
+            s = s + (operations[k] + i32::MAX + 1);
         }
         else {
-            if s + operations[k] < 0 {
-                if num_overflows > 0 {
-                    assert((num_overflows - 1) * max_plus == num_overflows * max_plus - max_plus) by (nonlinear_arith);
-                    num_overflows = num_overflows - 1;
-                    s = s + (operations[k] + i32::MAX + 1);
-                }
-                else {
-                    return true;
-                }
-            }
-            else {
-                s = s + operations[k];
-            }
+            s = s + operations[k];
         }
     }
     false
