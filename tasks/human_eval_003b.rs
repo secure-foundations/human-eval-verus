@@ -21,7 +21,7 @@ spec fn sum(s: Seq<i64>) -> int
 
 fn below_zero(operation: &[i64]) -> (r: bool)
     ensures
-        r <==> (forall|i: int|
+        r <==> !(forall|i: int|
             0 <= i <= operation.len() ==> sum(#[trigger] operation@.subrange(0, i)) >= 0),
 {
     // We use i128 since it allows us to have sufficiently large numbers without overflowing.
@@ -38,10 +38,10 @@ fn below_zero(operation: &[i64]) -> (r: bool)
         ).drop_last());
         s = s + operation[i] as i128;
         if s < 0 {
-            return false;
+            return true;
         }
     }
-    true
+    false
 }
 
 } // verus!
