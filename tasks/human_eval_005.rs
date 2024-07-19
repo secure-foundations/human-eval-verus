@@ -57,7 +57,7 @@ proof fn intersperse_quantified_is_spec(numbers: Seq<u64>, delimeter: u64, inter
     requires
         intersperse_quantified(numbers, delimeter, interspersed),
     ensures
-        interspersed =~= intersperse_spec(numbers, delimeter),
+        interspersed == intersperse_spec(numbers, delimeter),
     decreases numbers.len(),
 {
     let is = intersperse_spec(numbers, delimeter);
@@ -86,6 +86,7 @@ proof fn intersperse_quantified_is_spec(numbers: Seq<u64>, delimeter: u64, inter
             }
         });
     }
+    assert(interspersed =~= intersperse_spec(numbers, delimeter));
 }
 
 /// Implementation of intersperse
