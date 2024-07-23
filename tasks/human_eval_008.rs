@@ -137,9 +137,8 @@ fn sum_product(numbers: Vec<i32>) -> (ret: (i32, i32))
                 numbers@.take(i).map(|_idx, j: i32| j as int),
             ) <= i32::MAX,
     ensures
-        ret.0 == sum(numbers@.map(|_idx, j: i32| j as int)) && ret.1 == product(
-            numbers@.map(|_idx, j: i32| j as int),
-        ),
+        ret.0 == sum(numbers@.map(|_idx, j: i32| j as int)),
+        ret.1 == product(numbers@.map(|_idx, j: i32| j as int)),
 {
     let mut p = 1i32;
     let mut s = 0i32;
