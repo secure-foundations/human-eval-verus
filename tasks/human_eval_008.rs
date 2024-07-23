@@ -93,33 +93,8 @@ proof fn lemma_prod_equals_prod_other_way(s: Seq<int>)
         assert(ss.take(ss.len() - 1) == s.take(s.len() - 1).skip(1));
         lemma_prod_equals_prod_other_way(s.take(s.len() - 1));
 
-        calc! {
-            (==)
-            product(s); {}
-            // fold definition
-            s[0] * product(s.skip(1)); {}
-            // lemma
-            s[0] * prod_another_way(s.skip(1)); {}
-            // fold definition
-            s[0] * (ss[ss.len() - 1] * prod_another_way(ss.take(ss.len() - 1))); {}
-            // ss[ss.len() - 1] == s[s.len() - 1]
-            s[0] * (s[s.len() - 1] * prod_another_way(ss.take(ss.len() - 1))); {
-                lemma_mul_is_commutative(s[s.len() - 1], prod_another_way(ss.take(ss.len() - 1)));
-            }
-            s[0] * (prod_another_way(ss.take(ss.len() - 1)) * s[s.len() - 1]); {
-                lemma_mul_is_associative(
-                    s[0],
-                    prod_another_way(ss.take(ss.len() - 1)),
-                    s[s.len() - 1],
-                );
-            }
-            (s[0] * prod_another_way(ss.take(ss.len() - 1))) * s[s.len() - 1]; {}
-            // s[0] * prod_another_way(ss.take(ss.len() - 1))) == prod_another_way(s.take(s.len() - 1))
-            prod_another_way(s.take(s.len() - 1)) * s[s.len() - 1]; {
-                lemma_mul_is_commutative(prod_another_way(s.take(s.len() - 1)), s[s.len() - 1]);
-            }
-            prod_another_way(s);
-        }
+        broadcast use lemma_mul_is_commutative;
+        broadcast use lemma_mul_is_associative;
 
     }
 }
