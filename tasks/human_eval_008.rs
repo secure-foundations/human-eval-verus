@@ -42,16 +42,13 @@ fn sum_product(numbers: Vec<u32>) -> (result: (u64, Option<u32>))
 {
     let mut sum_value: u64 = 0;
     let mut prod_value: Option<u32> = Some(1);
-    let mut index = 0;
-    while index < numbers.len()
+    for index in 0..numbers.len()
         invariant
-            0 <= index <= numbers.len(),
             numbers.len() < u32::MAX,
             sum_value == sum(numbers@.take(index as int)),
             prod_value matches Some(v) ==> v == product(numbers@.take(index as int)),
             index <= numbers.len(),
             index >= 0,
-            sum_value <= u64::MAX,
     {
         proof {
             sum_bound(numbers@.take(index as int));
@@ -65,9 +62,8 @@ fn sum_product(numbers: Vec<u32>) -> (result: (u64, Option<u32>))
             Some(v) => v.checked_mul(numbers[index]),
             None => None,
         };
-        index += 1;
     }
-    assert(numbers@.take(index as int) =~= numbers@);
+    assert(numbers@.take(numbers@.len() as int) =~= numbers@);
     (sum_value, prod_value)
 }
 

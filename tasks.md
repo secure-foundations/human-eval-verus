@@ -8,7 +8,7 @@
 - [x] 005 - parno
 - [ ] 006
 - [ ] 007
-- [ ] 008
+- [x] 008 - parno
 - [x] 009 - jaylorch
 - [ ] 010
 - [x] 011 - jaylorch
