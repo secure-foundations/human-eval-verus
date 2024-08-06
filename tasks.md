@@ -4,7 +4,7 @@
 - [x] 001 - jaylorch
 - [x] 002 - ❌ *impossible (floating point)*
 - [x] 003 - jaylorch (003a), jaybosamiya (003b), jaylorch (003c)
-- [ ] 004 - jaylorch
+- [x] 004 - jaylorch
 - [x] 005 - parno
 - [ ] 006
 - [ ] 007
