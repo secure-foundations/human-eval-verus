@@ -17,8 +17,8 @@ pub open spec fn mul(a: nat, b: nat) -> nat {
 }
 
 /// Specification for what it means for d to divide a
-pub open spec fn divides(v: nat, d: nat) -> bool {
-    exists|k: nat| mul(d, k) == v
+pub open spec fn divides(factor: nat, candidate: nat) -> bool {
+    exists|k: nat| mul(factor, k) == candidate
 }
 
 /// Helper function to prove a % b == 0 imples b divides a
@@ -27,7 +27,7 @@ proof fn lemma_mod_zero(a: nat, b: nat)
         a > 0 && b > 0,
         a % b == 0,
     ensures
-        divides(a, b),
+        divides(b, a),
 {
     lemma_fundamental_div_mod(a as int, b as int);
     assert(mul(b, (a / b)) == a);
@@ -37,7 +37,7 @@ proof fn lemma_mod_zero(a: nat, b: nat)
 proof fn lemma_mod_zero_reversed(a: nat, b: nat)
     requires
         a > 0 && b > 0,
-        divides(a, b),
+        divides(b, a),
     ensures
         a % b == 0,
 {
@@ -51,9 +51,9 @@ proof fn lemma_mod_zero_reversed(a: nat, b: nat)
 /// Helper function to prove everything is divided by one
 proof fn lemma_one_divides_all()
     ensures
-        forall|v: nat| divides(v, 1 as nat),
+        forall|v: nat| divides(1 as nat, v),
 {
-    assert forall|v: nat| divides(v, 1 as nat) by {
+    assert forall|v: nat| divides(1 as nat, v) by {
         assert(mul(1 as nat, v) == v);
     }
 }
@@ -63,36 +63,36 @@ fn largest_divisor(n: u32) -> (ret: u32)
     requires
         n > 1,
     ensures
-        divides(n as nat, ret as nat),
+        divides(ret as nat, n as nat),
         ret < n,
-        forall|k: u32| (0 < k < n && divides(n as nat, k as nat)) ==> ret >= k,
+        forall|k: u32| (0 < k < n && divides(k as nat, n as nat)) ==> ret >= k,
 {
     let mut i = n - 1;
     while i >= 2
         invariant
             n > 0,
             i < n,
-            forall|k: u32| i < k < n ==> !divides(n as nat, k as nat),
+            forall|k: u32| i < k < n ==> !divides(k as nat, n as nat),
     {
         if n % i == 0 {
-            assert(divides(n as nat, i as nat)) by {
+            assert(divides(i as nat, n as nat)) by {
                 lemma_mod_zero(n as nat, i as nat);
             }
             return i;
         }
         i -= 1;
 
-        assert forall|k: u32| i < k < n implies !divides(n as nat, k as nat) by {
+        assert forall|k: u32| i < k < n implies !divides(k as nat, n as nat) by {
             if k == i + 1 {
-                assert(!divides(n as nat, k as nat)) by {
-                    if (divides(n as nat, k as nat)) {
+                assert(!divides(k as nat, n as nat)) by {
+                    if (divides(k as nat, n as nat)) {
                         lemma_mod_zero_reversed(n as nat, k as nat);
                     }
                 }
             }
         }
     }
-    assert(divides(n as nat, 1 as nat)) by {
+    assert(divides(1 as nat, n as nat)) by {
         lemma_one_divides_all();
     }
     1
