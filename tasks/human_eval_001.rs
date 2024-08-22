@@ -263,4 +263,3 @@ def check(candidate):
     assert candidate('( ) (( )) (( )( ))') == ['()', '(())', '(()())']
 
 */
-
