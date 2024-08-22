@@ -1,0 +1,33 @@
+name: verusfmt
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  verusfmt-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: setup verusfmt
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/verus-lang/verusfmt/releases/latest/download/verusfmt-installer.sh | sh
+      - name: check formatting
+        working-directory: ./tasks
+        run: |
+          # Run `verusfmt --check` on each file, collecting failures if any
+          ANYFAILED=""
+          for i in *.rs; do
+            echo -n "[fmt check] $i: "
+            if verusfmt --check "$i" >/dev/null 2>/dev/null; then
+              echo "success"
+            else 
+              echo "failed"
+              # Re-run `verusfmt --check` on any failure just to display the actual output
+              verusfmt --check "$i" || true
+              ANYFAILED="$ANYFAILED $i"
+            fi
+          done
+          if [ -n "$ANYFAILED" ]; then
+            echo "Failed:$ANYFAILED"
+            exit 1
+          fi
