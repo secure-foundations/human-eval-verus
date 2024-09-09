@@ -10,12 +10,12 @@ use vstd::prelude::*;
 verus! {
 
 spec fn spec_sum_to_n(n: nat) -> nat
-    decreases n
+    decreases n,
 {
     if (n == 0) {
         0
     } else {
-        n + spec_sum_to_n((n-1) as nat)
+        n + spec_sum_to_n((n - 1) as nat)
     }
 }
 

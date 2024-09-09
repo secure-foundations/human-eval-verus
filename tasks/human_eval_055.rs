@@ -9,10 +9,10 @@ use vstd::prelude::*;
 
 verus! {
 
-spec fn spec_fib(n: nat) -> nat 
-    decreases n
+spec fn spec_fib(n: nat) -> nat
+    decreases n,
 {
-    if (n == 0){
+    if (n == 0) {
         0
     } else if (n == 1) {
         1
@@ -23,7 +23,7 @@ spec fn spec_fib(n: nat) -> nat
 
 fn fib(n: u32) -> (ret: Option<u32>)
     ensures
-        ret.is_some() ==> ret.unwrap() == spec_fib(n as nat)
+        ret.is_some() ==> ret.unwrap() == spec_fib(n as nat),
 {
     match n {
         0 => Some(0),
@@ -32,7 +32,7 @@ fn fib(n: u32) -> (ret: Option<u32>)
             let n1 = fib(n - 1)?;
             let n2 = fib(n - 2)?;
             n1.checked_add(n2)
-        }
+        },
     }
 }
 

@@ -10,14 +10,18 @@ use vstd::prelude::*;
 verus! {
 
 spec fn spec_bracketing_helper(brackets: Seq<char>) -> (int, bool) {
-    brackets.fold_left((0, true), |p: (int, bool), c| {
-        let (x, b) = p;
-        match (c) {
-            '<' => (x + 1, b),
-            '>' => (x - 1 , b && x == 0),
-            _ => (x, b),
-        }
-    })
+    brackets.fold_left(
+        (0, true),
+        |p: (int, bool), c|
+            {
+                let (x, b) = p;
+                match (c) {
+                    '<' => (x + 1, b),
+                    '>' => (x - 1, b && x == 0),
+                    _ => (x, b),
+                }
+            },
+    )
 }
 
 spec fn spec_bracketing(brackets: Seq<char>) -> bool {
@@ -27,10 +31,10 @@ spec fn spec_bracketing(brackets: Seq<char>) -> bool {
 
 fn correct_bracketing(brackets: &str) -> (ret: bool)
     requires
-        brackets@.len() <= i32::MAX
-        -brackets@.len() >= i32::MIN
+        brackets@.len() <= i32::MAX,
+        -brackets@.len() >= i32::MIN,
     ensures
-        ret <==> spec_bracketing(brackets@)
+        ret <==> spec_bracketing(brackets@),
 {
     let mut i = 0;
     let mut b = true;
@@ -39,7 +43,7 @@ fn correct_bracketing(brackets: &str) -> (ret: bool)
     while i < brackets.unicode_len()
         invariant
             (stack_size as int, b) == spec_bracketing_helper(brackets@.subrange(0, i as int)),
-            stack_size <=  i <=  brackets@.len() <= i32::MAX,
+            stack_size <= i <= brackets@.len() <= i32::MAX,
             stack_size >= -i >= -brackets@.len() >= i32::MIN,
     {
         let c = brackets.get_char(i);
@@ -50,7 +54,7 @@ fn correct_bracketing(brackets: &str) -> (ret: bool)
             b = b && stack_size == 0;
             stack_size -= 1;
         }
-        assert(brackets@.subrange(0, i+1 as int).drop_last() =~= brackets@.subrange(0, i as int));
+        assert(brackets@.subrange(0, i + 1 as int).drop_last() =~= brackets@.subrange(0, i as int));
         i += 1;
     }
     assert(brackets@ =~= brackets@.subrange(0, i as int));
