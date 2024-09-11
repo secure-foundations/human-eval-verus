@@ -11,9 +11,8 @@ verus! {
 
 fn monotonic(l: Vec<i32>) -> (ret: bool)
     ensures
-        ret <==> forall|i: int, j: int|
-            0 <= i < j < l@.len() ==> l@.index(i) <= l@.index(j) || forall|i: int, j: int|
-                0 <= i < j < l@.len() ==> l@.index(i) >= l@.index(j),
+        ret <==> (forall|i: int, j: int| 0 <= i < j < l@.len() ==> l@.index(i) <= l@.index(j)) || (
+        forall|i: int, j: int| 0 <= i < j < l@.len() ==> l@.index(i) >= l@.index(j)),
 {
     if l.len() == 0 || l.len() == 1 {
         return true;
