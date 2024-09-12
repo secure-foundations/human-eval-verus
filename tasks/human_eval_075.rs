@@ -9,7 +9,52 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+spec fn spec_prime(p: int) -> bool {
+    p > 1 &&
+    forall|k: int| 1 < k < p ==> #[trigger] (p % k) != 0
+}
+
+fn prime(p: u64) -> (ret: bool)
+    ensures
+        ret <==> spec_prime(p as int),
+{
+    for k in 2..p {
+        if p % k == 0 {
+            return false;
+        }
+    }
+    true
+}
+
+fn is_multiply_prime(x: u64) -> (ans: bool)
+    requires x > 1,
+    ensures ans <==> exists|a: int, b: int, c: int| 
+        spec_prime(a) && spec_prime(b) && spec_prime(c) && x == a * b * c,
+{
+    for a in 2..x+1
+        invariant forall|i: int, j: int, k: int| 
+            (spec_prime(i) && spec_prime(j) && spec_prime(k) && i < a as int) ==> x != i * j * k,
+    {
+        if prime(a) {
+            for b in 2..x+1
+                invariant forall|j: int, k: int| 
+                    (spec_prime(j) && spec_prime(k) && j < b as int) ==> x != (a as int) * j * k,
+            {
+                if prime(b) {
+                    for c in 2..x+1
+                        invariant forall|k: int| 
+                            (spec_prime(k) && k < c as int) ==> x != (a as int) * (b as int) * k,
+                    {
+                        if prime(c) && x == a * b * c {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    false
+}
 
 } // verus!
 fn main() {}
