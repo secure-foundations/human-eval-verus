@@ -9,7 +9,6 @@ use vstd::prelude::*;
 
 verus! {
 
-#[verifier::loop_isolation(false)]
 fn all_prefixes(s: &Vec<u8>) -> (prefixes: Vec<Vec<u8>>)
     ensures
         prefixes.len() == s.len(),
