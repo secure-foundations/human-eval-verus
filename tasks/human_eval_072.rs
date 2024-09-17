@@ -123,7 +123,7 @@ proof fn lemma_increasing_sum_params(s: Seq<u32>, i: int, j: int)
     decreases j - i,
 {
     if (i < j) {
-        assert (spec_sum(s.subrange(0, j - 1)) <= spec_sum(s.subrange(0, j))) by {
+        assert(spec_sum(s.subrange(0, j - 1)) <= spec_sum(s.subrange(0, j))) by {
             assert(s.subrange(0, j).drop_last() == s.subrange(0, j - 1));
         }
         lemma_increasing_sum_params(s, i, j - 1);
