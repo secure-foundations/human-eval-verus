@@ -5,11 +5,44 @@ HumanEval/76
 /*
 ### VERUS BEGIN
 */
+use vstd::arithmetic::logarithm::log;
+use vstd::arithmetic::power::pow;
 use vstd::prelude::*;
-
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+fn is_simple_power(x: u32, n: u32) -> (ret: bool)
+    requires
+        n > 1,
+    ensures
+        ret <==> x == pow(n as int, log(n as int, x as int) as nat),
+{
+    let maybe_x = n.checked_pow(x.ilog(n));
+    if (maybe_x.is_some() && maybe_x.unwrap() == x) {
+        true
+    } else {
+        false
+    }
+}
+
+// note that the order of paramters is reverse in exec fn ilog and spec fn log
+#[verifier::external_fn_specification]
+pub fn ex_ilog(x: u32, base: u32) -> (ret: u32)
+    requires
+        base > 1,
+    ensures
+        ret == log(base as int, x as int),
+{
+    x.ilog(base)
+}
+
+#[verifier::external_fn_specification]
+pub fn ex_checked_pow(x: u32, exp: u32) -> (ret: Option<u32>)
+    ensures
+        ret.is_some() <==> ret.unwrap() == pow(x as int, exp as nat),
+        ret.is_none() <==> pow(x as int, exp as nat) > u32::MAX,
+{
+    x.checked_pow(exp)
+}
 
 } // verus!
 fn main() {}
