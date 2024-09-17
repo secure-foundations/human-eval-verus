@@ -9,47 +9,50 @@ use vstd::prelude::*;
 
 verus! {
 
-spec fn spec_pluck(s: Seq<usize>) -> Seq<usize>{
-    let filtered = s.map(|i: int, x: usize| (i, x)).filter(|p: (int, usize)| p.1 % 2 == 0);
-    if filtered.len() == 0 {
-        Seq::empty()
-    } else {
-        let (i, x) = filtered.min_via(|p1: (int, usize), p2: (int, usize)| p1.1 <= p2.1);
-        seq![x, i as usize]
-    }
-}
-
-fn pluck(nodes: &Vec<usize>) -> (ret: Vec<usize>)
+fn pluck_smallest_even(nodes: &Vec<u32>) -> (result: Vec<u32>)
+    requires
+        nodes@.len() <= u32::MAX,
+        forall|i: int| 0 <= i < nodes@.len() ==> nodes@[i] >= 0,
     ensures
-        ret@ =~= spec_pluck(nodes@),
+        result@.len() == 0 || result@.len() == 2,
+        result@.len() == 2 ==> 0 <= result@[1] < nodes@.len() && nodes@[result@[1] as int]
+            == result@[0],
+        result@.len() == 2 ==> result@[0] % 2 == 0,
+        result@.len() == 2 ==> forall|i: int|
+            0 <= i < nodes@.len() && nodes@[i] % 2 == 0 ==> result@[0] <= nodes@[i],
+        result@.len() == 2 ==> forall|i: int|
+            0 <= i < result@[1] ==> nodes@[i] % 2 != 0 || nodes@[i] > result@[0],
+        result@.len() == 0 ==> forall|i: int| 0 <= i < nodes@.len() ==> nodes@[i] % 2 != 0,
 {
-    let mut ret = Vec::new();
-    let ghost filtered: Seq<(int, usize)> = Seq::empty();
-    let ghost mapped: Seq<(int, usize)> = Seq::empty();
+    let mut smallest_even: Option<u32> = None;
+    let mut smallest_index: Option<u32> = None;
+
     for i in 0..nodes.len()
         invariant
-            ret@ =~= spec_pluck(nodes@.subrange(0, i as int)),
-            mapped =~= nodes@.subrange(0, i as int).map(|i: int, x: usize| (i, x)),
-            filtered =~= mapped.filter(|p: (int, usize)| p.1 % 2 == 0),
-            filtered.len() <= mapped.len() == i as int,
-            i <= nodes.len(),
+            0 <= i <= nodes@.len(),
+            nodes@.len() <= u32::MAX,
+            smallest_even.is_none() == smallest_index.is_none(),
+            smallest_index.is_some() ==> 0 <= smallest_index.unwrap() < i as int,
+            smallest_index.is_some() ==> nodes@[smallest_index.unwrap() as int]
+                == smallest_even.unwrap(),
+            smallest_even.is_some() ==> smallest_even.unwrap() % 2 == 0,
+            smallest_even.is_some() ==> forall|j: int|
+                0 <= j < i ==> nodes@[j] % 2 == 0 ==> smallest_even.unwrap() <= nodes@[j],
+            smallest_index.is_some() ==> forall|j: int|
+                0 <= j < smallest_index.unwrap() ==> nodes@[j] % 2 != 0 || nodes@[j]
+                    > smallest_even.unwrap(),
+            smallest_index.is_none() ==> forall|j: int| 0 <= j < i ==> nodes@[j] % 2 != 0,
     {
-        reveal_with_fuel(Seq::filter, 5);
-        reveal_with_fuel(Seq::min_via, 5);
-        proof { mapped = mapped.push((i as int, nodes[i as int])); } 
-        // assert(mapped.len() == i + 1 as int);
-        // assert(mapped.subrange(0, i+1 as int).drop_last() =~= mapped.subrange(0, i as int));
-        // assert(nodes@.subrange(0, i+1 as int).drop_last() =~= nodes@.subrange(0, i as int));
-        assert(mapped.index(i as int).1 == nodes[i as int]);
-        if (nodes[i] % 2 == 0) {
-            proof { filtered = filtered.push((i as int, nodes[i as int])); }
-            if (ret.len() == 0 || nodes[i] < ret[0]) {
-                ret = vec![nodes[i], i];
-            }
+        if nodes[i] % 2 == 0 && (smallest_even.is_none() || nodes[i] < smallest_even.unwrap()) {
+            smallest_even = Some(nodes[i]);
+            smallest_index = Some((i as u32));
         }
     }
-    assert(nodes@.subrange(0, nodes.len() as int) =~= nodes@);
-    ret
+    if smallest_index.is_none() {
+        Vec::new()
+    } else {
+        vec![smallest_even.unwrap(), smallest_index.unwrap()]
+    }
 }
 
 } // verus!
