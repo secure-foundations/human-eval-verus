@@ -9,7 +9,54 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+fn total_match<'a>(lst1: Vec<&'a str>, lst2: Vec<&'a str>) -> (ret: Option<Vec<&'a str>>)
+    ensures
+        ret.is_some() ==> ret.unwrap() == if lst1@.map_values(|s: &str| s@.len()).fold_left(
+            0,
+            |x: int, y| x + y,
+        ) <= lst2@.map_values(|s: &str| s@.len()).fold_left(0, |x: int, y| x + y) {
+            lst1
+        } else {
+            lst2
+        },
+{
+    let mut l1: usize = 0;
+    for i in 0..lst1.len()
+        invariant
+            l1 == lst1@.subrange(0, i as int).map_values(|s: &str| s@.len()).fold_left(
+                0,
+                |x: int, y| x + y,
+            ),
+    // i <= lst1.len(),
+    {
+        l1 = l1.checked_add(lst1[i].unicode_len())?;
+        assert(lst1@.subrange(0, i + 1).map_values(|s: &str| s@.len()).drop_last()
+            == lst1@.subrange(0, i as int).map_values(|s: &str| s@.len()));
+    }
+    assert(lst1@ == lst1@.subrange(0, lst1.len() as int));
+
+    let mut l2: usize = 0;
+    for i in 0..lst2.len()
+        invariant
+            l2 == lst2@.subrange(0, i as int).map_values(|s: &str| s@.len()).fold_left(
+                0,
+                |x: int, y| x + y,
+            ),
+    {
+        let x = lst2[i].unicode_len();
+        assert(x == lst2[i as int]@.len());
+        l2 = l2.checked_add(x)?;
+        assert(lst2@.subrange(0, i + 1).map_values(|s: &str| s@.len()).drop_last()
+            == lst2@.subrange(0, i as int).map_values(|s: &str| s@.len()));
+    }
+    assert(lst2@ == lst2@.subrange(0, lst2.len() as int));
+
+    if l1 <= l2 {
+        Some(lst1)
+    } else {
+        Some(lst2)
+    }
+}
 
 } // verus!
 fn main() {}
