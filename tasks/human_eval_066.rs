@@ -11,69 +11,6 @@ verus! {
 
 // TODO: Put your solution (the specification, implementation, and proof) to the task here
 
-fn toLower(c: char) -> (ret: char)
-    // requires
-    //     c.is_ascii(),
-    ensures 'A' <= c <= 'Z' ==> ret as u32 == add(c as u32, 32u32),
-            c < 'A' || c > 'Z' ==> ret == c
-{
-    if ('A' <= c && c <= 'Z') {
-        char::from_u32(c as u32 + 32).unwrap()
-    } else {
-        c
-    }
-}
-
-// pub fn upper_sum_rec(s: &str) -> u64 
-//     ensures upper_sum_rec(s) >= 0
-// {
-//     if s.len() == 0 {
-//         0
-//     } else {
-//         let remaining = upper_sum_rec(&s[1..]);
-//         to_int(s.chars().next().unwrap()) as u64 + remaining
-//     }
-// }
-
-// pub proof fn upper_sum_rec_prop(s: &str)
-//     requires s.len() > 0,
-//     ensures upper_sum_rec(s) == upper_sum_rec(&s[..s.len()-1]) + to_int(s.chars().nth(s.len()-1).unwrap()) as u64
-// {
-//     if s.len() > 1 {
-//         assert(s[1..][..s[1..].len() - 1] == s[1..s.len() - 1]);
-//     }
-// }
-
-// pub fn to_int(c: char) -> u8
-//     ensures 'A' <= c <= 'Z' ==> to_int(c) == c as u8,
-//             c < 'A' || c > 'Z' ==> to_int(c) == 0
-// {
-//     if 'A' <= c && c <= 'Z' { c as u8 } else { 0 }
-// }
-
-// pub fn upper_sum(s: &str) -> (res: u64)
-//     ensures res == upper_sum_rec(s)
-// {
-//     let mut res = 0;
-//     let mut i = 0;
-//     while i < s.len()
-//         invariant
-//             0 <= i && i <= s.len(),
-//             res == upper_sum_rec(&s[..i])
-//     {
-//         res = res + to_int(s.chars().nth(i).unwrap()) as u64;
-//         proof {
-//             assert(upper_sum_rec(&s[..i+1]) == upper_sum_rec(&s[..i]) + to_int(s.chars().nth(i).unwrap()) as u64);
-//             assert(s[..i+1][..i] == s[..i]);
-//             upper_sum_rec_prop(&s[..i+1]);
-//         }
-//         i = i + 1;
-//     }
-//     proof {
-//         assert(s == &s[..s.len()]);
-//     }
-//     res
-// }
 } // verus!
 fn main() {}
 
