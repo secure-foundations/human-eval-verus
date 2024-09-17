@@ -9,30 +9,30 @@ use vstd::prelude::*;
 
 verus! {
 
-fn strange_sort_list(s: &Vec<i32>) -> (ret: Vec<i32>)
-    ensures s@.len() == ret@.len()
-{
-    let (_, strange) = strange_sort_list_helper(s);
-    strange
-}
-
-#[verifier::external_body]
+// returns (sorted, strange). Also returning sorted solely to have access to it for writing postcondition
 fn strange_sort_list_helper(s: &Vec<i32>) -> (ret: (Vec<i32>, Vec<i32>))
-    ensures 
+    ensures
         s@.to_multiset() == (ret.0)@.to_multiset(),
         s@.len() == (ret.0)@.len() == (ret.1)@.len(),
-        forall|i: int| 0 <= i < s@.len() && i % 2 == 0 ==> (ret.1)@.index(i) == (ret.0)@.index(i / 2),
-        forall|i: int| 0 <= i < s@.len() && i % 2 == 1 ==> (ret.1)@.index(i) == (ret.0)@.index(s@.len() - (i - 1) / 2 - 1)
+        forall|i: int|
+            0 <= i < s@.len() && i % 2 == 0 ==> (ret.1)@.index(i) == (ret.0)@.index(i / 2),
+        forall|i: int|
+            0 <= i < s@.len() && i % 2 == 1 ==> (ret.1)@.index(i) == (ret.0)@.index(
+                s@.len() - (i - 1) / 2 - 1,
+            ),
 {
     let sorted = sort_seq(s);
     let mut strange = Vec::new();
     let mut i: usize = 0;
     while i < sorted.len()
         invariant
-            i <= sorted.len(),
+            i <= sorted.len() == s@.len(),
             strange@.len() == i,
             forall|j: int| 0 <= j < i && j % 2 == 0 ==> strange@.index(j) == sorted@.index(j / 2),
-            forall|j: int| 0 <  j < i && j % 2 == 1 ==> strange@.index(j) == sorted@.index(sorted@.len() - (j / 2) - 1)
+            forall|j: int|
+                0 < j < i && j % 2 == 1 ==> strange@.index(j) == sorted@.index(
+                    sorted@.len() - (j / 2) - 1,
+                ),
     {
         if i % 2 == 0 {
             strange.push(sorted[i / 2]);
@@ -45,11 +45,19 @@ fn strange_sort_list_helper(s: &Vec<i32>) -> (ret: (Vec<i32>, Vec<i32>))
     (sorted, strange)
 }
 
+fn strange_sort_list(s: &Vec<i32>) -> (ret: Vec<i32>)
+    ensures
+        s@.len() == ret@.len(),
+{
+    let (_, strange) = strange_sort_list_helper(s);
+    strange
+}
+
 fn sort_seq(s: &Vec<i32>) -> (ret: Vec<i32>)
-    ensures 
+    ensures
         forall|i: int, j: int| 0 <= i < j < ret@.len() ==> ret@.index(i) <= ret@.index(j),
         ret@.len() == s@.len(),
-        s@.to_multiset() == ret@.to_multiset()
+        s@.to_multiset() == ret@.to_multiset(),
 {
     let mut sorted = s.clone();
     let mut i: usize = 0;
@@ -58,15 +66,16 @@ fn sort_seq(s: &Vec<i32>) -> (ret: Vec<i32>)
             i <= sorted.len(),
             forall|j: int, k: int| 0 <= j < k < i ==> sorted@.index(j) <= sorted@.index(k),
             s@.to_multiset() == sorted@.to_multiset(),
-            forall|j: int, k: int| 0 <= j < i <= k < sorted@.len() ==> sorted@.index(j) <= sorted@.index(k),
-            sorted@.len() == s@.len()
+            forall|j: int, k: int|
+                0 <= j < i <= k < sorted@.len() ==> sorted@.index(j) <= sorted@.index(k),
+            sorted@.len() == s@.len(),
     {
         let mut min_index: usize = i;
         let mut j: usize = i + 1;
         while j < sorted.len()
             invariant
                 i <= min_index < j <= sorted.len(),
-                forall|k: int| i <= k < j ==> sorted@.index(min_index as int) <= sorted@.index(k)
+                forall|k: int| i <= k < j ==> sorted@.index(min_index as int) <= sorted@.index(k),
         {
             if sorted[j] < sorted[min_index] {
                 min_index = j;
@@ -103,7 +112,6 @@ fn sort_seq(s: &Vec<i32>) -> (ret: Vec<i32>)
 //         }
 //     }
 // }
-
 } // verus!
 fn main() {}
 
