@@ -9,50 +9,21 @@ use vstd::prelude::*;
 
 verus! {
 
-// returns (sorted, strange). Also returning sorted solely to have access to it for writing postcondition
-fn strange_sort_list_helper(s: &Vec<i32>) -> (ret: (Vec<i32>, Vec<i32>))
-    ensures
-        s@.to_multiset() == (ret.0)@.to_multiset(),
-        s@.len() == (ret.0)@.len() == (ret.1)@.len(),
-        forall|i: int|
-            0 <= i < s@.len() && i % 2 == 0 ==> (ret.1)@.index(i) == (ret.0)@.index(i / 2),
-        forall|i: int|
-            0 <= i < s@.len() && i % 2 == 1 ==> (ret.1)@.index(i) == (ret.0)@.index(
-                s@.len() - (i - 1) / 2 - 1,
-            ),
-{
-    let sorted = sort_seq(s);
-    let mut strange = Vec::new();
-    let mut i: usize = 0;
-    while i < sorted.len()
-        invariant
-            i <= sorted.len() == s@.len(),
-            strange@.len() == i,
-            forall|j: int| 0 <= j < i && j % 2 == 0 ==> strange@.index(j) == sorted@.index(j / 2),
-            forall|j: int|
-                0 < j < i && j % 2 == 1 ==> strange@.index(j) == sorted@.index(
-                    sorted@.len() - (j / 2) - 1,
-                ),
-    {
-        if i % 2 == 0 {
-            strange.push(sorted[i / 2]);
-        } else {
-            let r = (i - 1) / 2;
-            strange.push(sorted[s.len() - r - 1]);
-        }
-        i += 1;
-    }
-    (sorted, strange)
-}
-
-fn strange_sort_list(s: &Vec<i32>) -> (ret: Vec<i32>)
-    ensures
-        s@.len() == ret@.len(),
-{
-    let (_, strange) = strange_sort_list_helper(s);
-    strange
-}
-
+// #[verifier::external_body]
+// // Helper lemma to prove that swapping two elements doesn't change the multiset
+// proof fn swap_preserves_multiset(s: Seq<int>, i: int, j: int)
+//     requires 0 <= i < s.len() && 0 <= j < s.len()
+//     ensures s.to_multiset() == s.update(i, s.index(j)).update(j, s.index(i)).to_multiset()
+// {
+//     let s_new = s.update(i, s.index(j)).update(j, s.index(i));
+//     assert(s.to_multiset().count(s.index(i)) == s_new.to_multiset().count(s.index(i)));
+//     assert(s.to_multiset().count(s.index(j)) == s_new.to_multiset().count(s.index(j)));
+//     assert forall|x: int| s.to_multiset().count(x) == s_new.to_multiset().count(x) by {
+//         if x != s.index(i) && x != s.index(j) {
+//             assert(s.to_multiset().count(x) == s_new.to_multiset().count(x));
+//         }
+//     }
+// }
 fn sort_seq(s: &Vec<i32>) -> (ret: Vec<i32>)
     ensures
         forall|i: int, j: int| 0 <= i < j < ret@.len() ==> ret@.index(i) <= ret@.index(j),
@@ -97,21 +68,50 @@ fn sort_seq(s: &Vec<i32>) -> (ret: Vec<i32>)
     sorted
 }
 
-// #[verifier::external_body]
-// // Helper lemma to prove that swapping two elements doesn't change the multiset
-// proof fn swap_preserves_multiset(s: Seq<int>, i: int, j: int)
-//     requires 0 <= i < s.len() && 0 <= j < s.len()
-//     ensures s.to_multiset() == s.update(i, s.index(j)).update(j, s.index(i)).to_multiset()
-// {
-//     let s_new = s.update(i, s.index(j)).update(j, s.index(i));
-//     assert(s.to_multiset().count(s.index(i)) == s_new.to_multiset().count(s.index(i)));
-//     assert(s.to_multiset().count(s.index(j)) == s_new.to_multiset().count(s.index(j)));
-//     assert forall|x: int| s.to_multiset().count(x) == s_new.to_multiset().count(x) by {
-//         if x != s.index(i) && x != s.index(j) {
-//             assert(s.to_multiset().count(x) == s_new.to_multiset().count(x));
-//         }
-//     }
-// }
+// returns (sorted, strange). Also returning sorted solely to have access to it for writing postcondition
+fn strange_sort_list_helper(s: &Vec<i32>) -> (ret: (Vec<i32>, Vec<i32>))
+    ensures
+        s@.to_multiset() == (ret.0)@.to_multiset(),
+        s@.len() == (ret.0)@.len() == (ret.1)@.len(),
+        forall|i: int|
+            0 <= i < s@.len() && i % 2 == 0 ==> (ret.1)@.index(i) == (ret.0)@.index(i / 2),
+        forall|i: int|
+            0 <= i < s@.len() && i % 2 == 1 ==> (ret.1)@.index(i) == (ret.0)@.index(
+                s@.len() - (i - 1) / 2 - 1,
+            ),
+{
+    let sorted = sort_seq(s);
+    let mut strange = Vec::new();
+    let mut i: usize = 0;
+    while i < sorted.len()
+        invariant
+            i <= sorted.len() == s@.len(),
+            strange@.len() == i,
+            forall|j: int| 0 <= j < i && j % 2 == 0 ==> strange@.index(j) == sorted@.index(j / 2),
+            forall|j: int|
+                0 < j < i && j % 2 == 1 ==> strange@.index(j) == sorted@.index(
+                    sorted@.len() - (j / 2) - 1,
+                ),
+    {
+        if i % 2 == 0 {
+            strange.push(sorted[i / 2]);
+        } else {
+            let r = (i - 1) / 2;
+            strange.push(sorted[s.len() - r - 1]);
+        }
+        i += 1;
+    }
+    (sorted, strange)
+}
+
+fn strange_sort_list(s: &Vec<i32>) -> (ret: Vec<i32>)
+    ensures
+        s@.len() == ret@.len(),
+{
+    let (_, strange) = strange_sort_list_helper(s);
+    strange
+}
+
 } // verus!
 fn main() {}
 

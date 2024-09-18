@@ -33,6 +33,35 @@ fn prime(p: u32) -> (ret: bool)
     true
 }
 
+fn checked_mul_thrice(x: u32, y: u32, z: u32) -> (ret: Option<u32>)
+    ensures
+        ret.is_some() ==> ret.unwrap() == x * y * z,
+        ret.is_none() ==> x * y * z > u32::MAX,
+{
+    // x,y,z == 0 done separately to invoke lemma_mul_increases which requires x > 0
+    if (x == 0 || y == 0 || z == 0) {
+        return Some(0);
+    }
+    assert(x > 0 && y > 0 && z > 0);
+    let prod2 = x.checked_mul(y);
+    if prod2.is_some() {
+        let prod3 = prod2.unwrap().checked_mul(z);
+        if prod3.is_some() {
+            let ans = prod3.unwrap();
+            assert(ans == x * y * z);
+            Some(ans)
+        } else {
+            assert(x * y * z > u32::MAX);
+            None
+        }
+    } else {
+        broadcast use group_mul_properties;
+
+        assert(x * y * z >= y * z);
+        None
+    }
+}
+
 fn is_multiply_prime(x: u32) -> (ans: bool)
     requires
         x > 1,
@@ -95,35 +124,6 @@ fn is_multiply_prime(x: u32) -> (ans: bool)
         }
     }
     false
-}
-
-fn checked_mul_thrice(x: u32, y: u32, z: u32) -> (ret: Option<u32>)
-    ensures
-        ret.is_some() ==> ret.unwrap() == x * y * z,
-        ret.is_none() ==> x * y * z > u32::MAX,
-{
-    // x,y,z == 0 done separately to invoke lemma_mul_increases which requires x > 0
-    if (x == 0 || y == 0 || z == 0) {
-        return Some(0);
-    }
-    assert(x > 0 && y > 0 && z > 0);
-    let prod2 = x.checked_mul(y);
-    if prod2.is_some() {
-        let prod3 = prod2.unwrap().checked_mul(z);
-        if prod3.is_some() {
-            let ans = prod3.unwrap();
-            assert(ans == x * y * z);
-            Some(ans)
-        } else {
-            assert(x * y * z > u32::MAX);
-            None
-        }
-    } else {
-        broadcast use group_mul_properties;
-
-        assert(x * y * z >= y * z);
-        None
-    }
 }
 
 } // verus!

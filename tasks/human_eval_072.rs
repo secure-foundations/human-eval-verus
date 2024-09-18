@@ -9,11 +9,77 @@ use vstd::prelude::*;
 
 verus! {
 
-fn will_it_fly(qs: &Vec<u32>, w: u32) -> (ret: bool)
+// i and j are ends of the subrange - exclusive
+proof fn lemma_increasing_sum_params(s: Seq<u32>, i: int, j: int)
+    requires
+        0 <= i <= j <= s.len(),
     ensures
-        ret <==> qs@ =~= qs@.reverse() && spec_sum(qs@) <= w,
+        spec_sum(s.subrange(0, i)) <= spec_sum(s.subrange(0, j)),
+    decreases j - i,
 {
-    palindrome(qs) && sum_lesser_than_limit(qs, w)
+    if (i < j) {
+        assert(spec_sum(s.subrange(0, j - 1)) <= spec_sum(s.subrange(0, j))) by {
+            assert(s.subrange(0, j).drop_last() == s.subrange(0, j - 1));
+        }
+        lemma_increasing_sum_params(s, i, j - 1);
+    }
+}
+
+proof fn lemma_increasing_sum(s: Seq<u32>)
+    ensures
+        forall|i: int, j: int|
+            #![trigger spec_sum(s.subrange(0, i)), spec_sum(s.subrange(0, j))]
+            0 <= i <= j <= s.len() ==> spec_sum(s.subrange(0, i)) <= spec_sum(s.subrange(0, j)),
+{
+    assert forall|i: int, j: int|
+        #![trigger spec_sum(s.subrange(0, i)), spec_sum(s.subrange(0, j))]
+        0 <= i <= j <= s.len() ==> spec_sum(s.subrange(0, i)) <= spec_sum(s.subrange(0, j)) by {
+        if (0 <= i <= j <= s.len()) {
+            lemma_increasing_sum_params(s, i, j);
+        }
+    }
+}
+
+spec fn spec_sum(s: Seq<u32>) -> int {
+    s.fold_left(0, |x: int, y| x + y)
+}
+
+fn sum_lesser_than_limit(qs: &Vec<u32>, w: u32) -> (ret: bool)
+    ensures
+        ret <==> spec_sum(qs@) <= w,
+{
+    let mut sum: u32 = 0;
+    for i in 0..qs.len()
+        invariant
+            sum == spec_sum(qs@.subrange(0, i as int)),
+            i <= qs.len(),
+            sum <= w,
+    {
+        proof {
+            assert(spec_sum(qs@.subrange(0, i + 1)) <= spec_sum(qs@)) by {
+                assert(qs@ == qs@.subrange(0, qs@.len() as int));
+                lemma_increasing_sum(qs@);
+            }
+            assert(spec_sum(qs@.subrange(0, i as int)) + qs[i as int] == spec_sum(
+                qs@.subrange(0, i + 1),
+            )) by {
+                assert(qs@.subrange(0, i + 1).drop_last() == qs@.subrange(0, i as int));
+            }
+        }
+        let sum_opt = sum.checked_add(qs[i]);
+        if sum_opt.is_none() {
+            assert(spec_sum(qs@.subrange(0, i + 1)) > u32::MAX >= w);
+            return false;
+        } else {
+            sum = sum_opt.unwrap();
+            if sum > w {
+                assert(spec_sum(qs@.subrange(0, i + 1)) > w);
+                return false;
+            }
+        }
+    }
+    assume(sum == spec_sum(qs@));
+    true
 }
 
 fn palindrome(qs: &Vec<u32>) -> (ret: bool)
@@ -57,77 +123,11 @@ fn palindrome(qs: &Vec<u32>) -> (ret: bool)
     ret
 }
 
-fn sum_lesser_than_limit(qs: &Vec<u32>, w: u32) -> (ret: bool)
+fn will_it_fly(qs: &Vec<u32>, w: u32) -> (ret: bool)
     ensures
-        ret <==> spec_sum(qs@) <= w,
+        ret <==> qs@ =~= qs@.reverse() && spec_sum(qs@) <= w,
 {
-    let mut sum: u32 = 0;
-    for i in 0..qs.len()
-        invariant
-            sum == spec_sum(qs@.subrange(0, i as int)),
-            i <= qs.len(),
-            sum <= w,
-    {
-        proof {
-            assert(spec_sum(qs@.subrange(0, i + 1)) <= spec_sum(qs@)) by {
-                assert(qs@ == qs@.subrange(0, qs@.len() as int));
-                lemma_increasing_sum(qs@);
-            }
-            assert(spec_sum(qs@.subrange(0, i as int)) + qs[i as int] == spec_sum(
-                qs@.subrange(0, i + 1),
-            )) by {
-                assert(qs@.subrange(0, i + 1).drop_last() == qs@.subrange(0, i as int));
-            }
-        }
-        let sum_opt = sum.checked_add(qs[i]);
-        if sum_opt.is_none() {
-            assert(spec_sum(qs@.subrange(0, i + 1)) > u32::MAX >= w);
-            return false;
-        } else {
-            sum = sum_opt.unwrap();
-            if sum > w {
-                assert(spec_sum(qs@.subrange(0, i + 1)) > w);
-                return false;
-            }
-        }
-    }
-    assume(sum == spec_sum(qs@));
-    true
-}
-
-spec fn spec_sum(s: Seq<u32>) -> int {
-    s.fold_left(0, |x: int, y| x + y)
-}
-
-proof fn lemma_increasing_sum(s: Seq<u32>)
-    ensures
-        forall|i: int, j: int|
-            #![trigger spec_sum(s.subrange(0, i)), spec_sum(s.subrange(0, j))]
-            0 <= i <= j <= s.len() ==> spec_sum(s.subrange(0, i)) <= spec_sum(s.subrange(0, j)),
-{
-    assert forall|i: int, j: int|
-        #![trigger spec_sum(s.subrange(0, i)), spec_sum(s.subrange(0, j))]
-        0 <= i <= j <= s.len() ==> spec_sum(s.subrange(0, i)) <= spec_sum(s.subrange(0, j)) by {
-        if (0 <= i <= j <= s.len()) {
-            lemma_increasing_sum_params(s, i, j);
-        }
-    }
-}
-
-// i and j are ends of the subrange - exclusive
-proof fn lemma_increasing_sum_params(s: Seq<u32>, i: int, j: int)
-    requires
-        0 <= i <= j <= s.len(),
-    ensures
-        spec_sum(s.subrange(0, i)) <= spec_sum(s.subrange(0, j)),
-    decreases j - i,
-{
-    if (i < j) {
-        assert(spec_sum(s.subrange(0, j - 1)) <= spec_sum(s.subrange(0, j))) by {
-            assert(s.subrange(0, j).drop_last() == s.subrange(0, j - 1));
-        }
-        lemma_increasing_sum_params(s, i, j - 1);
-    }
+    palindrome(qs) && sum_lesser_than_limit(qs, w)
 }
 
 } // verus!
