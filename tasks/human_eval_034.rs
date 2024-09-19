@@ -8,6 +8,7 @@ HumanEval/34
 use vstd::calc;
 use vstd::prelude::*;
 use vstd::seq_lib::lemma_multiset_commutative;
+use vstd::seq_lib::lemma_seq_contains_after_push;
 
 verus! {
 
@@ -142,15 +143,16 @@ fn unique_sorted(s: Vec<i32>) -> (result: Vec<i32>)
         if result.len() == 0 || result[result.len() - 1] != s[i] {
             assert(result.len() == 0 || result[result.len() - 1] < s[i as int]);
             result.push(s[i]);
+            assert forall|m: int| #![trigger s[m]] 0 <= m < i implies result@.contains(s[m]) by {
+                assert(pre@.contains(s@[m]));
+                lemma_seq_contains_after_push(pre@, s@[i as int], s@[m]);
+            };
         }
         assert(forall|m: int|
             #![trigger result@[m], pre@[m]]
             0 <= m < pre.len() ==> pre@.contains(result@[m]) ==> result@.contains(pre@[m])) by {
             assert(forall|m: int| 0 <= m < pre.len() ==> result@[m] == pre@[m]);
         }
-        assert(forall|m: int|
-            #![trigger s@[m]]
-            0 <= m < i ==> pre@.contains(s[m]) && result@.contains(s[m]));
         assert(result@.contains(s[i as int])) by {
             assert(result[result.len() - 1] == s[i as int]);
         }
