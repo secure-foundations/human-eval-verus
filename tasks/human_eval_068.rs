@@ -12,17 +12,18 @@ verus! {
 fn pluck_smallest_even(nodes: &Vec<u32>) -> (result: Vec<u32>)
     requires
         nodes@.len() <= u32::MAX,
-        forall|i: int| 0 <= i < nodes@.len() ==> nodes@[i] >= 0,
     ensures
         result@.len() == 0 || result@.len() == 2,
-        result@.len() == 2 ==> 0 <= result@[1] < nodes@.len() && nodes@[result@[1] as int]
-            == result@[0],
-        result@.len() == 2 ==> result@[0] % 2 == 0,
-        result@.len() == 2 ==> forall|i: int|
-            0 <= i < nodes@.len() && nodes@[i] % 2 == 0 ==> result@[0] <= nodes@[i],
-        result@.len() == 2 ==> forall|i: int|
-            0 <= i < result@[1] ==> nodes@[i] % 2 != 0 || nodes@[i] > result@[0],
         result@.len() == 0 ==> forall|i: int| 0 <= i < nodes@.len() ==> nodes@[i] % 2 != 0,
+        result@.len() == 2 ==> {
+            let node = result@[0];
+            let index = result@[1];
+            0 <= index < nodes@.len() && nodes@[index as int] == node && node % 2 == 0 && forall|
+                i: int,
+            |
+                0 <= i < nodes@.len() && nodes@[i] % 2 == 0 ==> node <= nodes@[i] && forall|i: int|
+                    0 <= i < result@[1] ==> nodes@[i] % 2 != 0 || nodes@[i] > node
+        },
 {
     let mut smallest_even: Option<u32> = None;
     let mut smallest_index: Option<u32> = None;

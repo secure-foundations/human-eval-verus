@@ -68,38 +68,28 @@ fn check_substring(s: &str, sub: &str) -> (result: bool)
 
 fn filter_by_substring<'a>(strings: &Vec<&'a str>, substring: &str) -> (res: Vec<&'a str>)
     ensures
-        res@.len() <= strings@.len(),
-        forall|s: &str| res@.contains(s) ==> strings@.contains(s),
-        forall|s: &str|
-            res@.contains(s) ==> exists|i: int|
-                0 <= i <= s@.len() - substring@.len() && s@.subrange(
-                    i,
-                    #[trigger] (i + substring@.len()),
-                ) == substring@,
+        forall|i: int|
+            0 <= i < strings@.len() && (exists|j: int|
+                0 <= j <= strings@[i]@.len() - substring@.len() && strings[i]@.subrange(
+                    j,
+                    #[trigger] (j + substring@.len()),
+                ) == substring@) ==> res@.contains(#[trigger] (strings[i])),
 {
     let mut res = Vec::new();
-    let mut i: usize = 0;
-
-    for i in 0..strings.len()
+    for n in 0..strings.len()
         invariant
-            0 <= i && i <= strings@.len(),
-            res@.len() <= i,
-            forall|s: &str| res@.contains(s) ==> strings@.contains(s),
-            forall|s: &str|
-                res@.contains(s) ==> exists|i: int|
-                    0 <= i <= s@.len() - substring@.len() && s@.subrange(
-                        i,
-                        #[trigger] (i + substring@.len()),
-                    ) == substring@,
+            forall|i: int|
+                0 <= i < n && (exists|j: int|
+                    0 <= j <= strings@[i]@.len() - substring@.len() && strings[i]@.subrange(
+                        j,
+                        #[trigger] (j + substring@.len()),
+                    ) == substring@) ==> res@.contains(#[trigger] (strings[i])),
     {
-        if check_substring(strings[i], substring) {
+        if check_substring(strings[n], substring) {
             let ghost res_old = res;
-            res.push(strings[i]);
-
-            assert(res@.last() == strings[i as int]);
+            res.push(strings[n]);
+            assert(res@.last() == strings[n as int]);
             assert(res@.drop_last() == res_old@);
-            assert(forall|s: &str|
-                res@.contains(s) <==> res_old@.contains(s) || s == strings[i as int]);
         }
     }
     res
