@@ -9,7 +9,46 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+spec fn spec_prime_helper(num: int, limit: int) -> bool {
+    forall|j: int| 2 <= j < limit ==> (#[trigger] (num % j)) != 0
+}
+
+spec fn spec_prime(num: int) -> bool {
+    num >= 2 && spec_prime_helper(num, num)
+}
+
+fn is_prime(num: u32) -> (result: bool)
+    requires
+        num >= 2,
+    ensures
+        result <==> spec_prime(num as int),
+{
+    let mut i = 2;
+    let mut result = true;
+    while i < num
+        invariant
+            2 <= i <= num,
+            result <==> spec_prime_helper(num as int, i as int),
+    {
+        if num % i == 0 {
+            result = false;
+        }
+        i += 1;
+    }
+    result
+}
+
+fn x_or_y(n: u32, x: i32, y: i32) -> (result: i32)
+    ensures
+        spec_prime(n as int) ==> result == x,
+        !spec_prime(n as int) ==> result == y,
+{
+    if n >= 2 && is_prime(n) {
+        x
+    } else {
+        y
+    }
+}
 
 } // verus!
 fn main() {}
