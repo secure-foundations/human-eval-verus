@@ -9,7 +9,55 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+spec fn abs_spec(x: int) -> int
+    recommends
+        x >= i32::MIN,
+{
+    if x < 0 {
+        -x
+    } else {
+        x
+    }
+}
+
+fn abs(x: i32) -> (r: i32)
+    requires
+        x != i32::MIN,
+    ensures
+        r == x || r == -x,
+        r >= 0,
+        r == abs_spec(x as int),
+{
+    if x < 0 {
+        -x
+    } else {
+        x
+    }
+}
+
+#[verifier::loop_isolation(false)]
+fn compare(scores: &[i32], guesses: &[i32]) -> (result: Vec<i32>)
+    requires
+        scores.len() == guesses.len(),
+        forall|i: int| 0 <= i < scores.len() ==> scores[i] - guesses[i] > i32::MIN,
+        forall|i: int| 0 <= i < scores.len() ==> scores[i] - guesses[i] <= i32::MAX,
+    ensures
+        result.len() == scores.len(),
+        forall|i: int|
+            #![auto]
+            0 <= i < result.len() ==> result[i] == abs_spec(scores[i] - guesses[i]),
+{
+    let mut result = Vec::with_capacity(scores.len());
+    let mut i = 0;
+    for i in 0..scores.len()
+        invariant
+            result.len() == i,
+            forall|j: int| #![auto] 0 <= j < i ==> result[j] == abs_spec(scores[j] - guesses[j]),
+    {
+        result.push(abs(scores[i] - guesses[i]));
+    }
+    result
+}
 
 } // verus!
 fn main() {}
