@@ -9,7 +9,20 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+pub fn eat(number: u32, need: u32, remaining: u32) -> (result: [u32; 2])
+    requires
+        number + remaining <= u32::MAX,
+        number + need <= u32::MAX,
+    ensures
+        remaining >= need ==> result[0] == number + need && result[1] == remaining - need,
+        remaining < need ==> result[0] == number + remaining && result[1] == 0,
+{
+    if remaining < need {
+        [number + remaining, 0]
+    } else {
+        [number + need, remaining - need]
+    }
+}
 
 } // verus!
 fn main() {}
