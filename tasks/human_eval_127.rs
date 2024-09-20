@@ -9,7 +9,106 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+spec fn spec_min(a: int, b: int) -> int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+fn min(a: i32, b: i32) -> (m: i32)
+    ensures
+        m == a || m == b,
+        m <= a && m <= b,
+        m == spec_min(a as int, b as int),
+{
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+spec fn spec_max(a: int, b: int) -> int {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+fn max(a: i32, b: i32) -> (m: i32)
+    ensures
+        m == a || m == b,
+        m >= a && m >= b,
+        m == spec_max(a as int, b as int),
+{
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+spec fn spec_prime_helper(num: int, limit: int) -> bool {
+    forall|j: int| 2 <= j < limit ==> (#[trigger] (num % j)) != 0
+}
+
+spec fn spec_prime(num: int) -> bool {
+    num >= 2 && spec_prime_helper(num, num)
+}
+
+fn is_prime_2(num: u32) -> (result: bool)
+    requires
+        num >= 2,
+    ensures
+        result <==> spec_prime(num as int),
+{
+    let mut i = 2;
+    let mut result = true;
+    while i < num
+        invariant
+            2 <= i <= num,
+            result <==> spec_prime_helper(num as int, i as int),
+    {
+        if num % i == 0 {
+            result = false;
+        }
+        i += 1;
+    }
+    result
+}
+
+fn is_prime(num: i32) -> (is: bool)
+    requires
+        num >= 0,
+    ensures
+        is <==> (num >= 2 && spec_prime(num as int)),
+{
+    num >= 2 && is_prime_2(num as u32)
+}
+
+fn intersection(a: (i32, i32), b: (i32, i32)) -> (result: &'static str)
+    requires
+        a.0 <= a.1 && b.0 <= b.1,
+        a.1 - a.0 + 1 <= i32::MAX && b.1 - b.0 + 1 <= i32::MAX,
+    ensures
+        result == "YES" || result == "NO",
+        result == "YES" <==> ((spec_max(a.0 as int, b.0 as int) <= spec_min(a.1 as int, b.1 as int))
+            && spec_prime(
+            (spec_min(a.1 as int, b.1 as int) - spec_max(a.0 as int, b.0 as int) + 1) as int,
+        )),
+{
+    let sect_start = max(a.0, b.0);
+    let sect_end = min(a.1, b.1);
+
+    if sect_start < sect_end && is_prime(sect_end - sect_start + 1) {
+        "YES"
+    } else {
+        "NO"
+    }
+}
 
 } // verus!
 fn main() {}
