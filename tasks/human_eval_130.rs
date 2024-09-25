@@ -10,7 +10,6 @@ use vstd::prelude::*;
 verus! {
 
 spec fn spec_tri(n: nat) -> nat
-    by (nonlinear_arith)
     decreases
             if n % 2 == 0 {
                 0
@@ -28,7 +27,6 @@ spec fn spec_tri(n: nat) -> nat
 }
 
 fn checked_add_three(a: Option<u32>, b: Option<u32>, c: Option<u32>) -> (r: Option<u32>)
-    by (nonlinear_arith)
     ensures
         r.is_some() && a.is_some() && b.is_some() && c.is_some() ==> r.unwrap() == a.unwrap()
             + b.unwrap() + c.unwrap(),
@@ -39,7 +37,6 @@ fn checked_add_three(a: Option<u32>, b: Option<u32>, c: Option<u32>) -> (r: Opti
 
 #[verifier::loop_isolation(false)]
 fn tri(n: u32) -> (result: Vec<Option<u32>>)
-    by (nonlinear_arith)
     requires
         n + 1 <= u32::MAX,
     ensures

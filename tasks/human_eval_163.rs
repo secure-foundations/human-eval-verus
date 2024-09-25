@@ -5,14 +5,14 @@ HumanEval/163
 /*
 ### VERUS BEGIN
 */
+use vstd::math::{max as vmax, min as vmin};
 use vstd::prelude::*;
 
 verus! {
 
 fn min(a: u32, b: u32) -> (m: u32)
     ensures
-        m == a || m == b,
-        m <= a && m <= b,
+        m == vmin(a as int, b as int),
 {
     if a < b {
         a
@@ -23,8 +23,7 @@ fn min(a: u32, b: u32) -> (m: u32)
 
 fn max(a: u32, b: u32) -> (m: u32)
     ensures
-        m == a || m == b,
-        m >= a && m >= b,
+        m == vmax(a as int, b as int),
 {
     if a > b {
         a
@@ -42,7 +41,8 @@ fn generate_integers(a: u32, b: u32) -> (result: Vec<u32>)
                 || result[i] == 8),
         forall|i: int, j: int| 0 <= i < j < result.len() ==> result[i] <= result[j],
         forall|x: int|
-            a <= x <= b && 2 <= x <= 8 && x % 2 == 0 ==> #[trigger] result@.contains(x as u32),
+            vmin(a as int, b as int) <= x <= vmax(a as int, b as int) && 2 <= x <= 8 && x % 2 == 0
+                ==> #[trigger] result@.contains(x as u32),
 {
     let left = min(a, b);
     let right = max(a, b);

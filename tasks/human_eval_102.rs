@@ -11,12 +11,13 @@ verus! {
 
 fn choose_num(x: u32, y: u32) -> (ret: i32)
     requires
-        x >= 0 && y >= 0,
         x <= i32::MAX && y <= i32::MAX,
     ensures
-        ret != -1 ==> (ret >= x && ret <= y),
-        ret != -1 ==> ret % 2 == 0,
-        ret != -1 ==> (forall|i: int| #![trigger i % 2] (x <= i <= y && i % 2 == 0) ==> i <= ret),
+        ret != -1 ==> {
+            x <= ret <= y && ret % 2 == 0 && (forall|i: int|
+                #![trigger i % 2]
+                (x <= i <= y && i % 2 == 0) ==> i <= ret)
+        },
         (ret == -1) <==> forall|i: int| #![trigger i % 2] x <= i <= y ==> i % 2 == 1,
 {
     if x > y || (x == y && y % 2 == 1) {

@@ -13,14 +13,14 @@ verus! {
 broadcast use group_set_axioms;
 
 spec fn spec_is_upper_vowel(c: char) -> bool {
-    c == 'A' || c == 'E' || c == 'U' || c == 'I' || c == 'O'
+    c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U'
 }
 
 fn is_upper_vowel(c: char) -> (is: bool)
     ensures
         is <==> spec_is_upper_vowel(c),
 {
-    c == 'A' || c == 'E' || c == 'U' || c == 'I' || c == 'O'
+    c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U'
 }
 
 #[verifier::loop_isolation(false)]

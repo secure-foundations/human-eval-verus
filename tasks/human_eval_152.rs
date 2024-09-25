@@ -5,28 +5,16 @@ HumanEval/152
 /*
 ### VERUS BEGIN
 */
+use vstd::math::abs as vabs;
 use vstd::prelude::*;
 
 verus! {
 
-spec fn abs_spec(x: int) -> int
-    recommends
-        x >= i32::MIN,
-{
-    if x < 0 {
-        -x
-    } else {
-        x
-    }
-}
-
-fn abs(x: i32) -> (r: i32)
+fn abs(x: i64) -> (r: i64)
     requires
-        x != i32::MIN,
+        x != i64::MIN,
     ensures
-        r == x || r == -x,
-        r >= 0,
-        r == abs_spec(x as int),
+        r == vabs(x as int),
 {
     if x < 0 {
         -x
@@ -36,25 +24,21 @@ fn abs(x: i32) -> (r: i32)
 }
 
 #[verifier::loop_isolation(false)]
-fn compare(scores: &[i32], guesses: &[i32]) -> (result: Vec<i32>)
+fn compare(scores: &[i32], guesses: &[i32]) -> (result: Vec<i64>)
     requires
         scores.len() == guesses.len(),
-        forall|i: int| 0 <= i < scores.len() ==> scores[i] - guesses[i] > i32::MIN,
-        forall|i: int| 0 <= i < scores.len() ==> scores[i] - guesses[i] <= i32::MAX,
     ensures
         result.len() == scores.len(),
-        forall|i: int|
-            #![auto]
-            0 <= i < result.len() ==> result[i] == abs_spec(scores[i] - guesses[i]),
+        forall|i: int| #![auto] 0 <= i < result.len() ==> result[i] == vabs(scores[i] - guesses[i]),
 {
     let mut result = Vec::with_capacity(scores.len());
     let mut i = 0;
     for i in 0..scores.len()
         invariant
             result.len() == i,
-            forall|j: int| #![auto] 0 <= j < i ==> result[j] == abs_spec(scores[j] - guesses[j]),
+            forall|j: int| #![auto] 0 <= j < i ==> result[j] == vabs(scores[j] - guesses[j]),
     {
-        result.push(abs(scores[i] - guesses[i]));
+        result.push(abs(scores[i] as i64 - guesses[i] as i64));
     }
     result
 }
