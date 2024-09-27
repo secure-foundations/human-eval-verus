@@ -9,11 +9,13 @@ use vstd::prelude::*;
 
 verus! {
 
-spec fn is_divisible(n: int, divisor: int) -> bool {
+pub open spec fn is_divisible(n: int, divisor: int) -> bool {
     (n % divisor) == 0
 }
 
-fn prime_length(str: &Vec<char>) -> (result: bool)
+// Implementation following the ground-truth
+// This function determines if a given string length is prime or not
+fn prime_length(str: &[char]) -> (result: bool)
     ensures
         result == if str.len() < 2 {
             false
