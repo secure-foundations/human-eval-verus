@@ -9,8 +9,9 @@ use vstd::prelude::*;
 
 verus! {
 
-pub closed spec fn concat_helper(strings: Seq<Seq<char>>, i: nat) -> Seq<char> 
-    recommends 0 <= i <= strings.len(),
+pub closed spec fn concat_helper(strings: Seq<Seq<char>>, i: nat) -> Seq<char>
+    recommends
+        0 <= i <= strings.len(),
     decreases strings.len() - i,
 {
     if (i >= strings.len()) {
@@ -27,23 +28,35 @@ pub open spec fn concatenate(strings: Seq<Seq<char>>) -> Seq<char> {
 proof fn sanity_check() {
     assert(concatenate(seq![seq!['a'], seq!['b'], seq!['c']]) == seq!['a', 'b', 'c']) by (compute);
     assert(concatenate(Seq::empty()) == Seq::<char>::empty());
-    assert(concatenate(seq![seq!['a', 'z'], seq!['b'], seq!['c', 'y']]) == seq!['a', 'z', 'b', 'c', 'y']) by (compute);
+    assert(concatenate(seq![seq!['a', 'z'], seq!['b'], seq!['c', 'y']]) == seq![
+        'a',
+        'z',
+        'b',
+        'c',
+        'y',
+    ]) by (compute);
 }
 
-fn concatenate_impl(strings: Vec<Vec<char>>) -> (joined: Vec<char>) 
+fn concatenate_impl(strings: Vec<Vec<char>>) -> (joined: Vec<char>)
     ensures
-        joined@ == concatenate(strings.deep_view())
+        joined@ == concatenate(strings.deep_view()),
 {
-    let mut i = 0; 
+    let mut i = 0;
     let mut joined = vec![];
 
-    while (i < strings.len()) 
+    while (i < strings.len())
         invariant
             0 <= i <= strings.len(),
-            concatenate(strings.deep_view()) == joined@ + concat_helper(strings.deep_view(), i as nat)
+            concatenate(strings.deep_view()) == joined@ + concat_helper(
+                strings.deep_view(),
+                i as nat,
+            ),
     {
-        assert (concatenate(strings.deep_view()) == joined@ + strings[i as int]@ + concat_helper(strings.deep_view(), (i + 1) as nat));
-        
+        assert(concatenate(strings.deep_view()) == joined@ + strings[i as int]@ + concat_helper(
+            strings.deep_view(),
+            (i + 1) as nat,
+        ));
+
         let mut copy_str = strings[i].clone();
         joined.append(&mut copy_str);
         i = i + 1;
