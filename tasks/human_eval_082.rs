@@ -9,7 +9,33 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+spec fn is_divisible(n: int, divisor: int) -> bool {
+    (n % divisor) == 0
+}
+
+fn prime_length(str: &Vec<char>) -> (result: bool)
+    ensures
+        result == if str.len() < 2 {
+            false
+        } else {
+            (forall|k: int| 2 <= k < str.len() ==> !is_divisible(str.len() as int, k))
+        },
+{
+    if str.len() < 2 {
+        return false;
+    }
+    for index in 2..str.len()
+        invariant
+            2 <= index <= str.len(),
+            forall|k: int| 2 <= k < index ==> !is_divisible(str.len() as int, k),
+    {
+        if ((str.len() % index) == 0) {
+            assert(is_divisible(str.len() as int, index as int));
+            return false;
+        }
+    }
+    true
+}
 
 } // verus!
 fn main() {}
