@@ -13,15 +13,19 @@ pub open spec fn is_divisible(n: int, divisor: int) -> bool {
     (n % divisor) == 0
 }
 
+pub open spec fn is_prime(n: int) -> bool {
+    if n < 2 {
+        false
+    } else {
+        (forall|k: int| 2 <= k < n ==> !is_divisible(n as int, k))
+    }
+}
+
 // Implementation following the ground-truth
-// This function determines if a given string length is prime or not
+// This function checks whether a given string length is prime
 fn prime_length(str: &[char]) -> (result: bool)
     ensures
-        result == if str.len() < 2 {
-            false
-        } else {
-            (forall|k: int| 2 <= k < str.len() ==> !is_divisible(str.len() as int, k))
-        },
+        result == is_prime(str.len() as int),
 {
     if str.len() < 2 {
         return false;
