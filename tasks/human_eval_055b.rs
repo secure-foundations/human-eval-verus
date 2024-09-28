@@ -10,7 +10,6 @@ use vstd::prelude::*;
 verus! {
 
 // O(n) non-recursive solution using same spec as 55a
-
 #[verifier::memoize]
 spec fn spec_fib(n: nat) -> nat
     decreases n,
@@ -24,9 +23,9 @@ spec fn spec_fib(n: nat) -> nat
     }
 }
 
-proof fn lemma_fib_monotonic(i:nat, j:nat)
+proof fn lemma_fib_monotonic(i: nat, j: nat)
     requires
-        i <= j
+        i <= j,
     ensures
         spec_fib(i) <= spec_fib(j),
     decreases j - i,
@@ -45,7 +44,7 @@ fn fib(n: u32) -> (ret: Option<u32>)
     ensures
         match ret {
             None => spec_fib(n as nat) > u32::MAX,
-            Some(f) => f == spec_fib(n as nat)
+            Some(f) => f == spec_fib(n as nat),
         },
 {
     if n == 0 {

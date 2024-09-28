@@ -39,10 +39,13 @@ fn sum_product(numbers: Vec<u32>) -> (result: (u64, Option<u32>))
     ensures
         result.0 == sum(numbers@),
         match result.1 {
-            None => // Computing the product overflowed at some point
-                exists |i| #![auto] 0 <= i < numbers.len() && product(numbers@.subrange(0, i)) * numbers[i] as int > u32::MAX,
+            None =>   // Computing the product overflowed at some point
+            exists|i|
+                #![auto]
+                0 <= i < numbers.len() && product(numbers@.subrange(0, i)) * numbers[i] as int
+                    > u32::MAX,
             Some(v) => v == product(numbers@),
-        }
+        },
 {
     let mut sum_value: u64 = 0;
     let mut prod_value: Option<u32> = Some(1);
@@ -52,8 +55,11 @@ fn sum_product(numbers: Vec<u32>) -> (result: (u64, Option<u32>))
             sum_value == sum(numbers@.take(index as int)),
             prod_value matches Some(v) ==> v == product(numbers@.take(index as int)),
             match prod_value {
-                None => // Computing the product overflowed at some point
-                    exists |i| #![auto] 0 <= i < index && product(numbers@.subrange(0, i)) * numbers[i] as int > u32::MAX,
+                None =>   // Computing the product overflowed at some point
+                exists|i|
+                    #![auto]
+                    0 <= i < index && product(numbers@.subrange(0, i)) * numbers[i] as int
+                        > u32::MAX,
                 Some(v) => v == product(numbers@.take(index as int)),
             },
             index <= numbers.len(),

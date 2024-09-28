@@ -19,9 +19,9 @@ spec fn spec_sum_to_n(n: nat) -> nat
     }
 }
 
-proof fn lemma_sum_monotonic(i:nat, j:nat)
+proof fn lemma_sum_monotonic(i: nat, j: nat)
     requires
-        i <= j
+        i <= j,
     ensures
         spec_sum_to_n(i) <= spec_sum_to_n(j),
     decreases j - i,
@@ -38,7 +38,7 @@ fn sum_to_n(n: u32) -> (sum: Option<u32>)
     ensures
         match sum {
             None => spec_sum_to_n(n as nat) > u32::MAX,
-            Some(f) => f == spec_sum_to_n(n as nat)
+            Some(f) => f == spec_sum_to_n(n as nat),
         },
 {
     if n >= 92682 {

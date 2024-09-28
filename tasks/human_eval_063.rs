@@ -24,9 +24,9 @@ spec fn spec_fibfib(n: nat) -> nat
     }
 }
 
-proof fn lemma_fibfib_monotonic(i:nat, j:nat)
+proof fn lemma_fibfib_monotonic(i: nat, j: nat)
     requires
-        i <= j
+        i <= j,
     ensures
         spec_fibfib(i) <= spec_fibfib(j),
     decreases j - i,
@@ -50,7 +50,7 @@ fn fibfib(x: u32) -> (ret: Option<u32>)
     ensures
         match ret {
             None => spec_fibfib(x as nat) > u32::MAX,
-            Some(f) => f == spec_fibfib(x as nat)
+            Some(f) => f == spec_fibfib(x as nat),
         },
 {
     if x > 39 {
@@ -75,7 +75,7 @@ fn fibfib(x: u32) -> (ret: Option<u32>)
                 lemma_fibfib_monotonic((x - 3) as nat, 39);
             }
             Some(fibfib(x - 1)? + fibfib(x - 2)? + fibfib(x - 3)?)
-        }
+        },
     }
 }
 

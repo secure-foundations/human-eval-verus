@@ -14,12 +14,10 @@ fn derivative(xs: &Vec<u32>) -> (ret: Vec<u64>)
         xs.len() <= u32::MAX,
     ensures
         if xs.len() == 0 {
-            ret.len() == 0 
+            ret.len() == 0
         } else {
-            ret@.map_values(|x| x as int) 
-            =~= 
-            xs@.map(|i: int, x| i * x).skip(1)
-        }
+            ret@.map_values(|x| x as int) =~= xs@.map(|i: int, x| i * x).skip(1)
+        },
 {
     let mut ret = Vec::new();
     if xs.len() == 0 {
@@ -33,7 +31,12 @@ fn derivative(xs: &Vec<u32>) -> (ret: Vec<u64>)
     {
         proof {
             // Prove that the multiplication does not overflow
-            vstd::arithmetic::mul::lemma_mul_upper_bound(xs[i as int] as int, u32::MAX as int, i as int, u32::MAX as int);
+            vstd::arithmetic::mul::lemma_mul_upper_bound(
+                xs[i as int] as int,
+                u32::MAX as int,
+                i as int,
+                u32::MAX as int,
+            );
             assert(u32::MAX * u32::MAX <= u64::MAX);
             assert((i as u64) * (xs[i as int] as u64) == i as int * xs[i as int]);
         }
