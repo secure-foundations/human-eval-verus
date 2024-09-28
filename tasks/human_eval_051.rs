@@ -9,13 +9,13 @@ use vstd::prelude::*;
 
 verus! {
 
-// This spec function checks whether a character is vowel
+// This spec function checks whether a character is a vowel
 pub open spec fn is_vowel_spec(c: char) -> bool {
     c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' || c == 'A' || c == 'E' || c == 'I'
         || c == 'O' || c == 'U'
 }
 
-// This auxilary exe function checks whether a character is vowel
+// This auxilary exec function checks whether a character is a vowel
 fn is_vowel(c: char) -> (is_vowel: bool)
     ensures
         is_vowel == is_vowel_spec(c),
