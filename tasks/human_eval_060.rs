@@ -19,21 +19,52 @@ spec fn spec_sum_to_n(n: nat) -> nat
     }
 }
 
+proof fn lemma_sum_monotonic(i:nat, j:nat)
+    requires
+        i <= j
+    ensures
+        spec_sum_to_n(i) <= spec_sum_to_n(j),
+    decreases j - i,
+{
+    if (i == 0 && j == 0) || i == j {
+    } else if i == j - 1 {
+        lemma_sum_monotonic(i, (j - 1) as nat);
+    } else {
+        lemma_sum_monotonic(i, (j - 1) as nat);
+    }
+}
+
 fn sum_to_n(n: u32) -> (sum: Option<u32>)
     ensures
-        sum.is_some() ==> sum.unwrap() == spec_sum_to_n(n as nat),
+        match sum {
+            None => spec_sum_to_n(n as nat) > u32::MAX,
+            Some(f) => f == spec_sum_to_n(n as nat)
+        },
 {
+    if n >= 92682 {
+        proof {
+            assert(spec_sum_to_n(92682) > u32::MAX) by (compute_only);
+            lemma_sum_monotonic(92682, n as nat);
+        }
+        return None;
+    }
     let mut res: u32 = 0;
     let mut sum: u32 = 0;
     let mut i: u32 = 0;
     while i < n
         invariant
-            i <= n,
+            i <= n < 92682,
             res == spec_sum_to_n(i as nat),
             res <= u32::MAX,
     {
         i += 1;
-        res = i.checked_add(res)?;
+        proof {
+            // Prove that that n1 + n2 won't overflow
+            assert(spec_sum_to_n(92681) < u32::MAX) by (compute_only);
+            lemma_sum_monotonic(i as nat, 92681);
+            lemma_sum_monotonic((i - 1) as nat, 92681);
+        }
+        res = i + res;
     }
     Some(res)
 }
