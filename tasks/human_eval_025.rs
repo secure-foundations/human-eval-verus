@@ -20,9 +20,9 @@ pub closed spec fn is_prime(n: nat) -> bool {
 // canonical definition of prime factoriztion
 pub closed spec fn is_prime_factorization(n: nat, factorization: Seq<nat>) -> bool {
     // all factors are prime
-    &&& forall|i: nat|
+    &&& forall|i: int|
         0 <= i < factorization.len() ==> #[trigger] is_prime(
-            factorization[i as int] as nat,
+            factorization[i] as nat,
         )
     // product of factors is n
     &&& factorization.fold_right(|x: nat, acc: nat| (acc * x as nat), 1nat)
@@ -107,14 +107,14 @@ proof fn lemma_fold_right_pull_out_hybrid(seq: Seq<u8>, k: nat)
 
 proof fn lemma_unfold_right_fold(factors: Seq<u8>, old_factors: Seq<u8>, k: u8, m: u8)
     requires
-        old_factors + seq![m as u8] == factors,
+        old_factors.push(m) == factors,
         k % m == 0,
         m != 0,
     ensures
         factors.fold_right(|x, acc: nat| (acc * x) as nat, ((k / m) as nat))
             == old_factors.fold_right(|x, acc: nat| (acc * x) as nat, ((k as nat))),
 {
-    assert((old_factors + seq![m as u8]).drop_last() == old_factors);
+    assert((old_factors.push(m)).drop_last() == old_factors);
     assert(((k as int) / (m as int)) * (m as int) + (k as int) % (m as int) == (k as int)) by {
         lemma_fundamental_div_mod(k as int, m as int)
     };
@@ -122,7 +122,7 @@ proof fn lemma_unfold_right_fold(factors: Seq<u8>, old_factors: Seq<u8>, k: u8, 
 
 proof fn lemma_unfold_right_fold_new(factors: Seq<u8>, old_factors: Seq<u8>, m: u8)
     requires
-        old_factors + seq![m as u8] == factors,
+        old_factors.push(m as u8) == factors,
         m != 0,
     ensures
         factors.fold_right(|x, acc: nat| (acc * x) as nat, 1nat) == old_factors.fold_right(
@@ -130,7 +130,7 @@ proof fn lemma_unfold_right_fold_new(factors: Seq<u8>, old_factors: Seq<u8>, m: 
             1nat,
         ) * (m as nat),
 {
-    assert((old_factors + seq![m as u8]).drop_last() == old_factors);
+    assert((old_factors.push(m as u8)).drop_last() == old_factors);
     assert(factors.fold_right(|x, acc: nat| (acc * x) as nat, 1nat) == old_factors.fold_right(
         |x, acc: nat| (acc * x) as nat,
         1,
@@ -333,7 +333,7 @@ pub fn factorize(n: u8) -> (factorization: Vec<u8>)
             let l = factorization.len();
             factorization.insert(l, m);
 
-            assert(old_factors@ + seq![m] == factorization@);
+            assert(old_factors@.push(m) == factorization@);
 
             assert(factorization@.fold_right(|x, acc: nat| (acc * x) as nat, 1nat) == ((m as nat)
                 * (n as nat / (k as nat))) as nat) by {
