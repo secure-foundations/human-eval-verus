@@ -34,6 +34,20 @@ proof fn lemma_sum_monotonic(i: nat, j: nat)
     }
 }
 
+proof fn lemma_sum_to_n_closed_form(n: nat)
+    ensures
+        spec_sum_to_n(n) == (n * (n + 1)) / 2,
+    decreases n,
+{
+    if n == 0 {
+    } else {
+        assert(spec_sum_to_n((n - 1) as nat) == ((n - 1) * n) / 2) by {
+            lemma_sum_to_n_closed_form((n - 1) as nat);
+        }
+        assert(n + (((n - 1) * n) / 2) == (n * (n + 1)) / 2) by (nonlinear_arith);
+    }
+}
+
 fn sum_to_n(n: u32) -> (sum: Option<u32>)
     ensures
         match sum {
@@ -43,7 +57,7 @@ fn sum_to_n(n: u32) -> (sum: Option<u32>)
 {
     if n >= 92682 {
         proof {
-            assert(spec_sum_to_n(92682) > u32::MAX) by (compute_only);
+            lemma_sum_to_n_closed_form(92682);
             lemma_sum_monotonic(92682, n as nat);
         }
         return None;
@@ -60,7 +74,7 @@ fn sum_to_n(n: u32) -> (sum: Option<u32>)
         i += 1;
         proof {
             // Prove that that n1 + n2 won't overflow
-            assert(spec_sum_to_n(92681) < u32::MAX) by (compute_only);
+            lemma_sum_to_n_closed_form(92681);
             lemma_sum_monotonic(i as nat, 92681);
             lemma_sum_monotonic((i - 1) as nat, 92681);
         }
