@@ -29,8 +29,8 @@ pub closed spec fn is_prime_factorization(n: nat, factorization: Seq<nat>) -> bo
         == n
     // factors are listed in ascending order
     &&& forall|i: nat, j: nat|
-        (#[trigger] (1 + i - i + j - j) < i <= j < factorization.len()) ==> (factorization[i as int]
-            <= factorization[j as int])
+        (1 < i <= j < factorization.len()) ==> (#[trigger] factorization[i as int]
+            <= #[trigger] factorization[j as int])
 }
 
 // these two pull out lemmas are the same except for types
@@ -301,18 +301,18 @@ proof fn lemma_fold_right_equivalent_for_nat_u8(factorization: Seq<u8>)
 
 pub fn factorize(n: u8) -> (factorization: Vec<u8>)
     requires
-        1 < n < 255,
+        1 <= n <= 255,
     ensures
         is_prime_factorization(n as nat, factorization@.map(|_idx, j: u8| j as nat)),
 {
     let mut factorization = vec![];
     let mut k = n;
-    let mut m = 2;
+    let mut m = 2u16;
     let ghost n_nat = n as nat;
-    while (m <= n)
+    while (m <= n as u16)
         invariant
             1 < m < n + 2,
-            n < 255,
+            n <= 255,
             0 < k <= n,
             forall|j: u8| 1 < j < m ==> #[trigger] (k % j) != 0,
             factorization@.fold_right(|x: u8, acc: nat| (acc * x) as nat, 1nat) == n as nat / (
@@ -324,38 +324,38 @@ pub fn factorize(n: u8) -> (factorization: Vec<u8>)
             forall|i: int| 0 <= i < factorization.len() ==> factorization[i] > 0,
             n % k == 0,
             forall|i: nat, j: nat|
-                (#[trigger] (1 + i - i + j - j) < i <= j < factorization.len()) ==> ((
-                factorization[i as int] as nat) <= (factorization[j as int] as nat) <= m),
+                (1 < i <= j < factorization.len()) ==> ((#[trigger] factorization[i as int] as nat)
+                    <= (#[trigger] factorization[j as int] as nat) <= m),
     {
-        if (k % m == 0) {
+        if (k as u16 % m == 0) {
             assert(is_prime(m as nat)) by { lemma_first_divisor_is_prime(k as nat, m as nat) };
             let ghost old_factors = factorization;
             let l = factorization.len();
-            factorization.insert(l, m);
+            factorization.insert(l, m as u8);
 
-            assert(old_factors@.push(m) == factorization@);
+            assert(old_factors@.push(m as u8) == factorization@);
 
             assert(factorization@.fold_right(|x, acc: nat| (acc * x) as nat, 1nat) == ((m as nat)
                 * (n as nat / (k as nat))) as nat) by {
                 lemma_unfold_right_fold_new(factorization@, old_factors@, m as u8)
             };
 
-            assert(n % (k / m) == 0) by {
+            assert(n % (k / m as u8) == 0) by {
                 lemma_multiple_mod_is_zero(m as int, n as int, k as int);
             };
 
             assert(factorization@.fold_right(|x, acc: nat| (acc * x) as nat, 1nat) == ((n as nat / (
-            (k / m) as nat))) as nat) by {
+            (k / m as u8) as nat))) as nat) by {
                 lemma_multiple_mod_is_zero_new(m as int, n as int, k as int)
             };
 
-            assert forall|j: u8| (1 < j < m && (k % j != 0)) implies #[trigger] ((k / m) % j)
+            assert forall|j: u8| (1 < j < m && (k % j != 0)) implies #[trigger] ((k / m as u8) % j)
                 != 0 by { lemma_factor_mod_is_zero(k as int, m as int, j as int) };
             assert((k as int) == ((k as int) / (m as int)) * (m as int)) by {
                 lemma_fundamental_div_mod(k as int, m as int)
             };
 
-            k = k / m;
+            k = k / m as u8;
         } else {
             m = m + 1;
         }
@@ -365,6 +365,7 @@ pub fn factorize(n: u8) -> (factorization: Vec<u8>)
                 assert (k % k == 0);
             });
     }
+
     assert(factorization@.map(|_idx, j: u8| j as nat).fold_right(
         |x: nat, acc: nat| (acc * x as nat),
         1nat,
