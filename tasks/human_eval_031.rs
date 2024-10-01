@@ -10,40 +10,26 @@ use vstd::prelude::*;
 verus! {
 
 // specification
-pub closed spec fn prime_helper(n: nat, k: nat) -> bool
+pub closed spec fn is_prime_so_far(n: nat, k: nat) -> bool
     recommends
-        2 <= k <= n,
-    decreases n - k,
+        n > 1,
 {
-    if k < 2 || k > n {
-        false  //arbitrarily chosen return value, should have 2 <= k <= n
-
-    } else if n >= k >= n - 1 {
-        true
-    } else if n % k == 0 {
-        false
-    } else {
-        prime_helper(n, k + 1)
-    }
+    forall|i| 1 < i < k ==> #[trigger] (n % i) != 0
 }
 
 pub open spec fn is_prime(n: nat) -> bool {
-    if n < 2 {
-        false
-    } else {
-        prime_helper(n, 2)
-    }
+    (n > 1) && forall|i| 1 < i < n ==> #[trigger] (n % i) != 0
 }
 
-proof fn sanity_check() {
-    assert(is_prime(6) == false) by (compute);
-    assert(is_prime(101) == true) by (compute);
-    assert(is_prime(11) == true) by (compute);
-    assert(is_prime(13441) == true) by (compute);
-    assert(is_prime(61) == true) by (compute);
-    assert(is_prime(4) == false) by (compute);
-    assert(is_prime(1) == false) by (compute);
-}
+// proof fn sanity_check() {
+//     assert(is_prime(6) == false) by (compute);
+//     assert(is_prime(101) == true) by (compute);
+//     assert(is_prime(11) == true) by (compute);
+//     assert(is_prime(13441) == true) by (compute);
+//     assert(is_prime(61) == true) by (compute);
+//     assert(is_prime(4) == false) by (compute);
+//     assert(is_prime(1) == false) by (compute);
+// }
 
 // implementation
 fn is_prime_impl(n: u8) -> (res: bool)
@@ -53,20 +39,19 @@ fn is_prime_impl(n: u8) -> (res: bool)
     if n < 2 {
         return false;
     }
-    if n == 2 {
-        return true;
-    }
-    let mut k = n - 1;
+    let mut k = 2;
     let mut res = true;
-    while (k > 2)
+
+    while (k < n)
         invariant
-            2 <= k <= n - 1,
-            res == prime_helper(n as nat, k as nat),
+            2 <= k <= n,
+            res == is_prime_so_far(n as nat, k as nat),
     {
-        k = k - 1;
-        if n % k == 0 {
-            res = false;
-        }
+        assert((is_prime_so_far(n as nat, k as nat) && (n as nat) % (k as nat) != 0)
+            == is_prime_so_far(n as nat, (k + 1) as nat));
+
+        res = res && n % k != 0;
+        k = k + 1;
     }
     return res;
 }

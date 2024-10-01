@@ -11,7 +11,7 @@ verus! {
 
 pub closed spec fn concat_helper(strings: Seq<Seq<char>>, i: nat) -> Seq<char>
     recommends
-        0 <= i <= strings.len(),
+        i <= strings.len(),
     decreases strings.len() - i,
 {
     if (i >= strings.len()) {
