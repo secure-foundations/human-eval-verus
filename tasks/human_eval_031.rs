@@ -10,17 +10,18 @@ use vstd::prelude::*;
 verus! {
 
 // specification
-pub closed spec fn is_prime_so_far(n: nat, k: nat) -> bool
-    recommends
-        n > 1,
-{
-    forall|i| 1 < i < k ==> #[trigger] (n % i) != 0
-}
-
 pub open spec fn is_prime(n: nat) -> bool {
     (n > 1) && forall|i| 1 < i < n ==> #[trigger] (n % i) != 0
 }
 
+pub closed spec fn is_prime_so_far(n: nat, k: nat) -> bool
+    recommends
+        n >= k > 1,
+{
+    forall|i| 1 < i < k ==> #[trigger] (n % i) != 0
+}
+
+// Verus does not yet support quantifiers when using proof-by-compute
 // proof fn sanity_check() {
 //     assert(is_prime(6) == false) by (compute);
 //     assert(is_prime(101) == true) by (compute);
