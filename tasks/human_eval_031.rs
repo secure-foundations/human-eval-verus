@@ -31,7 +31,6 @@ pub closed spec fn is_prime_so_far(n: nat, k: nat) -> bool
 //     assert(is_prime(4) == false) by (compute);
 //     assert(is_prime(1) == false) by (compute);
 // }
-
 // implementation
 fn is_prime_impl(n: u8) -> (res: bool)
     ensures
