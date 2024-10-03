@@ -11,136 +11,106 @@ use vstd::prelude::*;
 verus! {
 
 // specification
-pub closed spec fn brazilian_factorial_helper(
-    start: int,
-    end: int,
-    fact_i: int,
-    special_fact: int,
-) -> int
-    decreases (end - start),
+
+pub closed spec fn factorial(n: nat) -> nat 
+    decreases n,
 {
-    if (end - start <= 0) {
-        special_fact
+    if n <= 1 {
+        1
     } else {
-        brazilian_factorial_helper(start + 1, end, fact_i * start, special_fact * (fact_i * start))
+        n * factorial((n - 1) as nat)
     }
 }
 
-pub closed spec fn brazilian_factorial(n: int) -> int {
-    brazilian_factorial_helper(1int, n + 1, 1, 1)
-}
-
-// implementation
-proof fn lemma_bf_helper_is_increasing(start: nat, end: nat, fact_i: nat, special_fact: nat)
-    requires
-        start >= 1,
-        fact_i >= 1,
-        special_fact >= 1,
-    ensures
-        special_fact <= brazilian_factorial_helper(
-            start as int,
-            end as int,
-            fact_i as int,
-            special_fact as int,
-        ),
-    decreases (end - start),
+pub closed spec fn brazilian_factorial(n: nat) -> nat 
+    decreases n,
 {
-    if (end - start <= 0) {
+    if n <= 1 {
+        factorial(1)
     } else {
-        assert(fact_i * start >= 1) by { lemma_mul_strictly_positive(fact_i as int, start as int) };
-        assert((special_fact * (fact_i * start)) >= special_fact) by {
-            lemma_mul_ordering(special_fact as int, (fact_i * start) as int)
-        };
-        assert(brazilian_factorial_helper(
-            (start + 1) as int,
-            end as int,
-            (fact_i * start) as int,
-            (special_fact * (fact_i * start)) as int,
-        ) >= (special_fact * (fact_i * start))) by {
-            lemma_bf_helper_is_increasing(
-                start + 1,
-                end,
-                fact_i * start,
-                special_fact * (fact_i * start),
-            )
-        };
+        factorial(n) * brazilian_factorial((n - 1) as nat)
     }
 }
 
-pub fn brazilian_factorial_impl(n: u32) -> (bf: u32)
-    requires
-        0 < n < 4294967295,
-        (brazilian_factorial(n as int) <= 4294967295),
-    ensures
-        brazilian_factorial(n as int) == bf,
-{
-    let mut start = 1u32;
-    let mut end = n + 1u32;
-    let mut fact_i = 1u32;
-    let mut special_fact = 1u32;
 
-    assert(special_fact <= brazilian_factorial_helper(1, n + 1, 1, 1)) by {
-        lemma_bf_helper_is_increasing(1, (n + 1) as nat, 1, 1)
-    };
+
+proof fn lemma_factorial_positive(n : nat)
+    ensures factorial(n) >= 1,
+    decreases n
+{
+    if (n == 0) {} else {
+        lemma_factorial_positive((n - 1) as nat);
+        assert (factorial(n) >= 1) by {broadcast use lemma_mul_strictly_positive;};
+    }
+}
+
+proof fn lemma_brazilian_factorial_positive(n : nat)
+    ensures brazilian_factorial(n) >= 1,
+    decreases n
+{
+    if (n == 0) {} else {
+        lemma_factorial_positive((n) as nat);
+        lemma_brazilian_factorial_positive((n - 1) as nat);
+        assert (brazilian_factorial(n) >= 1) by {lemma_mul_strictly_positive(factorial(n) as int,brazilian_factorial((n-1) as nat) as int)};
+    }
+}
+
+proof fn lemma_brazilian_fib_monotonic(i : nat, j : nat) 
+    requires 0 <= i <= j,
+    ensures brazilian_factorial(i) <= brazilian_factorial(j),
+    decreases j - i,
+{
+    if (i == j) {} else if (j == i + 1) {
+        assert (factorial(j) >= 1) by {lemma_factorial_positive(j)};
+        assert (brazilian_factorial(j) >= brazilian_factorial(i)) by {broadcast use lemma_mul_increases;};
+    } 
+    else {
+        lemma_brazilian_fib_monotonic(i, (j - 1) as nat);
+        lemma_brazilian_fib_monotonic((j - 1) as nat, j);
+    }
+}
+
+pub fn brazilian_factorial_impl(n: u64) -> (ret: Option<u64>)
+    ensures
+        match ret {
+            None => brazilian_factorial(n as nat) > u64::MAX,
+            Some(bf) => bf == brazilian_factorial(n as nat),
+        },   
+{
+    if n >= 9 {
+        assert (brazilian_factorial(9nat) > u64::MAX) by (compute_only);
+        assert (brazilian_factorial(n as nat) >= brazilian_factorial(9nat)) by {lemma_brazilian_fib_monotonic(9nat, n as nat)};
+        return None;
+    }
+    let mut start = 1u64;
+    let mut end = n + 1u64;
+    let mut fact_i = 1u64;
+    let mut special_fact = 1u64;
+
 
     while start < end
-        invariant
-            brazilian_factorial_helper(start as int, end as int, fact_i as int, special_fact as int)
-                == brazilian_factorial_helper(1, n + 1, 1, 1),
-            special_fact <= brazilian_factorial_helper(1, n + 1, 1, 1),
-            start >= 1,
-            fact_i >= 1,
-            special_fact >= 1,
-            (brazilian_factorial_helper(1, n + 1, 1, 1) <= 4294967295),
+        invariant 
+            brazilian_factorial((start - 1) as nat) == special_fact,
+            factorial((start - 1) as nat) == fact_i,
+            1 <= start <= end < 10
         decreases (end - start),
     {
-        assert(special_fact <= brazilian_factorial_helper(
-            start as int,
-            end as int,
-            fact_i as int,
-            special_fact as int,
-        )) by {
-            lemma_bf_helper_is_increasing(
-                start as nat,
-                end as nat,
-                fact_i as nat,
-                special_fact as nat,
-            )
-        };
+        assert (brazilian_factorial(start as nat) <= brazilian_factorial(8nat)) by {lemma_brazilian_fib_monotonic(start as nat, 8nat)};
+        assert (brazilian_factorial(8nat) < u64::MAX) by (compute_only);
 
-        assert((fact_i * start) as int >= 1) by {
-            lemma_mul_strictly_positive(fact_i as int, start as int)
-        };
-        assert((special_fact * (fact_i * start) as int) as int >= special_fact) by {
-            lemma_mul_ordering(special_fact as int, (fact_i * start) as int)
-        };
-        assert(((special_fact * fact_i) as int * start) as int >= special_fact) by {
-            lemma_mul_is_associative(special_fact as int, fact_i as int, start as int)
-        };
+        assert (brazilian_factorial((start - 1) as nat) >= 1) by {lemma_brazilian_factorial_positive((start - 1) as nat)};
+        assert (factorial(start as nat) <= brazilian_factorial(start as nat)) by {broadcast use lemma_mul_ordering;};
 
-        assert((special_fact * (fact_i * start) as int) as int <= brazilian_factorial_helper(
-            start + 1 as int,
-            end as int,
-            (fact_i * start) as int,
-            special_fact * (fact_i * start) as int,
-        ) as int) by {
-            lemma_bf_helper_is_increasing(
-                (start + 1) as nat,
-                end as nat,
-                (fact_i * start) as nat,
-                (special_fact * (fact_i * start)) as nat,
-            )
-        };
+        fact_i = start * fact_i;
 
-        assert((fact_i * start) as int <= (special_fact * (fact_i * start) as int) as int) by {
-            lemma_mul_ordering(special_fact as int, (fact_i * start) as int)
-        };
+        special_fact = fact_i * special_fact;
 
-        fact_i = fact_i * start;
-        special_fact = special_fact * fact_i;
         start = start + 1;
     }
-    return special_fact;
+
+    return  Some(special_fact);
+
+
 }
 
 } // verus!
