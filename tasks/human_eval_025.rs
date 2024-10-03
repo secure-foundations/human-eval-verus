@@ -251,7 +251,7 @@ proof fn lemma_drop_last_map_commute(seq: Seq<u8>)
 
 proof fn lemma_fold_right_equivalent_for_nat_u8(factorization: Seq<u8>)
     requires
-        factorization.fold_right(|x, acc: u8| (acc * x) as u8, 1u8) <= 255 as u8,
+        factorization.fold_right(|x, acc: u8| (acc * x) as u8, 1u8) <= u8::MAX as u8,
         forall|i: int| 0 <= i < factorization.len() ==> factorization[i] > 0,
     ensures
         factorization.fold_right(|x, acc: nat| (acc * x) as nat, 1nat) == factorization.map(
@@ -301,7 +301,7 @@ proof fn lemma_fold_right_equivalent_for_nat_u8(factorization: Seq<u8>)
 
 pub fn factorize(n: u8) -> (factorization: Vec<u8>)
     requires
-        1 <= n <= 255,
+        1 <= n <= u8::MAX,
     ensures
         is_prime_factorization(n as nat, factorization@.map(|_idx, j: u8| j as nat)),
 {
@@ -312,7 +312,7 @@ pub fn factorize(n: u8) -> (factorization: Vec<u8>)
     while (m <= n as u16)
         invariant
             1 < m < n + 2,
-            n <= 255,
+            n <= u8::MAX,
             0 < k <= n,
             forall|j: u8| 1 < j < m ==> #[trigger] (k % j) != 0,
             factorization@.fold_right(|x: u8, acc: nat| (acc * x) as nat, 1nat) == n as nat / (
