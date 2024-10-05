@@ -9,7 +9,26 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+fn choose_num(x: u32, y: u32) -> (ret: i32)
+    requires
+        x <= i32::MAX && y <= i32::MAX,
+    ensures
+        ret != -1 ==> {
+            x <= ret <= y && ret % 2 == 0 && (forall|i: int|
+                #![trigger i % 2]
+                (x <= i <= y && i % 2 == 0) ==> i <= ret)
+        },
+        (ret == -1) <==> forall|i: int| #![trigger i % 2] x <= i <= y ==> i % 2 == 1,
+{
+    if x > y || (x == y && y % 2 == 1) {
+        return -1;
+    }
+    (if y % 2 == 0 {
+        y
+    } else {
+        y - 1
+    }) as i32
+}
 
 } // verus!
 fn main() {}
