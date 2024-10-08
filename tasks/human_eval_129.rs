@@ -8,11 +8,366 @@ HumanEval/129
 use vstd::prelude::*;
 
 verus! {
+    // specification
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+    pub closed spec fn path_less_than(path1 : Seq<int>, path2 : Seq<int>) -> bool
+        recommends path1.len() == path2.len()
+    {
+        ( exists |n : int| 
+                    (0 <= n < path1.len()
+                && path1[n] < path2[n]
+                && (forall |i : int| 0 <= i < n ==> path1[i] == path2[i])))
+    }
+
+    pub closed spec fn is_adjacent<const N: usize>(grid : Seq<Seq<int>>, m : int, n : int, coords : (int, int)) -> bool 
+        recommends 
+            grid.len() == N,
+            forall |i : int| (0 <= i < N ==> #[trigger] grid[i].len() == N),
+    {
+      &&& (0 <= coords.0 <= N - 1)
+      &&& (0 <= coords.1 <= N - 1)
+      &&& (grid[coords.0][coords.1]) == m
+      &&& ((coords.0 < N - 1 && grid[coords.0 + 1][coords.1] == n)
+            || (coords.0 > 0 && grid[coords.0][coords.1] == m && grid[coords.0 - 1][coords.1] == n)
+            || (coords.1 < N - 1 && grid[coords.0][coords.1] == m && grid[coords.0][coords.1 + 1] == n)
+            || (coords.1 > 0 && grid[coords.0][coords.1] == m && grid[coords.0][coords.1 - 1] == n))
+    }
+
+    pub closed spec fn adjacent_numbers<const N: usize>(grid : Seq<Seq<int>>, m : int, n : int) -> bool // TODO : will have to make these u8's into ints
+        recommends 
+            grid.len() == N,
+            forall |i : int| (0 <= i < N ==> #[trigger] grid[i].len() == N)
+    {
+        exists |i : int, j : int| #[trigger] (is_adjacent::<N>(grid, m, n, (i ,  j)))
+    }
+
+    pub closed spec fn exists_a_square_with_value<const N: usize>(grid : Seq<Seq<int>>, n : int) -> bool 
+        recommends 
+            grid.len() == N,
+            forall |i : int| (0 <= i < N ==>  #[trigger] grid[i].len() == N),
+    {
+        (exists |i: int, j : int| (0 <= i < N && 0 <= j < N) && #[trigger] (grid[i][j]) == n)
+    }
+
+
+    pub closed spec fn no_repeats_in_grid<const N: usize>(grid : Seq<Seq<int>>) -> bool 
+        recommends 
+            grid.len() == N,
+            forall |i : int| (0 <= i < N ==> #[trigger] grid[i].len() == N),
+    {
+        &&& (forall |i: int, j : int| (0 <= i < N && 0 <= j < N) ==> 1 <= #[trigger] grid[i][j] <= N * N)
+        &&& (forall |n : int| #[trigger] exists_a_square_with_value::<N>(grid, n))
+        &&& (forall |i1: int, j1 : int, i2: int, j2 : int| (grid[i1][j1] == grid[i2][j2]) ==> i1 == i2 && j1 == j2)
+    }
+
+
+
+    pub closed spec fn is_valid_path<const N: usize>(grid : Seq<Seq<int>>, path : Seq<int>) -> bool
+        recommends 
+            grid.len() == N,
+            forall |i : int| (0 <= i < N ==> #[trigger] grid[i].len() == N)
+    {
+        &&& forall |i : int| (0 <= i < path.len() - 1) ==> adjacent_numbers :: <N>(grid, #[trigger]  path[i], path[(i+1)])
+        &&& forall |i : int| (0 <= i <= path.len() - 1) ==> 1 <= #[trigger] path[i] <= N * N
+    }
+
+
+    // TODO: fix type issues with array
+    pub closed spec fn is_minpath<const N: usize>(grid : Seq<Seq<int>>, path : Seq<int>) -> bool
+        recommends 
+            grid.len() == N,
+            forall |i : int| (0 <= i < N ==> #[trigger] grid[i].len() == N)
+    {
+        // TODO : fix weird triggering issues
+        &&& (is_valid_path::<N>(grid, path))
+        &&& (forall |alternate_path : Seq<int>| (
+                (#[trigger] alternate_path.len() == path.len()
+             && is_valid_path::<N>(grid, alternate_path))
+                    ==>
+                (#[trigger] path_less_than(path, alternate_path) || path == alternate_path)
+                ))
+    }
+
+
+
+    // implementation
+    pub fn find_smallest_adjacent_to_one<const N : usize>(grid : [[u8; N]; N]) -> (ret : ((usize, usize), (usize , usize), u8))
+    requires 
+        no_repeats_in_grid :: <N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int))),
+        N >= 2,
+        2 <= N <= u8::MAX,
+        N * N <= u8::MAX,
+    ensures 
+        grid[ret.0.0 as int][ret.0.1 as int] == 1,
+        grid[ret.1.0 as int][ret.1.1 as int] == ret.2,
+        adjacent_numbers::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), ret.2 as int, 1),
+        0 <= ret.0.0 < N,
+        0 <= ret.0.1 < N,
+        0 <= ret.1.0 < N,
+        0 <= ret.1.1 < N,
+        (ret.0.0 < N - 1 && ret.0.0 + 1 == ret.1.0 && ret.0.1 == ret.1.1)
+                || (ret.0.0 > 0 && ret.0.0 - 1 == ret.1.0 && ret.0.1 == ret.1.1)
+                || (ret.0.1 < N - 1 && ret.0.0 == ret.1.0 && ret.0.1 + 1 == ret.1.1)
+                || (ret.0.1 > 0 && ret.0.0 == ret.1.0 && ret.0.1 - 1 == ret.1.1),
+        (ret.0.0 < N - 1 ==> grid[ret.0.0 + 1][ret.0.1 as int] >= ret.2)
+                && (ret.0.0 > 0 ==> grid[ret.0.0 - 1][ret.0.1 as int] >= ret.2)
+                && (ret.0.1 < N - 1 ==> grid[ret.0.0 as int][ret.0.1 + 1] >= ret.2)
+                && (ret.0.1 > 0 ==> grid[ret.0.0 as int][ret.0.1 - 1] >= ret.2)
+    {
+        let mut ones_i = 0usize;
+        let mut ones_j = 0usize;
+        let mut i = 0usize;
+
+        assert (exists_a_square_with_value::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), 1));
+        while i < N
+            invariant 
+                ((grid[ones_i as int][ones_j as int] == 1) || (exists |i0 : int, j0 : int| (i <= i0 < N) && 0 <= j0 < N && grid[i0 as int][j0 as int] == 1)),
+                (0 <= i <= N),
+                N == grid.len(),
+                (0 <= ones_i < N),
+                N == grid[ones_i as int].len(),
+                (0 <= ones_j < N),
+            decreases (N - i),
+        {
+            let mut j = 0usize;
+            while j < N
+                invariant 
+                    ((grid[ones_i as int][ones_j as int] == 1) || (exists |i0 : int, j0 : int| ((i < i0 < N && 0 <= j0 < N) || (i0 == i && j <= j0 < N)) && grid[i0 as int][j0 as int] == 1)),
+                    0 <= j <= N,
+                    0 <= i < N,
+                    (0 <= ones_i < N),
+                    (0 <= ones_j < N),
+                decreases N - j,
+            {
+                if grid[i][j] == 1 {
+                    ones_i = i;
+                    ones_j = j;
+                }
+                j = j + 1;
+            }
+            i = i + 1;
+        }
+
+        let mut smallest = (N * N) as u8;
+        let mut smallest_i = 0usize;
+        let mut smallest_j = 0usize;
+
+
+        if (ones_j > 0 && grid[ones_i][ones_j - 1] <= smallest) {
+            smallest = grid[ones_i][ones_j - 1];
+            smallest_i = ones_i;
+            smallest_j = ones_j - 1;
+        }
+
+
+        if (ones_j < N - 1 && grid[ones_i][ones_j + 1] <= smallest) {
+            smallest = grid[ones_i][ones_j + 1];
+            smallest_i = ones_i ;
+            smallest_j = ones_j +1;
+        }
+
+        if (ones_i > 0 && grid[ones_i - 1][ones_j] <= smallest) {
+            smallest = grid[ones_i - 1][ones_j];
+            smallest_i = ones_i - 1;
+            smallest_j = ones_j;
+        }
+
+        if (ones_i < N  - 1 && grid[ones_i + 1][ones_j] <= smallest) {
+            smallest = grid[ones_i + 1][ones_j];
+            smallest_i = ones_i + 1;
+            smallest_j = ones_j;
+        }
+
+        assert (ones_j > 0 ==> grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int))[ones_i as int][ones_j - 1] >= smallest);
+        assert (is_adjacent::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), smallest as int, 1, (smallest_i + 0 as int, smallest_j + 0 as int)));
+        assert (exists |i : int, j : int| ( is_adjacent::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), smallest as int, 1, (#[trigger] (i + 0) ,#[trigger] (j + 0)))));
+
+        return ((ones_i, ones_j), (smallest_i, smallest_j), smallest)
+    }
+
+    // basically want a lemma that says if \forall alt_path (path < alt_path)
+    // then if alt_path' < path + [x]
+    // we get that alt_path'[:path.len()] == path adn alt_path[path.len()] < x
+    proof fn lemma_less_than_step_even<const N: usize>(path : Seq<int>, grid : [[u8; N]; N], extra_item : int)
+        requires
+            no_repeats_in_grid :: <N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int))),
+            forall |alternate_path : Seq<int>| (
+                (alternate_path.len() == path.len() 
+                &&  is_valid_path::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), alternate_path))
+                    ==>
+                    (#[trigger] path_less_than(path, alternate_path) ||
+                     path == alternate_path)
+                ),
+            extra_item == 1
+        ensures
+            forall |alternate_path_ : Seq<int>|
+                ((#[trigger] alternate_path_.len() == path.len() + 1
+                  && is_valid_path::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), alternate_path_))
+                ==> 
+                (path_less_than(path + seq![extra_item], alternate_path_) ||
+                path + seq![extra_item] == alternate_path_)
+            )
+    {
+        assert forall |alternate_path_ : Seq<int>| ( (#[trigger] alternate_path_.len()) == path.len() + 1
+                                                    && is_valid_path::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), alternate_path_))
+                    implies (path_less_than(path + seq![extra_item], alternate_path_) ||
+                             path + seq![extra_item] == alternate_path_)
+            by {
+                if path_less_than(path, alternate_path_.subrange(0, path.len() as int)) {
+                } else {
+                    if (alternate_path_[path.len() as int] > extra_item) {
+                    } else {
+                        assert (path + seq![extra_item] =~= alternate_path_);
+                    }
+                }
+            }
+    }
+
+      proof fn lemma_less_than_step_odd<const N: usize>(path : Seq<int>, grid : [[u8; N]; N], extra_item : int, ones_i : int, ones_j : int)
+        requires
+            no_repeats_in_grid :: <N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int))),
+            forall |alternate_path : Seq<int>| (
+                (alternate_path.len() == path.len() 
+                &&  is_valid_path::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), alternate_path))
+                    ==>
+                    (#[trigger] path_less_than(path, alternate_path) ||
+                     path == alternate_path)
+                ),
+            path.len() >= 1,
+            path[path.len() - 1] == 1,
+            0 <= ones_i <= N-1,
+            0 <= ones_j <= N-1,
+            grid[ones_i][ones_j] == 1,
+            ones_i < N - 1 ==> grid[ones_i + 1][ones_j] >= extra_item,
+            ones_i > 0 ==> grid[ones_i - 1][ones_j] >= extra_item,
+            ones_j < N - 1 ==> grid[ones_i][ones_j + 1] >= extra_item,
+            ones_j > 0 ==> grid[ones_i][ones_j - 1] >= extra_item,
+            ones_i < N - 1 || ones_i > 0,
+            ones_j < N - 1 || ones_j > 0,
+        ensures
+            forall |alternate_path_ : Seq<int>|
+                ((#[trigger] alternate_path_.len() == path.len() + 1
+                  && is_valid_path::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), alternate_path_))
+                ==> 
+                (path_less_than(path + seq![extra_item], alternate_path_) ||
+                path + seq![extra_item] == alternate_path_)
+            )
+    {
+        assert forall |alternate_path_ : Seq<int>| ( (#[trigger] alternate_path_.len()) == path.len() + 1
+                                                    && is_valid_path::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), alternate_path_))
+                    implies (path_less_than(path + seq![extra_item], alternate_path_) ||
+                             path + seq![extra_item] == alternate_path_)
+            by {
+                assert (is_valid_path::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), alternate_path_.subrange(0, path.len() as int)));
+
+                if path_less_than(path, alternate_path_.subrange(0, path.len() as int)) {
+                } else {
+                    let m = alternate_path_[(path.len() - 1) as int];
+                    let n = alternate_path_[(path.len() + 0) as int];
+
+                    let pair = choose |pair : (int, int)| (is_adjacent::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), m, n, (#[trigger] pair.0, #[trigger] pair.1)));
+
+                    let i = pair.0;
+                    let j = pair.1;
+
+                    assert (1 == grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int))[ones_i][ones_j]);
+
+                    if (alternate_path_[path.len() as int] > extra_item) {
+                    } else {
+                        assert (path + seq![extra_item] =~= alternate_path_);
+                    }
+                }
+            }
+    }
+
+    pub fn min_path<const N: usize>(grid : [[u8; N]; N], k : u8) -> (path : Vec<u8>)
+        requires 
+            no_repeats_in_grid :: <N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int))), // grid.map(|row : [u8; N]| row.map(|x : u8| x as int))
+            2 <= N <= u8::MAX,
+            N * N <= u8::MAX,
+        ensures 
+            path.len() == k,
+            is_minpath :: <N> (grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), path@.map(|_idx, item| item as int)), // grid.map(|row : [u8; N]| row.map(|x : u8| x as int))
+    {
+        let (ones_coordinates, smallest_coordinates, smallest) = find_smallest_adjacent_to_one(grid);
+        let mut path : Vec<u8> = vec![];
+        let mut k_counter = k;
+        let mut even = true;
+
+        assert (forall |alternate_path : Seq<int>| (
+            (alternate_path.len() == path.len() ==> path@.map(|_idx, j: u8| j as int) == alternate_path)));
+
+        while k_counter > 0 
+            invariant 
+                path.len() + k_counter == k,
+
+                // what we are trying to prove
+                forall |i : int| (0 <= #[trigger] (i + 0) < path@.map(|_idx, j: u8| j as int).len() - 1) ==> adjacent_numbers :: <N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)),  path@.map(|_idx, j: u8| j as int)[i], path@.map(|_idx, j: u8| j as int)[(i+1)]),
+                forall |alternate_path : Seq<int>| (
+                    (#[trigger] alternate_path.len() == path@.map(|_idx, j: u8| j as int).len()
+                 && is_valid_path::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), alternate_path))
+                        ==>
+                    (path_less_than(path@.map(|_idx, j: u8| j as int), alternate_path) || path@.map(|_idx, j: u8| j as int) == alternate_path)
+                    ),
+
+                //remembering the last element
+                (path.len() > 0 && even) ==> path[path.len() - 1] == smallest,
+                (path.len() > 0 && !even) ==> path[path.len() - 1] == 1u8,
+                even || (path.len() >= 1),
+
+                // facts thjat we need to pass into the loop
+                no_repeats_in_grid::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int))),
+                1 <= smallest <= N * N,
+                ones_coordinates.0 < N - 1 ==> grid[ones_coordinates.0 + 1][ones_coordinates.1 as int] >= smallest,
+                ones_coordinates.0 > 0 ==> grid[ones_coordinates.0 - 1][ones_coordinates.1 as int] >= smallest,
+                ones_coordinates.1 < N - 1 ==> grid[ones_coordinates.0 as int][ones_coordinates.1 + 1] >= smallest,
+                ones_coordinates.1 > 0 ==> grid[ones_coordinates.0 as int][ones_coordinates.1 - 1] >= smallest,
+                ((ones_coordinates.0 < N + 1 && ones_coordinates.0 + 1 == smallest_coordinates.0 && ones_coordinates.1 == smallest_coordinates.1)
+                    || (ones_coordinates.0 > 0 && ones_coordinates.0 - 1 == smallest_coordinates.0 && ones_coordinates.1 == smallest_coordinates.1)
+                    || (ones_coordinates.1 < N + 1 && ones_coordinates.0 == smallest_coordinates.0 && ones_coordinates.1 + 1 == smallest_coordinates.1)
+                    || (ones_coordinates.1 > 0 && ones_coordinates.0 == smallest_coordinates.0 && ones_coordinates.1 - 1 == smallest_coordinates.1)),
+                0 <= smallest_coordinates.0 < N,
+                0 <= smallest_coordinates.1 < N,
+                0 <= ones_coordinates.0 < N,
+                0 <= ones_coordinates.1 < N,
+                grid[smallest_coordinates.0 as int][smallest_coordinates.1 as int] == smallest,
+                grid[ones_coordinates.0 as int][ones_coordinates.1 as int] == 1u8,        
+            decreases k_counter,
+        {
+            if (even) {
+                let t = path.len();
+                let old_path = path.clone();
+                let mut  next_item = vec![1u8];
+                path.append(&mut next_item);
+                proof {
+                    lemma_less_than_step_even(path@.map(|_idx, j: u8| j as int).subrange(0, path.len() - 1), grid, 1 as int);
+                }
+            } else {
+                let mut next_item = vec![smallest];
+                path.append(&mut next_item);
+
+                proof {
+                    lemma_less_than_step_odd(path@.map(|_idx, j: u8| j as int).subrange(0, path.len() - 1), grid, smallest as int, ones_coordinates.0 as int, ones_coordinates.1 as int);                
+                }
+            }
+            even = !even;
+            k_counter = k_counter - 1;
+
+            //proving adjacency
+            assert (forall |i : int| (0 <= #[trigger] (i + 0) < path@.map(|_idx, j: u8| j as int).len() - 1) ==> (exists |i0 : int, j0 : int|  (is_adjacent::<N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), path@.map(|_idx, j: u8| j as int)[i], path@.map(|_idx, j: u8| j as int)[(i+1)], (i0, j0)))));
+        }
+
+        assert (forall |i : int| (0 <= i + 0 < path@.len() - 1) ==> adjacent_numbers :: <N>(grid@.map(|_idx, row : [u8; N]| row@.map(|_idx, item| item as int)), #[trigger] path@[i] as int, path@[(i+1)] as int));
+        return path
+    }
 
 } // verus!
-fn main() {}
+fn main() {
+    println!("{:?}", min_path([ [1,2,3], [4,5,6], [7,8,9]], 3));
+    // > [1, 2, 1]
+    println!("{:?}", min_path([ [5,9,3], [4,1,6], [7,8,2]], 7));
+    // > [1, 4, 1, 4, 1, 4, 1]
+}
 
 /*
 ### VERUS END
@@ -21,7 +376,7 @@ fn main() {}
 /*
 ### PROMPT
 
-def minPath(grid, k):
+def min_path(grid, k):
     """
     Given a grid with N rows and N columns (N >= 2) and a positive integer k,
     each cell of the grid contains a value. Every integer in the range [1, N * N]
@@ -56,7 +411,7 @@ def minPath(grid, k):
 
 /*
 ### ENTRY POINT
-minPath
+min_path
 */
 
 /*
@@ -113,3 +468,4 @@ def check(candidate):
 
 
 */
+
