@@ -5,8 +5,8 @@ HumanEval/129
 /*
 ### VERUS BEGIN
 */
-use vstd::prelude::*;
 use vstd::arithmetic::mul::*;
+use vstd::prelude::*;
 
 verus! {
 
@@ -34,18 +34,13 @@ pub open spec fn is_adjacent<const N: usize>(
     &&& (0 <= coords.0 <= N - 1)
     &&& (0 <= coords.1 <= N - 1)
     &&& grid[coords.0][coords.1] == m
-    &&& ((coords.0 < N - 1 && grid[coords.0 + 1][coords.1] == n) 
-         || (coords.0 > 0 && grid[coords.0 - 1][coords.1] == n) 
-         || (coords.1 < N - 1 && grid[coords.0][coords.1 + 1] == n) 
+    &&& ((coords.0 < N - 1 && grid[coords.0 + 1][coords.1] == n)
+         || (coords.0 > 0 && grid[coords.0 - 1][coords.1] == n)
+         || (coords.1 < N - 1 && grid[coords.0][coords.1 + 1] == n)
          || (coords.1 > 0 && grid[coords.0][coords.1 - 1] == n))
 }
 
-pub open spec fn adjacent_numbers<const N: usize>(
-    grid: Seq<Seq<int>>,
-    m: int,
-    n: int,
-) -> bool 
-
+pub open spec fn adjacent_numbers<const N: usize>(grid: Seq<Seq<int>>, m: int, n: int) -> bool
     recommends
         grid.len() == N,
         forall|i: int| (0 <= i < N ==> #[trigger] grid[i].len() == N),
@@ -67,10 +62,10 @@ pub open spec fn no_repeats_in_grid<const N: usize>(grid: Seq<Seq<int>>) -> bool
         forall|i: int| (0 <= i < N ==> #[trigger] grid[i].len() == N),
 {
     &&& (forall|i: int, j: int| (0 <= i < N && 0 <= j < N) ==> 1 <= #[trigger] grid[i][j] <= N * N)
-    &&& (forall|n: int| 1 <= n <= N*N ==> #[trigger]  exists_a_cell_with_value::<N>(grid, n))
+    &&& (forall|n: int| 1 <= n <= N * N ==> #[trigger] exists_a_cell_with_value::<N>(grid, n))
     &&& (forall|i1: int, j1: int, i2: int, j2: int|
-        (0 <= i1 < N && 0 <= j1 < N && 0 <= i2 < N && 0 <= j2 < N)
-        ==> (#[trigger] grid[i1][j1] == #[trigger] grid[i2][j2]) ==> i1 == i2 && j1 == j2)
+        (0 <= i1 < N && 0 <= j1 < N && 0 <= i2 < N && 0 <= j2 < N) ==> (#[trigger] grid[i1][j1]
+            == #[trigger] grid[i2][j2]) ==> i1 == i2 && j1 == j2)
 }
 
 pub open spec fn is_valid_path<const N: usize>(grid: Seq<Seq<int>>, path: Seq<int>) -> bool
@@ -82,7 +77,6 @@ pub open spec fn is_valid_path<const N: usize>(grid: Seq<Seq<int>>, path: Seq<in
         (0 <= i < path.len() - 1) ==> adjacent_numbers::<N>(grid, #[trigger] path[i], path[(i + 1)])
     &&& forall|i: int| (0 <= i <= path.len() - 1) ==> 1 <= #[trigger] path[i] <= N * N
 }
-
 
 pub open spec fn is_minpath<const N: usize>(grid: Seq<Seq<int>>, path: Seq<int>) -> bool
     recommends
@@ -102,7 +96,9 @@ pub fn find_smallest_adjacent_to_one<const N: usize>(grid: [[u8; N]; N]) -> (ret
     u8,
 ))
     requires
-        no_repeats_in_grid::<N>(grid@.map_values(|row: [u8; N]| row@.map_values(|item : u8| item as int))),
+        no_repeats_in_grid::<N>(
+            grid@.map_values(|row: [u8; N]| row@.map_values(|item: u8| item as int)),
+        ),
         N >= 2,
         2 <= N <= u8::MAX,
         N * N <= u8::MAX,
@@ -110,7 +106,7 @@ pub fn find_smallest_adjacent_to_one<const N: usize>(grid: [[u8; N]; N]) -> (ret
         grid[ret.0.0 as int][ret.0.1 as int] == 1,
         grid[ret.1.0 as int][ret.1.1 as int] == ret.2,
         adjacent_numbers::<N>(
-            grid@.map_values(|row: [u8; N]| row@.map_values(|item : u8| item as int)),
+            grid@.map_values(|row: [u8; N]| row@.map_values(|item: u8| item as int)),
             ret.2 as int,
             1,
         ),
@@ -131,13 +127,13 @@ pub fn find_smallest_adjacent_to_one<const N: usize>(grid: [[u8; N]; N]) -> (ret
     let mut ones_j = 0usize;
     let mut i = 0usize;
 
-    assert (N * N >= 1) by {lemma_mul_strictly_positive(N as int, N as int)};
+    assert(N * N >= 1) by { lemma_mul_strictly_positive(N as int, N as int) };
 
     assert(exists_a_cell_with_value::<N>(
         grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
         1,
     ));
-    
+
     while i < N
         invariant
             (grid[ones_i as int][ones_j as int] == 1) || (exists|i0: int, j0: int|
@@ -173,24 +169,26 @@ pub fn find_smallest_adjacent_to_one<const N: usize>(grid: [[u8; N]; N]) -> (ret
     let mut smallest_i = 0usize;
     let mut smallest_j = 0usize;
 
-    assert (1 <= smallest);
+    assert(1 <= smallest);
 
-    assert ((forall|i: int, j: int| (0 <= i < N && 0 <= j < N) ==> 1 <=  grid@.map_values(|row: [u8; N]| row@.map_values(|item : u8| item as int))[#[trigger] (i + 0)][#[trigger] (j + 0)] <= N * N));
-    assert ((forall|i: int, j: int| (0 <= i < N && 0 <= j < N) ==> 1 <=  #[trigger] grid[i + 0][j + 0] <= N * N));
+    assert((forall|i: int, j: int|
+        (0 <= i < N && 0 <= j < N) ==> 1 <= grid@.map_values(
+            |row: [u8; N]| row@.map_values(|item: u8| item as int),
+        )[#[trigger] (i + 0)][#[trigger] (j + 0)] <= N * N));
+    assert((forall|i: int, j: int|
+        (0 <= i < N && 0 <= j < N) ==> 1 <= #[trigger] grid[i + 0][j + 0] <= N * N));
 
-    assert (ones_j > 0  ==> grid[(ones_i + 0) as int][(ones_j - 1) + 0] <= N * N);
+    assert(ones_j > 0 ==> grid[(ones_i + 0) as int][(ones_j - 1) + 0] <= N * N);
 
-    assert (ones_j > 0  ==> grid[(ones_i + 0) as int][(ones_j - 1) + 0] <= smallest);
-    assert (ones_j < N -1  ==> grid[(ones_i + 0) as int][(ones_j + 1) + 0] <= smallest);
-    assert (ones_i > 0  ==> grid[(ones_i - 1) + 0][ones_j + 0] <= smallest);
-    assert (ones_i < N - 1  ==> grid[(ones_i + 1) + 0][ones_j + 0] <= smallest);
+    assert(ones_j > 0 ==> grid[(ones_i + 0) as int][(ones_j - 1) + 0] <= smallest);
+    assert(ones_j < N - 1 ==> grid[(ones_i + 0) as int][(ones_j + 1) + 0] <= smallest);
+    assert(ones_i > 0 ==> grid[(ones_i - 1) + 0][ones_j + 0] <= smallest);
+    assert(ones_i < N - 1 ==> grid[(ones_i + 1) + 0][ones_j + 0] <= smallest);
 
-    assert (
-        (ones_j > 0 && grid[ones_i as int][ones_j - 1] <= smallest) ||
-        (ones_j < N - 1 && grid[ones_i as int][ones_j + 1] <= smallest) ||
-        (ones_i > 0 && grid[ones_i - 1][ones_j as int] <= smallest) ||
-        (ones_i < N - 1 && grid[ones_i + 1][ones_j as int] <= smallest)
-    );
+    assert((ones_j > 0 && grid[ones_i as int][ones_j - 1] <= smallest) || (ones_j < N - 1
+        && grid[ones_i as int][ones_j + 1] <= smallest) || (ones_i > 0 && grid[ones_i
+        - 1][ones_j as int] <= smallest) || (ones_i < N - 1 && grid[ones_i + 1][ones_j as int]
+        <= smallest));
 
     if (ones_j > 0 && grid[ones_i][ones_j - 1] <= smallest) {
         smallest = grid[ones_i][ones_j - 1];
@@ -216,13 +214,16 @@ pub fn find_smallest_adjacent_to_one<const N: usize>(grid: [[u8; N]; N]) -> (ret
         |row: [u8; N]| row@.map_values(|item| item as int),
     )[ones_i as int][ones_j - 1] >= smallest);
 
-    assert (0 <= (smallest_i + 0) as int <= N - 1);
-    assert (0 <= (smallest_j + 0) as int <= N - 1);
-    assert (grid[(smallest_i + 0) as int][(smallest_j + 0) as int] == smallest);
-    assert ((((smallest_i + 0) < (N - 1)) && grid[(smallest_i + 0) as int + 1][(smallest_j + 0) as int] == 1) 
-             || ((smallest_i + 0) > 0 && grid[(smallest_i + 0) as int][(smallest_j + 0) as int] == smallest && grid[(smallest_i + 0) as int - 1][(smallest_j + 0) as int] == 1) 
-             || ((smallest_j + 0) < N - 1 && grid[(smallest_i + 0) as int][(smallest_j + 0) as int] == smallest && grid[(smallest_i + 0) as int][(smallest_j + 0) as int + 1] == 1) 
-             || ((smallest_j + 0) as int > 0 && grid[(smallest_i + 0) as int][(smallest_j + 0) as int] == smallest && grid[(smallest_i + 0) as int][(smallest_j + 0) as int - 1] == 1));
+    assert(0 <= (smallest_i + 0) as int <= N - 1);
+    assert(0 <= (smallest_j + 0) as int <= N - 1);
+    assert(grid[(smallest_i + 0) as int][(smallest_j + 0) as int] == smallest);
+    assert((((smallest_i + 0) < (N - 1)) && grid[(smallest_i + 0) as int + 1][(smallest_j
+        + 0) as int] == 1) || ((smallest_i + 0) > 0 && grid[(smallest_i + 0) as int][(smallest_j
+        + 0) as int] == smallest && grid[(smallest_i + 0) as int - 1][(smallest_j + 0) as int] == 1)
+        || ((smallest_j + 0) < N - 1 && grid[(smallest_i + 0) as int][(smallest_j + 0) as int]
+        == smallest && grid[(smallest_i + 0) as int][(smallest_j + 0) as int + 1] == 1) || ((
+    smallest_j + 0) as int > 0 && grid[(smallest_i + 0) as int][(smallest_j + 0) as int] == smallest
+        && grid[(smallest_i + 0) as int][(smallest_j + 0) as int - 1] == 1));
 
     assert(is_adjacent::<N>(
         grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
@@ -252,7 +253,9 @@ proof fn lemma_less_than_step_even<const N: usize>(
     extra_item: int,
 )
     requires
-        no_repeats_in_grid::<N>(grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int))),
+        no_repeats_in_grid::<N>(
+            grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
+        ),
         forall|alternate_path: Seq<int>|
             ((alternate_path.len() == path.len() && is_valid_path::<N>(
                 grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
@@ -293,7 +296,9 @@ proof fn lemma_less_than_step_odd<const N: usize>(
     ones_j: int,
 )
     requires
-        no_repeats_in_grid::<N>(grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int))),
+        no_repeats_in_grid::<N>(
+            grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
+        ),
         forall|alternate_path: Seq<int>|
             ((alternate_path.len() == path.len() && is_valid_path::<N>(
                 grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
@@ -359,8 +364,15 @@ proof fn lemma_less_than_step_odd<const N: usize>(
     }
 }
 
-pub closed spec fn facts_passed_into_loop<const N: usize>(grid: [[u8; N]; N], ones_coordinates : (usize, usize), smallest_coordinates : (usize, usize), smallest : u8) -> bool {
-    &&& no_repeats_in_grid::<N>(grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)))
+pub closed spec fn facts_passed_into_loop<const N: usize>(
+    grid: [[u8; N]; N],
+    ones_coordinates: (usize, usize),
+    smallest_coordinates: (usize, usize),
+    smallest: u8,
+) -> bool {
+    &&& no_repeats_in_grid::<N>(
+        grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
+    )
     &&& 1 <= smallest <= N * N
     &&& ones_coordinates.0 < N - 1 ==> grid[ones_coordinates.0 + 1][ones_coordinates.1 as int]
         >= smallest
@@ -375,8 +387,8 @@ pub closed spec fn facts_passed_into_loop<const N: usize>(grid: [[u8; N]; N], on
         && ones_coordinates.0 - 1 == smallest_coordinates.0 && ones_coordinates.1
         == smallest_coordinates.1) || (ones_coordinates.1 < N + 1 && ones_coordinates.0
         == smallest_coordinates.0 && ones_coordinates.1 + 1 == smallest_coordinates.1) || (
-    ones_coordinates.1 > 0 && ones_coordinates.0 == smallest_coordinates.0
-        && ones_coordinates.1 - 1 == smallest_coordinates.1))
+    ones_coordinates.1 > 0 && ones_coordinates.0 == smallest_coordinates.0 && ones_coordinates.1 - 1
+        == smallest_coordinates.1))
     &&& 0 <= smallest_coordinates.0 < N
     &&& 0 <= smallest_coordinates.1 < N
     &&& 0 <= ones_coordinates.0 < N
@@ -387,7 +399,9 @@ pub closed spec fn facts_passed_into_loop<const N: usize>(grid: [[u8; N]; N], on
 
 pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
     requires
-        no_repeats_in_grid::<N>(grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int))),
+        no_repeats_in_grid::<N>(
+            grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
+        ),
         2 <= N <= u8::MAX,
         N * N <= u8::MAX,
     ensures
@@ -395,7 +409,7 @@ pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
         is_minpath::<N>(
             grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
             path@.map_values(|item| item as int),
-        ),  
+        ),
 {
     let (ones_coordinates, smallest_coordinates, smallest) = find_smallest_adjacent_to_one(grid);
     let mut path: Vec<u8> = vec![];
@@ -429,8 +443,7 @@ pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
             (path.len() > 0 && !even) ==> path[path.len() - 1] == 1u8,
             even || (path.len() >= 1),
             // facts that we need to pass into the loop
-            facts_passed_into_loop(grid, ones_coordinates, smallest_coordinates, smallest)
-            
+            facts_passed_into_loop(grid, ones_coordinates, smallest_coordinates, smallest),
         decreases k_counter,
     {
         if (even) {
