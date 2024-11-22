@@ -34,7 +34,7 @@ pub open spec fn is_adjacent<const N: usize>(
     &&& (0 <= coords.0 <= N - 1)
     &&& (0 <= coords.1 <= N - 1)
     &&& grid[coords.0][coords.1] == m
-    &&& ((coords.0 < N - 1 && grid[coords.0 + 1][coords.1] == n)
+    &&& (   (coords.0 < N - 1 && grid[coords.0 + 1][coords.1] == n)
          || (coords.0 > 0 && grid[coords.0 - 1][coords.1] == n)
          || (coords.1 < N - 1 && grid[coords.0][coords.1 + 1] == n)
          || (coords.1 > 0 && grid[coords.0][coords.1 - 1] == n))
@@ -239,8 +239,6 @@ pub fn find_smallest_adjacent_to_one<const N: usize>(grid: [[u8; N]; N]) -> (ret
             (#[trigger] (i + 0), #[trigger] (j + 0)),
         )));
 
-    // assert (false);
-
     return ((ones_i, ones_j), (smallest_i, smallest_j), smallest)
 }
 
@@ -364,39 +362,6 @@ proof fn lemma_less_than_step_odd<const N: usize>(
     }
 }
 
-pub closed spec fn facts_passed_into_loop<const N: usize>(
-    grid: [[u8; N]; N],
-    ones_coordinates: (usize, usize),
-    smallest_coordinates: (usize, usize),
-    smallest: u8,
-) -> bool {
-    &&& no_repeats_in_grid::<N>(
-        grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
-    )
-    &&& 1 <= smallest <= N * N
-    &&& ones_coordinates.0 < N - 1 ==> grid[ones_coordinates.0 + 1][ones_coordinates.1 as int]
-        >= smallest
-    &&& ones_coordinates.0 > 0 ==> grid[ones_coordinates.0 - 1][ones_coordinates.1 as int]
-        >= smallest
-    &&& ones_coordinates.1 < N - 1 ==> grid[ones_coordinates.0 as int][ones_coordinates.1 + 1]
-        >= smallest
-    &&& ones_coordinates.1 > 0 ==> grid[ones_coordinates.0 as int][ones_coordinates.1 - 1]
-        >= smallest
-    &&& ((ones_coordinates.0 < N + 1 && ones_coordinates.0 + 1 == smallest_coordinates.0
-        && ones_coordinates.1 == smallest_coordinates.1) || (ones_coordinates.0 > 0
-        && ones_coordinates.0 - 1 == smallest_coordinates.0 && ones_coordinates.1
-        == smallest_coordinates.1) || (ones_coordinates.1 < N + 1 && ones_coordinates.0
-        == smallest_coordinates.0 && ones_coordinates.1 + 1 == smallest_coordinates.1) || (
-    ones_coordinates.1 > 0 && ones_coordinates.0 == smallest_coordinates.0 && ones_coordinates.1 - 1
-        == smallest_coordinates.1))
-    &&& 0 <= smallest_coordinates.0 < N
-    &&& 0 <= smallest_coordinates.1 < N
-    &&& 0 <= ones_coordinates.0 < N
-    &&& 0 <= ones_coordinates.1 < N
-    &&& grid[smallest_coordinates.0 as int][smallest_coordinates.1 as int] == smallest
-    &&& grid[ones_coordinates.0 as int][ones_coordinates.1 as int] == 1u8
-}
-
 pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
     requires
         no_repeats_in_grid::<N>(
@@ -420,6 +385,7 @@ pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
         ((alternate_path.len() == path.len() ==> path@.map_values(|j: u8| j as int)
             == alternate_path)));
 
+    #[verifier::loop_isolation(false)]
     while k_counter > 0
         invariant
             path.len() + k_counter == k,
@@ -442,8 +408,6 @@ pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
             (path.len() > 0 && even) ==> path[path.len() - 1] == smallest,
             (path.len() > 0 && !even) ==> path[path.len() - 1] == 1u8,
             even || (path.len() >= 1),
-            // facts that we need to pass into the loop
-            facts_passed_into_loop(grid, ones_coordinates, smallest_coordinates, smallest),
         decreases k_counter,
     {
         if (even) {
