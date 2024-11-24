@@ -34,10 +34,10 @@ pub open spec fn is_adjacent<const N: usize>(
     &&& (0 <= coords.0 <= N - 1)
     &&& (0 <= coords.1 <= N - 1)
     &&& grid[coords.0][coords.1] == m
-    &&& (   (coords.0 < N - 1 && grid[coords.0 + 1][coords.1] == n)
-         || (coords.0 > 0 && grid[coords.0 - 1][coords.1] == n)
-         || (coords.1 < N - 1 && grid[coords.0][coords.1 + 1] == n)
-         || (coords.1 > 0 && grid[coords.0][coords.1 - 1] == n))
+    &&& (   (coords.0 < N - 1 && grid[coords.0 + 1][coords.1    ] == n)
+         || (coords.0 > 0     && grid[coords.0 - 1][coords.1    ] == n)
+         || (coords.1 < N - 1 && grid[coords.0    ][coords.1 + 1] == n)
+         || (coords.1 > 0     && grid[coords.0    ][coords.1 - 1] == n))
 }
 
 pub open spec fn adjacent_numbers<const N: usize>(grid: Seq<Seq<int>>, m: int, n: int) -> bool
