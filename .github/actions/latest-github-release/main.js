@@ -26,6 +26,7 @@ async function run() {
             repo: repo,
             });
         releases = releases.data;
+        console.log("releases");
         console.log(releases);
         var latest_release = releases[0];
         var release = latest_release;
@@ -45,6 +46,9 @@ async function run() {
             repo: repo,
             release_id: release.id,
         });
+        console.log("assets");
+        console.log(assets);
+        console.log(assets.length);
 
         for (asset in assets.data) {
             console.log(asset);
