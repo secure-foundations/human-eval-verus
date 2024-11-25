@@ -25,12 +25,12 @@ jobs:
           ANYFAILED=""
           for i in *.rs; do
             echo -n "[verus] $i: "
-            if verus "$i" >/dev/null 2>/dev/null; then
+            if ~/verus-x86-linux/verus "$i" >/dev/null 2>/dev/null; then
               echo "success"
             else 
               echo "failed"
               # Re-run `verus` on any failure just to display the actual output
-              verus "$i" || true
+              ~/verus-x86-linux/verus "$i" || true
               ANYFAILED="$ANYFAILED $i"
             fi
           done
