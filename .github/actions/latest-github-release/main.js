@@ -50,7 +50,7 @@ async function run() {
         console.log(assets);
         console.log(assets.length);
 
-        for (asset in assets.data) {
+        for (const asset of assets.data) {
             console.log(asset);
             if (asset.name.indexOf(platform) >= 0) {
                 core.setOutput('url', asset.url);
