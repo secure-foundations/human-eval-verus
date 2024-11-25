@@ -31160,13 +31160,26 @@ async function run() {
         if (repository){
                 [owner, repo] = repository.split("/");
         }
-        var release = await octokit.repos.getLatestRelease({
-            owner: owner,
-            repo: repo,
-            });
-        release = release.data;
+        // var releases  = await octokit.repos.listReleases({
+        //     owner: owner,
+        //     repo: repo,
+        //     });
+        // releases = releases.data;
+        // console.log(releases);
+        // var latest_release = releases[0];
+        // var release = latest_release;
+        // // var release = await octokit.rest.repos.getLatestRelease({
+        // //     owner: owner,
+        // //     repo: repo,
+        // //     });
+        // //release = release.data;
 
-        var assets = await octokit.repos.listReleaseAssets({
+        var release = await octokit.rest.repos.getLatestRelease({
+             owner: owner,
+             repo: repo,
+             });
+        release = release.data;
+        var assets = await octokit.rest.repos.listReleaseAssets({
             owner: owner,
             repo: repo,
             release_id: release.id,
