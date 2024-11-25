@@ -11,6 +11,8 @@ jobs:
       - name: get Verus release info
         id: verus-release-info
         uses: pozetroninc/github-action-get-latest-release@v0.8.0
+        with:
+          repository: verus-lang/verus
       - name: acquire verus
         run: |
           curl --proto '=https' --tlsv1.2 -LsSf https://github.com/verus-lang/verus/releases/download/release%2Frolling%2F${{ steps.verus-release-info.outputs.release }}/verus-${{ steps.verus-release-info.outputs.release }}-x86-linux.zip | unzip
