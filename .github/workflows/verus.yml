@@ -17,7 +17,7 @@ jobs:
           platform: x86-linux
       - name: acquire verus
         run: |
-          curl --proto '=https' --tlsv1.2 -LsSf ${{ steps.verus-release-info.outputs.url }} -o verus.zip; unzip verus.zip
+          curl --proto '=https' --tlsv1.2 -LsSf ${{ steps.verus-release-info.outputs.url }} -o verus.zip; unzip verus.zip; pwd
       - name: run Verus
         working-directory: ./tasks
         run: |
