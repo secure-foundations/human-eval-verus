@@ -1,0 +1,36 @@
+name: verus
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  verusfmt-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: get Verus release info
+        id: verus-release-info
+        uses: pozetroninc/github-action-get-latest-release@v0.8.0
+      - name: acquire verus
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/verus-lang/verus/releases/download/release%2Frolling%2F${{ steps.verus-release-info.outputs.release }}/verus-${{ steps.verus-release-info.outputs.release }}-x86-linux.zip | unzip
+      - name: run Verus
+        working-directory: ./tasks
+        run: |
+          # Run `verus` on each file, collecting failures if any
+          ANYFAILED=""
+          for i in *.rs; do
+            echo -n "[verus] $i: "
+            if verus "$i" >/dev/null 2>/dev/null; then
+              echo "success"
+            else 
+              echo "failed"
+              # Re-run `verus` on any failure just to display the actual output
+              verus "$i" || true
+              ANYFAILED="$ANYFAILED $i"
+            fi
+          done
+          if [ -n "$ANYFAILED" ]; then
+            echo "Failed:$ANYFAILED"
+            exit 1
+          fi
