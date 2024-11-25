@@ -1,0 +1,34 @@
+name: 'Get Latest GitHub Release'
+description: >-
+  Get the latest release from another repository and output that for use in 
+  other actions
+branding:
+  icon: 'anchor'
+  color: 'orange'
+inputs:
+  owner:
+    description: 'The Github user or organization that owns the repository'
+    required: false
+  repo:
+    description: 'The repository name'
+    required: false
+  repository:
+    description: 'The repository name in full'
+    required: false
+  excludes:
+    description: 'Types of releases to exclude (e.g. pre-release)'
+    required: false
+  token:
+    description: 'The GitHub token or personal access token'
+    required: false
+  platform:
+    description: 'Desired platform for the release'
+    required: true
+outputs:
+  # release:
+  #   description: 'Latest release name'
+  url:
+    description: 'URL to use when downloading the release'
+runs:
+  using: 'node20'
+  main: 'main.js' #'dist/index.js'

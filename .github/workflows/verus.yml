@@ -3,19 +3,21 @@ name: verus
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  verusfmt-check:
+  verus:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: actions/checkout@v4
       - name: get Verus release info
         id: verus-release-info
-        uses: pozetroninc/github-action-get-latest-release@v0.8.0
+        #uses: pozetroninc/github-action-get-latest-release@v0.8.0
+        uses: ./.github/actions/latest-github-release
         with:
           repository: verus-lang/verus
+          excludes: "draft"
       - name: acquire verus
         run: |
-          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/verus-lang/verus/releases/download/release%2Frolling%2F${{ steps.verus-release-info.outputs.release }}/verus-${{ steps.verus-release-info.outputs.release }}-x86-linux.zip | unzip
+          curl --proto '=https' --tlsv1.2 -LsSf ${{ steps.verus-release-info.outputs.url }} | unzip -
       - name: run Verus
         working-directory: ./tasks
         run: |
