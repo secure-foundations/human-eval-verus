@@ -53,7 +53,7 @@ async function run() {
         for (const asset of assets.data) {
             console.log(asset);
             if (asset.name.indexOf(platform) >= 0) {
-                core.setOutput('url', asset.url);
+                core.setOutput('url', asset.browser_download_url);
                 break;
             }
         }
