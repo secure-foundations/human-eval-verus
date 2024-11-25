@@ -12,7 +12,6 @@ jobs:
       - name: Install toolchain dependencies
         shell: bash
         run: |
-          dnf install -y gcc
           curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
           echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
 
