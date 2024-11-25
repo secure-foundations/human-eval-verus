@@ -34,10 +34,10 @@ pub open spec fn is_adjacent<const N: usize>(
     &&& (0 <= coords.0 <= N - 1)
     &&& (0 <= coords.1 <= N - 1)
     &&& grid[coords.0][coords.1] == m
-    &&& (   (coords.0 < N - 1 && grid[coords.0 + 1][coords.1] == n)
-         || (coords.0 > 0 && grid[coords.0 - 1][coords.1] == n)
-         || (coords.1 < N - 1 && grid[coords.0][coords.1 + 1] == n)
-         || (coords.1 > 0 && grid[coords.0][coords.1 - 1] == n))
+    &&& (   (coords.0 < N - 1 && grid[coords.0 + 1][coords.1    ] == n)
+         || (coords.0 > 0     && grid[coords.0 - 1][coords.1    ] == n)
+         || (coords.1 < N - 1 && grid[coords.0    ][coords.1 + 1] == n)
+         || (coords.1 > 0     && grid[coords.0    ][coords.1 - 1] == n))
 }
 
 pub open spec fn adjacent_numbers<const N: usize>(grid: Seq<Seq<int>>, m: int, n: int) -> bool
@@ -275,7 +275,7 @@ proof fn lemma_less_than_step_even<const N: usize>(
             alternate_path_,
         )) implies (path_less_than(path + seq![extra_item], alternate_path_) || path + seq![
         extra_item,
-    ] == alternate_path_) by {
+    ] =~= alternate_path_) by {
         if path_less_than(path, alternate_path_.subrange(0, path.len() as int)) {
         } else {
             if (alternate_path_[path.len() as int] > extra_item) {
@@ -328,7 +328,7 @@ proof fn lemma_less_than_step_odd<const N: usize>(
             alternate_path_,
         )) implies (path_less_than(path + seq![extra_item], alternate_path_) || path + seq![
         extra_item,
-    ] == alternate_path_) by {
+    ] =~= alternate_path_) by {
         assert(is_valid_path::<N>(
             grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
             alternate_path_.subrange(0, path.len() as int),
