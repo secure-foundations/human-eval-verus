@@ -8,6 +8,19 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+
+      - name: Install toolchain dependencies
+        shell: bash
+        run: |
+          dnf install -y gcc
+          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
+          echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
+
+      - name: Install Rust toolchain
+        run: |
+          rustup update --no-self-update stable
+          rustup install 1.79.0-x86_64-unknown-linux-gnu
+
       - name: get Verus release info
         id: verus-release-info
         #uses: pozetroninc/github-action-get-latest-release@v0.8.0
