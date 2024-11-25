@@ -21,13 +21,13 @@ async function run() {
         if (repository){
                 [owner, repo] = repository.split("/");
         }
-        var release = await octokit.repos.getLatestRelease({
+        var release = await octokit.rest.repos.getLatestRelease({
             owner: owner,
             repo: repo,
             });
         release = release.data;
 
-        var assets = await octokit.repos.listReleaseAssets({
+        var assets = await octokit.rest.repos.listReleaseAssets({
             owner: owner,
             repo: repo,
             release_id: release.id,
