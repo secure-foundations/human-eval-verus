@@ -275,7 +275,7 @@ proof fn lemma_less_than_step_even<const N: usize>(
             alternate_path_,
         )) implies (path_less_than(path + seq![extra_item], alternate_path_) || path + seq![
         extra_item,
-    ] == alternate_path_) by {
+    ] =~= alternate_path_) by {
         if path_less_than(path, alternate_path_.subrange(0, path.len() as int)) {
         } else {
             if (alternate_path_[path.len() as int] > extra_item) {
@@ -328,7 +328,7 @@ proof fn lemma_less_than_step_odd<const N: usize>(
             alternate_path_,
         )) implies (path_less_than(path + seq![extra_item], alternate_path_) || path + seq![
         extra_item,
-    ] == alternate_path_) by {
+    ] =~= alternate_path_) by {
         assert(is_valid_path::<N>(
             grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
             alternate_path_.subrange(0, path.len() as int),
