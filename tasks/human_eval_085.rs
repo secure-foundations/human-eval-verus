@@ -10,14 +10,17 @@ use vstd::prelude::*;
 verus! {
 
 /// Returns x if x is odd, else returns 0.
-pub open spec fn odd_or_zero(x: u32) -> u32
-{
-    if x % 2 == 0 { x } else { 0 }
+pub open spec fn odd_or_zero(x: u32) -> u32 {
+    if x % 2 == 0 {
+        x
+    } else {
+        0
+    }
 }
 
 /// Sum of all even elements at odd indices in the list.
 pub open spec fn add_odd_evens(lst: Seq<u32>) -> int
-    decreases lst.len()
+    decreases lst.len(),
 {
     if (lst.len() < 2) {
         0
@@ -28,12 +31,13 @@ pub open spec fn add_odd_evens(lst: Seq<u32>) -> int
 
 /// Implementation:
 /// Needed to change from (signed) integer to unsigned integer: Verus doesn't yet support % for signed integers.
-/// Original definition is underspecified when list has no applicable elements: assume that the desired return value is 0 for lists with no even integers at odd indices.
+/// Original definition is underspecified when list has no applicable elements: 
+/// assume that the desired return value is 0 for lists with no even integers at odd indices.
 fn add(lst: Vec<u32>) -> (sum: u64)
-    requires 
-        0 < lst.len() < u32::MAX
+    requires
+        0 < lst.len() < u32::MAX,
     ensures
-        sum == add_odd_evens(lst@)
+        sum == add_odd_evens(lst@),
 {
     let mut sum: u64 = 0;
     let mut i = 1;
