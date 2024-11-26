@@ -31,7 +31,7 @@ pub open spec fn add_odd_evens(lst: Seq<u32>) -> int
 
 /// Implementation:
 /// Needed to change from (signed) integer to unsigned integer: Verus doesn't yet support % for signed integers.
-/// Original definition is underspecified when list has no applicable elements: 
+/// Original definition is underspecified when list has no applicable elements:
 /// assume that the desired return value is 0 for lists with no even integers at odd indices.
 fn add(lst: Vec<u32>) -> (sum: u64)
     requires
