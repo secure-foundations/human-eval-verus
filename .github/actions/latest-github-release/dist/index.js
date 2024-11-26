@@ -31144,7 +31144,7 @@ const repository = core.getInput('repository');
 const token = core.getInput('token');
 var owner = core.getInput('owner');
 var repo = core.getInput('repo');
-var excludes = core.getInput('excludes').trim().split(",");
+//var excludes = core.getInput('excludes').trim().split(",");
 var platform = core.getInput('platform');
 
 const octokit = (() => {
