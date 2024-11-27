@@ -9,7 +9,14 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+fn right_angle_triangle(a: u32, b: u32, c: u32) -> (is: bool)
+    by (nonlinear_arith)
+    ensures
+        is <==> (a * a + b * b == c * c || a * a + c * c == b * b || b * b + c * c == a * a),
+{
+    let (a, b, c) = (a as u128, b as u128, c as u128);
+    a * a + b * b == c * c || a * a + c * c == b * b || b * b + c * c == a * a
+}
 
 } // verus!
 fn main() {}

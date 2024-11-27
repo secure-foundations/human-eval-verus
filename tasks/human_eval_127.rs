@@ -5,11 +5,91 @@ HumanEval/127
 /*
 ### VERUS BEGIN
 */
+use vstd::math;
 use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+fn min(a: i32, b: i32) -> (m: i32)
+    ensures
+        m == math::min(a as int, b as int),
+{
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+fn max(a: i32, b: i32) -> (m: i32)
+    ensures
+        m == math::max(a as int, b as int),
+{
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+spec fn spec_prime_helper(num: int, limit: int) -> bool {
+    forall|j: int| 2 <= j < limit ==> (#[trigger] (num % j)) != 0
+}
+
+spec fn spec_prime(num: int) -> bool {
+    num >= 2 && spec_prime_helper(num, num)
+}
+
+fn is_prime_2(num: u64) -> (result: bool)
+    requires
+        num >= 2,
+    ensures
+        result <==> spec_prime(num as int),
+{
+    let mut i = 2;
+    let mut result = true;
+    while i < num
+        invariant
+            2 <= i <= num,
+            result <==> spec_prime_helper(num as int, i as int),
+    {
+        if num % i == 0 {
+            result = false;
+        }
+        i += 1;
+    }
+    result
+}
+
+fn is_prime(num: i64) -> (is: bool)
+    requires
+        num >= 0,
+    ensures
+        is <==> (num >= 2 && spec_prime(num as int)),
+{
+    num >= 2 && is_prime_2(num as u64)
+}
+
+fn intersection(a: (i32, i32), b: (i32, i32)) -> (result: &'static str)
+    requires
+        a.0 <= a.1 && b.0 <= b.1,
+    ensures
+        result == "YES" || result == "NO",
+        result == "YES" <==> {
+            let left = math::max(a.0 as int, b.0 as int);
+            let right = math::min(a.1 as int, b.1 as int);
+            left <= right && spec_prime(right - left + 1)
+        },
+{
+    let sect_start = max(a.0, b.0);
+    let sect_end = min(a.1, b.1);
+
+    if sect_start < sect_end && is_prime(sect_end as i64 - sect_start as i64 + 1) {
+        "YES"
+    } else {
+        "NO"
+    }
+}
 
 } // verus!
 fn main() {}

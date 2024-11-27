@@ -5,11 +5,75 @@ HumanEval/163
 /*
 ### VERUS BEGIN
 */
+use vstd::math::{max as vmax, min as vmin};
 use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+fn min(a: u32, b: u32) -> (m: u32)
+    ensures
+        m == vmin(a as int, b as int),
+{
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+fn max(a: u32, b: u32) -> (m: u32)
+    ensures
+        m == vmax(a as int, b as int),
+{
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+#[verifier::loop_isolation(false)]
+fn generate_integers(a: u32, b: u32) -> (result: Vec<u32>)
+    ensures
+        forall|i: int| 0 <= i < result.len() ==> result[i] % 2 == 0,
+        forall|i: int|
+            0 <= i < result.len() ==> (result[i] == 2 || result[i] == 4 || result[i] == 6
+                || result[i] == 8),
+        forall|i: int, j: int| 0 <= i < j < result.len() ==> result[i] <= result[j],
+        forall|x: int|
+            vmin(a as int, b as int) <= x <= vmax(a as int, b as int) && 2 <= x <= 8 && x % 2 == 0
+                ==> #[trigger] result@.contains(x as u32),
+{
+    let left = min(a, b);
+    let right = max(a, b);
+
+    if right < 2 || left > 8 {
+        return vec![];
+    }
+    let lower = max(2, left);
+    let upper = min(8, right);
+
+    assert(2 <= lower);
+    assert(upper <= 8);
+
+    let mut result: Vec<u32> = vec![];
+    let mut i = lower;
+    while i <= upper
+        invariant
+            lower <= i <= upper + 1,
+            forall|i: int| 0 <= i < result.len() ==> result[i] % 2 == 0,
+            forall|i: int|
+                0 <= i < result.len() ==> (result[i] == 2 || result[i] == 4 || result[i] == 6
+                    || result[i] == 8),
+            forall|j: int| 0 <= j < result.len() ==> result[j] <= i,
+            forall|i: int, j: int| 0 <= i < j < result.len() ==> result[i] <= result[j],
+    {
+        if i % 2 == 0 {
+            result.push(i);
+        }
+    }
+    result
+}
 
 } // verus!
 fn main() {}
