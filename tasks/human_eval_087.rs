@@ -15,12 +15,6 @@ pub open spec fn row_sorted_asc(coords: Seq<(usize, usize)>) -> bool {
         0 <= i < j < coords.len() ==> #[trigger] coords[i as int].0 <= #[trigger] coords[j as int].0
 }
 
-pub open spec fn col_sorted_asc(coords: Seq<(usize, usize)>) -> bool {
-    forall|i: usize, j: usize|
-        0 <= i < j < coords.len() && #[trigger] coords[i as int].0 == #[trigger] coords[j as int].0
-            ==> coords[i as int].1 < coords[j as int].1
-}
-
 pub open spec fn col_sorted_desc(coords: Seq<(usize, usize)>) -> bool {
     forall|i: usize, j: usize|
         0 <= i < j < coords.len() && #[trigger] coords[i as int].0 == #[trigger] coords[j as int].0
@@ -39,7 +33,7 @@ pub open spec fn coords_complete_for_row_until_col(
 {
     forall|j: usize|
         #![trigger lst[i as int][j as int]]
-        0 <= j < lst[i as int].len() && j < col && lst[i as int][j as int] == x ==> exists|k: int|
+        0 <= j < lst[i as int].len() && col <= j && lst[i as int][j as int] == x ==> exists|k: int|
             #![trigger coords[k]]
             0 <= k < coords.len() && coords[k] == (i, j)
 }
@@ -52,13 +46,7 @@ pub open spec fn coords_complete_until_row(
 ) -> bool {
     forall|i: usize|
         #![trigger lst[i as int]]
-        0 <= i < lst.len() && i < row ==> coords_complete_for_row_until_col(
-            lst,
-            x,
-            coords,
-            i,
-            lst[i as int].len() as usize,
-        )
+        0 <= i < lst.len() && i < row ==> coords_complete_for_row_until_col(lst, x, coords, i, 0)
 }
 
 pub open spec fn coords_complete(lst: Seq<Seq<i32>>, x: i32, coords: Seq<(usize, usize)>) -> bool {
@@ -86,55 +74,54 @@ pub open spec fn lst_seq_refl(lst: Vec<Vec<i32>>) -> Seq<Seq<i32>> {
     lst@.map_values(|v: Vec<i32>| v@)
 }
 
-pub open spec fn coords_seq_refl(
-    coords: Vec<(usize, usize)>
-) -> Seq<(usize, usize)> {
+pub open spec fn coords_seq_refl(coords: Vec<(usize, usize)>) -> Seq<(usize, usize)> {
     coords@
 }
 
 fn get_row(lst: Vec<Vec<i32>>, x: i32) -> (coords: Vec<(usize, usize)>)
     ensures
-        coords_matches_lst(lst_seq_refl(lst), x, coords@)
+        coords_matches_lst(lst_seq_refl(lst), x, coords@),
+        row_sorted_asc(coords@),
+        col_sorted_desc(coords@)
 {
     let mut coords: Vec<(usize, usize)> = Vec::new();
     let mut i = 0;
     let ghost lst_seq: Seq<Seq<i32>> = lst_seq_refl(lst);
-    let ghost coords_seq: Seq<(usize, usize)> = coords_seq_refl(coords);
-    // first construct list of coordinates in ascending column order
+    let ghost ghost_coords: Seq<(usize, usize)> = coords_seq_refl(coords);
     for i in 0..lst.len()
         invariant
             lst_seq == lst_seq_refl(lst),
-            coords_seq == coords_seq_refl(coords),
-            forall|k: usize| 0 <= k < coords.len() ==> #[trigger] coords@[k as int].0 < i,
+            ghost_coords == coords_seq_refl(coords),
+            forall|k: int| 0 <= k < coords.len() ==> #[trigger] coords@[k].0 < i,
             row_sorted_asc(coords@),
-            col_sorted_asc(coords@),
+            col_sorted_desc(coords@),
             coords_sound(lst_seq, x, coords@),
             coords_complete_until_row(lst_seq, x, coords@, i),
     {
         let n = lst[i].len();
+        // construct list of coordinates for row in descending column order
         for j in 0..n
             invariant
                 lst_seq == lst_seq_refl(lst),
-                coords_seq == coords_seq_refl(coords),
+                ghost_coords == coords_seq_refl(coords),
                 0 <= i < lst.len(),
                 n == lst[i as int].len(),
-                forall|k: usize| 0 <= k < coords.len() ==> #[trigger] coords@[k as int].0 <= i,
+                forall|k: int| 0 <= k < coords.len() ==> #[trigger] coords@[k].0 <= i,
+                forall|k: int|
+                    0 <= k < coords.len() && #[trigger] coords@[k].0 == i ==> coords@[k].1 > n - 1
+                        - j,
                 row_sorted_asc(coords@),
-                forall|k: usize|
-                    0 <= k < coords.len() && coords@[k as int].0 == i
-                        ==> #[trigger] coords@[k as int].1 < j,
-                col_sorted_asc(coords@),
+                col_sorted_desc(coords@),
                 coords_sound(lst_seq, x, coords@),
                 coords_complete_until_row(lst_seq, x, coords@, i),
-                coords_complete_for_row_until_col(lst_seq, x, coords@, i, j),
+                coords_complete_for_row_until_col(lst_seq, x, coords@, i, (n - j) as usize),
         {
-            if (lst[i][j] == x) {
-                let tup = (i, j);
-                coords.push((i, j));
+            if (lst[i][n - 1 - j] == x) {
+                coords.push((i, n - 1 - j));
 
                 proof {
                     assert(coords_complete_until_row(lst_seq, x, coords@, i)) by {
-                        assert(coords@.drop_last() =~= coords_seq);
+                        assert(coords@.drop_last() =~= ghost_coords);
                     }
 
                     assert(coords_complete_for_row_until_col(
@@ -142,38 +129,21 @@ fn get_row(lst: Vec<Vec<i32>>, x: i32) -> (coords: Vec<(usize, usize)>)
                         x,
                         coords@.drop_last(),
                         i,
-                        j as usize,
+                        (n - j) as usize,
                     )) by {
-                        assert(coords@.drop_last() =~= coords_seq);
-                        assert(coords_complete_for_row_until_col(
-                            lst_seq,
-                            x,
-                            coords_seq,
-                            i,
-                            j as usize,
-                        ));
+                        assert(coords@.drop_last() =~= ghost_coords);
                     }
 
-                    coords_seq = coords_seq.push((i, j));
+                    ghost_coords = ghost_coords.push((i, (n - 1 - j) as usize));
 
                     assert(coords_complete_for_row_until_col(
                         lst_seq,
                         x,
                         coords@,
                         i,
-                        (j + 1) as usize,
+                        (n - j - 1) as usize,
                     )) by {
-                        assert(coords_seq.contains((i, j))) by {
-                            assert(coords_seq[coords_seq.len() - 1] == (i, j));
-                        };
-                        coords_complete_for_row_until_col(
-                            lst_seq,
-                            x,
-                            coords_seq,
-                            i,
-                            (j + 1) as usize,
-                        );
-                        assert(coords@ =~= coords_seq);
+                        assert(ghost_coords[ghost_coords.len() - 1] == (i, (n - j - 1) as usize));
                     }
                 }
             }
