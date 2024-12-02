@@ -20,9 +20,14 @@ jobs:
           rustup update --no-self-update stable
           rustup install 1.79.0-x86_64-unknown-linux-gnu
 
-      - name: Get latest Verus release
+      - name: Get the URL for the latest Verus release
+        id: verus-release-info
         run: |
           curl -s https://api.github.com/repos/verus-lang/verus/releases | jq -r ".[].assets.[].browser_download_url" | grep x86-linux -
+
+      - name: Download the latest Verus release
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf ${{ steps.verus-release-info.outputs.url }} -o verus.zip; unzip verus.zip
 
       - name: run Verus
         working-directory: ./tasks
