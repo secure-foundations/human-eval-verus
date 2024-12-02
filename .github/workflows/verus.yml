@@ -21,7 +21,8 @@ jobs:
           rustup install 1.79.0-x86_64-unknown-linux-gnu
 
       - name: Get latest Verus release
-        id: verus-release-info
+        env:
+          GH_TOKEN: $${{ github.token }}
         run: |
           REPO="verus-lang/verus"
           # Determine tag of latest release.
