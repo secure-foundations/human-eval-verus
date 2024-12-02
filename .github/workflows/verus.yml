@@ -24,11 +24,11 @@ jobs:
         id: verus-release-info
         run: |
           jq --version
-          curl -s https://api.github.com/repos/verus-lang/verus/releases | jq -r ".[].assets[].browser_download_url" | grep x86-linux -
+          echo "VERUS_URL=$(curl -s https://api.github.com/repos/verus-lang/verus/releases | jq -r '.[].assets[].browser_download_url' | grep x86-linux -)" >> $GITHUB_OUTPUT
 
       - name: Download the latest Verus release
         run: |
-          curl --proto '=https' --tlsv1.2 -LsSf ${{ steps.verus-release-info.outputs.url }} -o verus.zip; unzip verus.zip
+          curl --proto '=https' --tlsv1.2 -LsSf ${{ steps.verus-release-info.outputs.VERUS_URL }} -o verus.zip; unzip verus.zip
 
       - name: run Verus
         working-directory: ./tasks
