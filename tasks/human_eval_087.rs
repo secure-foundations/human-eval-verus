@@ -84,11 +84,6 @@ pub open spec fn lst_seq_refl(lst: Vec<Vec<i32>>) -> Seq<Seq<i32>> {
     lst@.map_values(|v: Vec<i32>| v@)
 }
 
-/// Returns coords as a Seq.
-pub open spec fn coords_seq_refl(coords: Vec<(usize, usize)>) -> Seq<(usize, usize)> {
-    coords@
-}
-
 /// Returns list of all points in lst whose value is x, sorted by row in ascending order and then by column in descending order.
 fn get_row(lst: Vec<Vec<i32>>, x: i32) -> (coords: Vec<(usize, usize)>)
     ensures
@@ -97,25 +92,22 @@ fn get_row(lst: Vec<Vec<i32>>, x: i32) -> (coords: Vec<(usize, usize)>)
         row_col_sorted_desc(coords@),
 {
     let mut coords: Vec<(usize, usize)> = Vec::new();
-    let mut i = 0;
     let ghost ghost_seq: Seq<Seq<i32>> = lst_seq_refl(lst);
-    let ghost ghost_coords: Seq<(usize, usize)> = coords_seq_refl(coords);
+    // construct list of coordinates for each row in ascending order
     for i in 0..lst.len()
         invariant
             ghost_seq == lst_seq_refl(lst),
-            ghost_coords == coords_seq_refl(coords),
             forall|k: int| 0 <= k < coords.len() ==> #[trigger] coords@[k].0 < i,
             row_sorted_asc(coords@),
             row_col_sorted_desc(coords@),
             coords_sound(ghost_seq, x, coords@),
             coords_complete_until_row(ghost_seq, x, coords@, i),
     {
-        let n = lst[i].len();
         // construct list of coordinates for row in descending column order
+        let n = lst[i].len();
         for j in 0..n
             invariant
                 ghost_seq == lst_seq_refl(lst),
-                ghost_coords == coords_seq_refl(coords),
                 0 <= i < lst.len(),
                 n == lst[i as int].len(),
                 forall|k: int| 0 <= k < coords.len() ==> #[trigger] coords@[k].0 <= i,
@@ -129,28 +121,16 @@ fn get_row(lst: Vec<Vec<i32>>, x: i32) -> (coords: Vec<(usize, usize)>)
                 coords_complete_for_row_until_col(ghost_seq, x, coords@, i, (n - j) as usize),
         {
             if (lst[i][n - 1 - j] == x) {
+                proof {
+                    // needed to show the following are maintained after coords is mutated:
+                    // coords_complete_until_row(ghost_seq, x, coords@, i)
+                    // coords_complete_for_row_until_col(ghost_seq, x, coords@, i, (n - j) as usize)
+                    assert(coords@ =~= coords@.push((i, (n - 1 - j) as usize)).drop_last());
+                }
+
                 coords.push((i, n - 1 - j));
 
                 proof {
-                    // todo - is there a better way to do this?
-                    // seems inefficient to use a ghost variable to assert that the list has only mutated by adding an element to the end
-                    assert(coords_complete_until_row(ghost_seq, x, coords@, i)) by {
-                        assert(coords@.drop_last() =~= ghost_coords);
-                    }
-
-                    // same todo as above
-                    assert(coords_complete_for_row_until_col(
-                        ghost_seq,
-                        x,
-                        coords@.drop_last(),
-                        i,
-                        (n - j) as usize,
-                    )) by {
-                        assert(coords@.drop_last() =~= ghost_coords);
-                    }
-
-                    ghost_coords = ghost_coords.push((i, (n - 1 - j) as usize));
-
                     assert(coords_complete_for_row_until_col(
                         ghost_seq,
                         x,
