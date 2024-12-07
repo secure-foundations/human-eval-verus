@@ -1,4 +1,4 @@
-# VerusBench: Hand-Written Examples of Verified Verus Code
+# HumanEval-Verus: Hand-Written Examples of Verified Verus Code Derived From HumanEval
 
 This is intended to be a collection of examples translated from the [HumanEval]
 benchmark into Rust.  The goal is that each example will include a textual
