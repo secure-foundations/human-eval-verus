@@ -9,7 +9,32 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+#[verifier::loop_isolation(false)]
+fn can_arrange(arr: &Vec<i32>) -> (pos: i32)
+    requires
+        forall|i: int, j: int| 0 <= i < j < arr.len() ==> arr[i] != arr[j],
+        arr.len() + 1 < i32::MAX,
+    ensures
+        pos == -1 ==> forall|i: int| #![trigger arr[i]] 1 <= i < arr.len() ==> arr[i] >= arr[i - 1],
+        pos >= 0 ==> 1 <= pos < arr.len() && arr[pos as int] < arr[pos - 1],
+        pos >= 0 ==> forall|i: int| #![trigger arr[i]] pos < i < arr.len() ==> arr[i] >= arr[i - 1],
+{
+    if arr.len() == 0 {
+        return -1;
+    }
+    let mut pos = -1;
+    for i in 1..arr.len()
+        invariant
+            pos == -1 ==> forall|j: int| #![trigger arr[j]] 1 <= j < i ==> arr[j] >= arr[j - 1],
+            pos >= 0 ==> 1 <= pos < i && arr[pos as int] < arr[pos - 1],
+            pos >= 0 ==> forall|j: int| #![trigger arr[j]] pos < j < i ==> arr[j] >= arr[j - 1],
+    {
+        if arr[i] < arr[i - 1] {
+            pos = i as i32;
+        }
+    }
+    pos
+}
 
 } // verus!
 fn main() {}
