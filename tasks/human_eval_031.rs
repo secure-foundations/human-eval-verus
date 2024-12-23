@@ -9,10 +9,62 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+// specification
+pub open spec fn is_prime(n: nat) -> bool {
+    (n > 1) && forall|i| 1 < i < n ==> #[trigger] (n % i) != 0
+}
+
+pub closed spec fn is_prime_so_far(n: nat, k: nat) -> bool
+    recommends
+        n >= k > 1,
+{
+    forall|i| 1 < i < k ==> #[trigger] (n % i) != 0
+}
+
+// Verus does not yet support quantifiers when using proof-by-compute
+// proof fn sanity_check() {
+//     assert(is_prime(6) == false) by (compute);
+//     assert(is_prime(101) == true) by (compute);
+//     assert(is_prime(11) == true) by (compute);
+//     assert(is_prime(13441) == true) by (compute);
+//     assert(is_prime(61) == true) by (compute);
+//     assert(is_prime(4) == false) by (compute);
+//     assert(is_prime(1) == false) by (compute);
+// }
+// implementation
+fn is_prime_impl(n: u8) -> (res: bool)
+    ensures
+        res == is_prime(n as nat),
+{
+    if n < 2 {
+        return false;
+    }
+    let mut k = 2;
+    let mut res = true;
+
+    while (k < n)
+        invariant
+            2 <= k <= n,
+            res == is_prime_so_far(n as nat, k as nat),
+    {
+        assert((is_prime_so_far(n as nat, k as nat) && (n as nat) % (k as nat) != 0)
+            == is_prime_so_far(n as nat, (k + 1) as nat));
+
+        res = res && n % k != 0;
+        k = k + 1;
+    }
+    return res;
+}
 
 } // verus!
-fn main() {}
+fn main() {
+    print!("6 is prime? {}\n", is_prime_impl(6));
+    print!("101 is prime? {}\n", is_prime_impl(101));
+    print!("11 is prime? {}\n", is_prime_impl(11));
+    print!("61 is prime? {}\n", is_prime_impl(61));
+    print!("4 is prime? {}\n", is_prime_impl(4));
+    print!("1 is prime? {}\n", is_prime_impl(1));
+}
 
 /*
 ### VERUS END
