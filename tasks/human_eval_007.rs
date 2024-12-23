@@ -36,10 +36,16 @@ fn string_eq(s1: &str, s2: &str) -> (result: bool)
     true
 }
 
+spec fn is_subseq_of<A>(s: Seq<A>, sub: Seq<A>) -> bool {
+    exists|i: int| 0 <= i <= s.len() - sub.len() && s.subrange(i, #[trigger] (i + sub.len())) == sub
+}
+
 fn check_substring(s: &str, sub: &str) -> (result: bool)
     ensures
-        result <==> exists|i: int|
-            0 <= i <= s@.len() - sub@.len() && s@.subrange(i, #[trigger] (i + sub@.len())) == sub@,
+        result <==> is_subseq_of(s@, sub@),
+//        exists|i: int|
+//            0 <= i <= s@.len() - sub@.len() && s@.subrange(i, #[trigger] (i + sub@.len())) == sub@,
+
 {
     let s_len = s.unicode_len();
     let sub_len = sub.unicode_len();
@@ -66,32 +72,64 @@ fn check_substring(s: &str, sub: &str) -> (result: bool)
     false
 }
 
-fn filter_by_substring<'a>(strings: &Vec<&'a str>, substring: &str) -> (res: Vec<&'a str>)
+fn filter_by_sub<'a>(strings: &Vec<&'a str>, sub: &str) -> (res: Vec<&'a str>)
     ensures
-        forall|i: int|
-            0 <= i < strings@.len() && (exists|j: int|
-                0 <= j <= strings@[i]@.len() - substring@.len() && strings[i]@.subrange(
-                    j,
-                    #[trigger] (j + substring@.len()),
-                ) == substring@) ==> res@.contains(#[trigger] (strings[i])),
+        strings@.filter(|s: &str| is_subseq_of(s@, sub@))
+            == res@,
+// forall|i: int|
+//     0 <= i < strings@.len() &&
+//     // strings@.filter (|s: &str| is_subseq_of(s@, sub@)) == res@
+//     is_subseq_of(strings[i]@, sub@) ==> res@.contains(
+//         #[trigger] (strings[i]),
+//     ) && res@.contains(#[trigger] (strings[i])) ==> is_subseq_of(strings[i]@, sub@),
+
 {
     let mut res = Vec::new();
+    // assert (strings@.subrange(0, 0).filter (|s: &str| is_subseq_of(s@, sub@)) == res@);
+    assert(res@ == Seq::<&str>::empty());
+    let mut n = 0;
+    // while n < strings.len()
     for n in 0..strings.len()
         invariant
-            forall|i: int|
-                0 <= i < n && (exists|j: int|
-                    0 <= j <= strings@[i]@.len() - substring@.len() && strings[i]@.subrange(
-                        j,
-                        #[trigger] (j + substring@.len()),
-                    ) == substring@) ==> res@.contains(#[trigger] (strings[i])),
+    // n < strings.len(),
+    // forall|i: int|
+    //     0 <= i < n && is_subseq_of(strings[i]@, sub@) ==> res@.contains(
+    //         #[trigger] (strings[i]),
+    //     ),
+
+            strings@.subrange(0, n as int).filter(|s: &str| is_subseq_of(s@, sub@)) == res@,
+            n <= strings.len(),
     {
-        if check_substring(strings[n], substring) {
-            let ghost res_old = res;
+        reveal(Seq::filter);
+        assert(strings@.subrange(0, n as int + 1).drop_last() == strings@.subrange(0, n as int));
+        if check_substring(strings[n], sub) {
+            // let ghost res_old = res@;
+            // let ghost filtered_sub = strings@.subrange(0, n as int).filter (|s: &str| is_subseq_of(s@, sub@));
+            // let ghost pred = |s: &str| is_subseq_of(s@, sub@);
+            // let ghost last = ran.last();
+            // assert (last@ == strings[n as int]@);
+            // let ghost ra = ran.drop_last();
+            // assert(ra.push(last) == ran);
+            // assert (ra == strings@.subrange(0, n as int));
+            // assert (pred(last));
+            // let ghost ran_f = ran.filter(pred);
+            // let ghost ra_f = ra.filter(pred);
+            // assert(ra_f == res@);
+            // assert(ra_f.push(last) == ran_f);
+            // assert (ran.filter (|s: &str| is_subseq_of(s@, sub@)).last()@ == ran.last()@);
             res.push(strings[n]);
-            assert(res@.last() == strings[n as int]);
-            assert(res@.drop_last() == res_old@);
+            // assert (ran_f == res@);
+            // assert(res@.last() == strings[n as int]);
+            // assert (strings[n as int] == strings@.subrange(0, n as int + 1).last());
+            // assert (res_old == filtered_sub);
+            // assert (strings[n as int] == strings@.subrange(0, n as int + 1).filter (|s: &str| is_subseq_of(s@, sub@)).last());
+            // assert (strings@.subrange(0, (n as int) + 1).filter (|s: &str| is_subseq_of(s@, sub@)) == strings@.subrange(0, n as int).filter (|s: &str| is_subseq_of(s@, sub@)).push(strings[n as int]));
+            // assert(strings[n as int]@ == strings@.subrange(0, n + 1).filter(|s: &str| is_subseq_of(s@, sub@)).last()@);
+            // assert(res@.drop_last() == res_old);
         }
     }
+    assert(strings@.subrange(0, strings@.len() as int) == strings@);
+    // assert (strings@.subrange(0, n as int).filter (|s: &str| is_subseq_of(s@, sub@)) == res@);
     res
 }
 
