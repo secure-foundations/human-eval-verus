@@ -9,7 +9,99 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+// This spec function extracts the first digit of an integer
+spec fn extract_first_digit_spec(n: int) -> int
+    decreases n,
+{
+    if n < 10 {
+        n
+    } else {
+        extract_first_digit_spec(n / 10)
+    }
+}
+
+fn extract_first_digit(n: u32) -> (res: u32)
+    ensures
+        res == extract_first_digit_spec(n as int),
+{
+    if n < 10 {
+        n
+    } else {
+        extract_first_digit(n / 10)
+    }
+}
+
+// This spec function extracts the last digit of an integer
+spec fn extract_last_digit_spec(n: int) -> int {
+    n % 10
+}
+
+fn extract_last_digit(n: u32) -> (res: u32)
+    ensures
+        res == extract_last_digit_spec(n as int),
+{
+    n % 10
+}
+
+spec fn is_odd(n: int) -> bool {
+    (n % 2) != 0
+}
+
+//This spec function determines a valid integer according to the problem description
+spec fn is_valid_element_spec(n: int) -> bool {
+    &&& (n > 10)
+    &&& is_odd(extract_first_digit_spec(n))
+    &&& is_odd(extract_last_digit_spec(n))
+}
+
+fn is_valid_element(n: i32) -> (res: bool)
+    ensures
+        res == is_valid_element_spec(n as int),
+{
+    ((n > 10) && (extract_first_digit(n as u32) % 2 != 0) && (extract_last_digit(n as u32) % 2
+        != 0))
+}
+
+//This spec function specifies the postcondition according to the problem description
+spec fn special_filter_spec(seq: Seq<i32>) -> int
+    decreases seq.len(),
+{
+    if seq.len() == 0 {
+        0
+    } else {
+        special_filter_spec(seq.drop_last()) + if (is_valid_element_spec(seq.last() as int)) {
+            1 as int
+        } else {
+            0 as int
+        }
+    }
+}
+
+fn special_filter(numbers: &Vec<i32>) -> (count: usize)
+    ensures
+        count == special_filter_spec(numbers@),
+{
+    let ghost numbers_length = numbers.len();
+    let mut counter: usize = 0;
+    let mut index = 0;
+    while index < numbers.len()
+        invariant
+            0 <= index <= numbers.len(),
+            0 <= counter <= index,
+            counter == special_filter_spec(numbers@.subrange(0, index as int)),
+    {
+        if (is_valid_element(numbers[index])) {
+            counter += 1;
+        }
+        index += 1;
+        assert(numbers@.subrange(0, index - 1 as int) == numbers@.subrange(
+            0,
+            index as int,
+        ).drop_last());
+    }
+    assert(numbers@ == numbers@.subrange(0, numbers_length as int));
+    counter
+}
 
 } // verus!
 fn main() {}

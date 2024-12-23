@@ -45,6 +45,8 @@ fn largest_prime_factor(n: u32) -> (largest: u32)
     ensures
         1 <= largest <= n,
         spec_prime(largest as int),
+        n % largest == 0,
+        forall|p| 0 <= p < n && spec_prime(p) && n as int % p == 0 ==> p <= largest,
 {
     let mut largest = 1;
     let mut j = 1;
@@ -52,6 +54,8 @@ fn largest_prime_factor(n: u32) -> (largest: u32)
         invariant
             1 <= largest <= j <= n,
             spec_prime(largest as int),
+            n % largest == 0,
+            forall|p| 0 <= p <= j && spec_prime(p) && n as int % p == 0 ==> p <= largest,
     {
         j += 1;
         let flag = is_prime(j);
