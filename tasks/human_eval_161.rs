@@ -9,7 +9,99 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+spec fn isalpha_spec(c: int) -> bool {
+    65 <= c <= 90 || 97 <= c <= 122
+}
+
+fn isalpha(c: u8) -> (is: bool)
+    ensures
+        is <==> isalpha_spec(c as int),
+{
+    (65 <= c && c <= 90) || (97 <= c && c <= 122)
+}
+
+spec fn flip_case_spec(c: int) -> int
+    recommends
+        isalpha_spec(c),
+{
+    if 97 <= c <= 122 {
+        c - 97 + 65
+    } else {
+        c - 65 + 97
+    }
+}
+
+fn flip_case(c: u8) -> (flipped: u8)
+    requires
+        isalpha_spec(c as int),
+    ensures
+        isalpha_spec(flipped as int),
+        flipped == flip_case_spec(c as int),
+{
+    if 97 <= c && c <= 122 {
+        c - 97 + 65
+    } else {
+        c - 65 + 97
+    }
+}
+
+fn reverse(s: Vec<u8>) -> (rev: Vec<u8>)
+    ensures
+        s.len() == rev.len(),
+        forall|i: int| 0 <= i < s.len() ==> rev[i] == s[s.len() - 1 - i],
+{
+    let mut rev = vec![];
+    for i in 0..s.len()
+        invariant
+            rev.len() == i,
+            forall|k: int| 0 <= k < i ==> rev[k] == s[s.len() - 1 - k],
+    {
+        rev.push(s[s.len() - i - 1]);
+    }
+    rev
+}
+
+fn solve(s: &Vec<u8>) -> (t: Vec<u8>)
+    ensures
+        s.len() == t.len(),
+        (forall|i: int| #![auto] 0 <= i < s.len() ==> !isalpha_spec(s[i] as int)) ==> (forall|
+            i: int,
+        |
+            0 <= i < t.len() ==> t[i] == s[s.len() - 1 - i]),
+        (exists|i: int| #![auto] 0 <= i < s.len() && isalpha_spec(s[i] as int)) ==> (forall|i: int|
+            #![auto]
+            0 <= i < t.len() ==> t[i] == (if isalpha_spec(s[i] as int) {
+                flip_case_spec(s[i] as int)
+            } else {
+                s[i] as int
+            })),
+{
+    let mut flag = false;
+    let mut t = vec![];
+    for i in 0..s.len()
+        invariant
+            t.len() == i,
+            flag <==> exists|j: int| #![auto] 0 <= j < i && isalpha_spec(s[j] as int),
+            forall|j: int|
+                #![auto]
+                0 <= j < i ==> (t[j] == if isalpha_spec(s[j] as int) {
+                    flip_case_spec(s[j] as int)
+                } else {
+                    s[j] as int
+                }),
+    {
+        if isalpha(s[i]) {
+            t.push(flip_case(s[i]));
+            flag = true;
+        } else {
+            t.push(s[i]);
+        }
+    }
+    if !flag {
+        t = reverse(t);
+    }
+    t
+}
 
 } // verus!
 fn main() {}

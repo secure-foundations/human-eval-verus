@@ -9,7 +9,12 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+fn is_equal_to_sum_even(n: u32) -> (b: bool)  // 2 + 2 + 2 + (n - 6)
+    ensures
+        b <==> n % 2 == 0 && n >= 8,
+{
+    n % 2 == 0 && n >= 8
+}
 
 } // verus!
 fn main() {}
