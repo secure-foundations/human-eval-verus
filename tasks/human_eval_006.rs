@@ -5,13 +5,12 @@ HumanEval/6
 /*
 ### VERUS BEGIN
 */
-use vstd::prelude::*;
 use vstd::math::*;
+use vstd::prelude::*;
 
 verus! {
 
 // TODO: Put your solution (the specification, implementation, and proof) to the task here
-
 /// Given a space separated group of nested parentheses
 /// return a list of maximum depths of each group.
 pub open spec fn spec_nested_parens(s: Seq<char>) -> Option<Seq<int>> {
@@ -19,8 +18,13 @@ pub open spec fn spec_nested_parens(s: Seq<char>) -> Option<Seq<int>> {
 }
 
 /// Formalizes the problem as a rewrite system
-pub open spec fn spec_nested_parens_helper(s: Seq<char>, depth: int, max_depth: int, prev_depths: Seq<int>) -> Option<Seq<int>>
-    decreases s.len()
+pub open spec fn spec_nested_parens_helper(
+    s: Seq<char>,
+    depth: int,
+    max_depth: int,
+    prev_depths: Seq<int>,
+) -> Option<Seq<int>>
+    decreases s.len(),
 {
     if s.len() == 0 && depth == 0 {
         if max_depth == 0 {
@@ -64,20 +68,22 @@ pub fn parse_nested_parens(s: &str) -> (res: Option<Vec<usize>>)
         invariant
             i <= s_len == s@.len() <= usize::MAX,
             0 <= depth <= max_depth <= i,
-            spec_nested_parens_helper(s@, 0, 0, seq![])
-            == spec_nested_parens_helper(
-                s@.skip(i as int), depth as int, max_depth as int,
+            spec_nested_parens_helper(s@, 0, 0, seq![]) == spec_nested_parens_helper(
+                s@.skip(i as int),
+                depth as int,
+                max_depth as int,
                 all_depths@.map_values(|d| d as int),
             ),
     {
-        let c = s.get_char(i); // Not the best performance-wise
+        let c = s.get_char(i);  // Not the best performance-wise
 
         assert(s@.skip(i as int).drop_first() == s@.skip(i + 1));
 
         if c == ' ' && depth == 0 && max_depth != 0 {
             // Push and map_values commute
-            assert(all_depths@.push(max_depth).map_values(|d| d as int)
-                == all_depths@.map_values(|d| d as int) + seq![max_depth as int]);
+            assert(all_depths@.push(max_depth).map_values(|d| d as int) == all_depths@.map_values(
+                |d| d as int,
+            ) + seq![max_depth as int]);
 
             all_depths.push(max_depth);
             depth = 0;
@@ -99,14 +105,13 @@ pub fn parse_nested_parens(s: &str) -> (res: Option<Vec<usize>>)
     if depth != 0 {
         return None;
     }
-
     if max_depth != 0 {
         // Push and map_values commute
-        assert(all_depths@.push(max_depth).map_values(|d| d as int)
-            == all_depths@.map_values(|d| d as int) + seq![max_depth as int]);
+        assert(all_depths@.push(max_depth).map_values(|d| d as int) == all_depths@.map_values(
+            |d| d as int,
+        ) + seq![max_depth as int]);
         all_depths.push(max_depth);
     }
-
     Some(all_depths)
 }
 
