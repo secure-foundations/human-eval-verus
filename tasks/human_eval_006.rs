@@ -31,7 +31,7 @@ pub open spec fn spec_nested_parens_helper(
             // (s, d, m, p) => Some(p) if s is empty and d is 0 and m == 0
             Some(prev_depths)
         } else {
-            // (s, d, m, p) => Some(p) if s is empty and d is 0 and m != 0
+            // (s, d, m, p) => Some(p + [max_depth]) if s is empty and d is 0 and m != 0
             Some(prev_depths + seq![max_depth])
         }
     } else if s.len() != 0 && s[0] == ' ' && depth == 0 && max_depth != 0 {
