@@ -9,7 +9,12 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+fn add(x: i32, y: i32) -> (res: Option<i32>)
+    ensures
+        res.is_some() ==> res.unwrap() == x + y,
+{
+    x.checked_add(y)
+}
 
 } // verus!
 fn main() {}
