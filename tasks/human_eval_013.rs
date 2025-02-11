@@ -197,7 +197,7 @@ proof fn all_common_divisors_divides_gcd(a: nat, b: nat)
 // We prove the recursive definition of computing gcd actually satisfies the
 // number theoretic properties og gcd, namely it's a common divisor of a and b
 // and it is the greatest positive common divisor in the preorder relation of divisibility
-proof fn gcd_is_gcd(a:nat, b:nat)
+proof fn gcd_is_gcd(a: nat, b: nat)
     ensures
         divides(gcd(a, b), a),
         divides(gcd(a, b), b),
