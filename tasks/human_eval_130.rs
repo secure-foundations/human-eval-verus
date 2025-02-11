@@ -31,6 +31,8 @@ fn checked_add_three(a: Option<u32>, b: Option<u32>, c: Option<u32>) -> (r: Opti
         r.is_some() && a.is_some() && b.is_some() && c.is_some() ==> r.unwrap() == a.unwrap()
             + b.unwrap() + c.unwrap(),
         a.is_none() || b.is_none() || c.is_none() ==> r.is_none(),
+        !(a.is_none() || b.is_none() || c.is_none()) && r.is_none() ==> a.unwrap() + b.unwrap()
+            + c.unwrap() > u32::MAX,
 {
     a?.checked_add(b?)?.checked_add(c?)
 }
@@ -43,9 +45,10 @@ fn tri(n: u32) -> (result: Vec<Option<u32>>)
         result.len() == n + 1,
         forall|i: int|
             #![trigger result[i]]
-            0 <= i < result.len() ==> result[i].is_some() ==> result[i].unwrap() == spec_tri(
-                i as nat,
-            ),
+            0 <= i < result.len() ==> {
+                (result[i].is_some() ==> result[i].unwrap() == spec_tri(i as nat)) && (
+                result[i].is_none() ==> spec_tri(i as nat) > u32::MAX)
+            },
 {
     if n == 0 {
         vec![Some(1)]
@@ -58,9 +61,9 @@ fn tri(n: u32) -> (result: Vec<Option<u32>>)
                 result.len() == i,
                 forall|j: int|
                     #![trigger result[j]]
-                    0 <= j < i ==> (result[j].is_some() ==> result[j].unwrap() == spec_tri(
+                    0 <= j < i ==> ((result[j].is_some() ==> result[j].unwrap() == spec_tri(
                         j as nat,
-                    )),
+                    )) && (result[j].is_none() ==> spec_tri(j as nat) > u32::MAX)),
         {
             if i % 2 == 0 {
                 result.push(Some(1 + (i / 2)));
