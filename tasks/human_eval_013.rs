@@ -17,7 +17,7 @@ pub open spec fn mul(a: nat, b: nat) -> nat {
 
 // This function is also part of the specification
 pub open spec fn divides(factor: nat, candidate: nat) -> bool {
-    exists|k: nat| mul(factor, k) == candidate
+    exists|k: nat| #[trigger] mul(factor, k) == candidate
 }
 
 // This function is also part of the specification
@@ -59,78 +59,6 @@ fn compute_gcd(a: u64, b: u64) -> (g: u64)
     }
 }
 
-// Helper function to prove gcd is a divisor of a and b
-proof fn gcd_devides(a: nat, b: nat)
-    ensures
-        divides(gcd(a, b), a),
-        divides(gcd(a, b), b),
-    decreases a, b,
-{
-    if a == 0 {
-        assert(gcd(a, b) == b);
-        assert(divides(b, a)) by {
-            assert(mul(b, 0) == 0);
-        };
-        assert(divides(b, b)) by {
-            assert(mul(b, 1) == b);
-        };
-    } else if b == 0 {
-        assert(divides(a, a)) by {
-            assert(mul(a, 1) == a);
-        };
-        assert(divides(a, b)) by {
-            assert(mul(a, 0) == 0);
-        };
-    } else if a > b {
-        let m = a % b;
-        gcd_devides(b, m);
-        assert(divides(gcd(a, b), a)) by {
-            lemma_div_converse(a, b, gcd(b, m));
-        };
-    } else {
-        let m = b % a;
-        gcd_devides(a, m);
-        assert(divides(gcd(a, b), b)) by {
-            lemma_div_converse(b, a, gcd(a, m));
-        }
-
-    }
-}
-
-// if d divides a and d divides b, then d divides gcd(a, b)
-proof fn gcd_is_greatest(a: nat, b: nat)
-    ensures
-        forall|d: nat| divides(d, a) && divides(d, b) ==> #[trigger] divides(d, gcd(a, b)),
-    decreases a, b,
-{
-    assert forall|d: nat| divides(d, a) && divides(d, b) implies #[trigger] divides(
-        d,
-        gcd(a, b),
-    ) by {
-        if a == 0 {
-            assert(divides(d, gcd(a, b)));
-        } else if b == 0 {
-            assert(divides(d, gcd(a, b)));
-        } else if a > b {
-            let m = a % b;
-            gcd_is_greatest(b, m);
-            assert(divides(d, m)) by {
-                lemma_div(a, b, d);
-            };
-            assert(gcd(a, b) == gcd(b, m));
-            assert(divides(d, gcd(a, b)));
-        } else {
-            let m = b % a;
-            gcd_is_greatest(a, m);
-            assert(divides(d, m)) by {
-                lemma_div(b, a, d);
-            };
-            assert(gcd(a, b) == gcd(a, m));
-            assert(divides(d, gcd(a, b)));
-        }
-    }
-}
-
 #[verifier::spinoff_prover]
 proof fn lemma_div(a: nat, b: nat, d: nat)
     requires
@@ -157,13 +85,11 @@ proof fn lemma_div(a: nat, b: nat, d: nat)
             if (k1 < k2) {
                 // note: using broadcast fails here
                 vstd::arithmetic::mul::lemma_mul_strict_inequality(k1 as int, k2 as int, d as int);
-                assert(mul(k1, d) < mul(k2, d));
             }
         }
         let k = k1 - k2;
-        // broadcast use vstd::arithmetic::mul::group_mul_properties; // cause trigger loop
         assert(mul(d, k as nat) == mul(d, k1) - mul(d, k2)) by {
-            // broadcast use vstd::arithmetic::mul::lemma_mul_is_distributive_sub;
+            // note: using broadcast fails here
             vstd::arithmetic::mul::lemma_mul_is_distributive_sub(d as int, k1 as int, k2 as int);
         };
     };
@@ -194,6 +120,91 @@ proof fn lemma_div_converse(a: nat, b: nat, d: nat)
             vstd::arithmetic::mul::lemma_mul_is_distributive_add(d as int, k1 as int, k2 as int);
         };
     }
+}
+
+// Helper function to prove gcd is a divisor of a and b
+proof fn gcd_divides(a: nat, b: nat)
+    ensures
+        divides(gcd(a, b), a),
+        divides(gcd(a, b), b),
+    decreases a, b,
+{
+    if a == 0 {
+        assert(gcd(a, b) == b);
+        assert(divides(b, a)) by {
+            assert(mul(b, 0) == 0);
+        };
+        assert(divides(b, b)) by {
+            assert(mul(b, 1) == b);
+        };
+    } else if b == 0 {
+        assert(divides(a, a)) by {
+            assert(mul(a, 1) == a);
+        };
+        assert(divides(a, b)) by {
+            assert(mul(a, 0) == 0);
+        };
+    } else if a > b {
+        let m = a % b;
+        gcd_divides(b, m);
+        assert(divides(gcd(a, b), a)) by {
+            lemma_div_converse(a, b, gcd(b, m));
+        };
+    } else {
+        let m = b % a;
+        gcd_divides(a, m);
+        assert(divides(gcd(a, b), b)) by {
+            lemma_div_converse(b, a, gcd(a, m));
+        }
+
+    }
+}
+
+// Helper function to prove if d divides a and d divides b, then d divides gcd(a, b)
+proof fn all_common_divisors_divides_gcd(a: nat, b: nat)
+    ensures
+        forall|d: nat| divides(d, a) && divides(d, b) ==> #[trigger] divides(d, gcd(a, b)),
+    decreases a, b,
+{
+    assert forall|d: nat| divides(d, a) && divides(d, b) implies #[trigger] divides(
+        d,
+        gcd(a, b),
+    ) by {
+        if a == 0 {
+            assert(divides(d, gcd(a, b)));
+        } else if b == 0 {
+            assert(divides(d, gcd(a, b)));
+        } else if a > b {
+            let m = a % b;
+            all_common_divisors_divides_gcd(b, m);
+            assert(divides(d, m)) by {
+                lemma_div(a, b, d);
+            };
+            assert(gcd(a, b) == gcd(b, m));
+            assert(divides(d, gcd(a, b)));
+        } else {
+            let m = b % a;
+            all_common_divisors_divides_gcd(a, m);
+            assert(divides(d, m)) by {
+                lemma_div(b, a, d);
+            };
+            assert(gcd(a, b) == gcd(a, m));
+            assert(divides(d, gcd(a, b)));
+        }
+    }
+}
+
+// We prove the recursive definition of computing gcd actually satisfies the
+// number theoretic properties og gcd, namely it's a common divisor of a and b
+// and it is the greatest positive common divisor in the preorder relation of divisibility
+proof fn gcd_is_gcd(a:nat, b:nat)
+    ensures
+        divides(gcd(a, b), a),
+        divides(gcd(a, b), b),
+        forall|d: nat| divides(d, a) && divides(d, b) ==> #[trigger] divides(d, gcd(a, b)),
+{
+    gcd_divides(a, b);
+    all_common_divisors_divides_gcd(a, b);
 }
 
 } // verus!
