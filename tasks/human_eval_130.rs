@@ -9,7 +9,93 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+spec fn spec_tri(n: nat) -> nat
+    decreases
+            if n % 2 == 0 {
+                0
+            } else {
+                n
+            },
+{
+    if n == 1 {
+        3
+    } else if n % 2 == 0 {
+        1 + n / 2
+    } else {
+        spec_tri((n - 1) as nat) + spec_tri((n - 2) as nat) + spec_tri(n + 1)
+    }
+}
+
+fn checked_add_three(a: Option<u32>, b: Option<u32>, c: Option<u32>) -> (r: Option<u32>)
+    ensures
+        r.is_some() && a.is_some() && b.is_some() && c.is_some() ==> r.unwrap() == a.unwrap()
+            + b.unwrap() + c.unwrap(),
+        a.is_none() || b.is_none() || c.is_none() ==> r.is_none(),
+        !(a.is_none() || b.is_none() || c.is_none()) && r.is_none() ==> a.unwrap() + b.unwrap()
+            + c.unwrap() > u32::MAX,
+{
+    a?.checked_add(b?)?.checked_add(c?)
+}
+
+#[verifier::loop_isolation(false)]
+fn tri(n: u32) -> (result: Vec<Option<u32>>)
+    requires
+        n + 1 <= u32::MAX,
+    ensures
+        result.len() == n + 1,
+        forall|i: int|
+            #![trigger result[i]]
+            0 <= i < result.len() ==> {
+                (result[i].is_some() ==> result[i].unwrap() == spec_tri(i as nat)) && (
+                result[i].is_none() ==> spec_tri(i as nat) > u32::MAX)
+            },
+{
+    if n == 0 {
+        vec![Some(1)]
+    } else {
+        let mut result: Vec<Option<u32>> = vec![Some(1), Some(3)];
+        let mut i = 2;
+        while i <= n
+            invariant
+                2 <= i <= n + 1,
+                result.len() == i,
+                forall|j: int|
+                    #![trigger result[j]]
+                    0 <= j < i ==> ((result[j].is_some() ==> result[j].unwrap() == spec_tri(
+                        j as nat,
+                    )) && (result[j].is_none() ==> spec_tri(j as nat) > u32::MAX)),
+        {
+            if i % 2 == 0 {
+                result.push(Some(1 + (i / 2)));
+                assert(result[i as int].unwrap() == spec_tri(i as nat));
+            } else {
+                assert((i + 1) / 2 + 1 == (i + 3) / 2);
+                let cur = checked_add_three(
+                    result[i as usize - 2],
+                    result[i as usize - 1],
+                    Some((i + 1) / 2 + 1),
+                );
+                proof {
+                    if result[i - 2].is_some() && result[i - 1].is_some() {
+                        assert(result[i - 2].unwrap() == spec_tri((i - 2) as nat));
+                        assert(result[i - 1].unwrap() == spec_tri((i - 1) as nat));
+                        assert((i + 3) / 2 == spec_tri((i + 1) as nat));
+                    } else {
+                        assert(cur.is_none());
+                    }
+                    assert(cur.is_some() ==> cur.unwrap() == spec_tri(i as nat));
+                }
+                result.push(cur);
+                assert(result[i as int].is_some() ==> result[i as int].unwrap() == spec_tri(
+                    i as nat,
+                ));
+            }
+            i += 1;
+        }
+        assert(result.len() == n + 1);
+        result
+    }
+}
 
 } // verus!
 fn main() {}

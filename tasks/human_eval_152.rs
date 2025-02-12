@@ -5,11 +5,43 @@ HumanEval/152
 /*
 ### VERUS BEGIN
 */
+use vstd::math::abs as vabs;
 use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+fn abs(x: i64) -> (r: i64)
+    requires
+        x != i64::MIN,
+    ensures
+        r == vabs(x as int),
+{
+    if x < 0 {
+        -x
+    } else {
+        x
+    }
+}
+
+#[verifier::loop_isolation(false)]
+fn compare(scores: &[i32], guesses: &[i32]) -> (result: Vec<i64>)
+    requires
+        scores.len() == guesses.len(),
+    ensures
+        result.len() == scores.len(),
+        forall|i: int| #![auto] 0 <= i < result.len() ==> result[i] == vabs(scores[i] - guesses[i]),
+{
+    let mut result = Vec::with_capacity(scores.len());
+    let mut i = 0;
+    for i in 0..scores.len()
+        invariant
+            result.len() == i,
+            forall|j: int| #![auto] 0 <= j < i ==> result[j] == vabs(scores[j] - guesses[j]),
+    {
+        result.push(abs(scores[i] as i64 - guesses[i] as i64));
+    }
+    result
+}
 
 } // verus!
 fn main() {}

@@ -6,10 +6,52 @@ HumanEval/98
 ### VERUS BEGIN
 */
 use vstd::prelude::*;
+use vstd::set::group_set_axioms;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+broadcast use group_set_axioms;
+
+spec fn spec_is_upper_vowel(c: char) -> bool {
+    c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U'
+}
+
+fn is_upper_vowel(c: char) -> (is: bool)
+    ensures
+        is <==> spec_is_upper_vowel(c),
+{
+    c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U'
+}
+
+#[verifier::loop_isolation(false)]
+fn count_upper(s: &[char]) -> (cnt: usize)
+    ensures
+        cnt == Set::new(|i: int| 0 <= i < s.len() && i % 2 == 0 && spec_is_upper_vowel(s[i])).len(),
+{
+    let ghost mut found = set![];
+    let mut cnt = 0;
+    for i in 0..s.len()
+        invariant
+            found.len() <= i,
+            found.finite(),
+            cnt == found.len(),
+            found =~= Set::new(|j: int| 0 <= j < i && j % 2 == 0 && spec_is_upper_vowel(s[j])),
+    {
+        if i % 2 == 0 && is_upper_vowel(s[i]) {
+            cnt = cnt + 1;
+            proof {
+                assert(!(0 <= i < i && i % 2 == 0 && spec_is_upper_vowel(s[i as int]))) by {
+                    assert(!(0 <= i < i));
+                };
+                assert(found.insert(i as int).len() == found.len() + 1) by {
+                    assert(!found.contains(i as int));
+                }
+                found = found.insert(i as int);
+            }
+        }
+    }
+    cnt
+}
 
 } // verus!
 fn main() {}
