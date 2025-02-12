@@ -11,8 +11,10 @@ use vstd::prelude::*;
 verus! {
 
 // This function is part of the specification
+// It helps Verus automatically choose the correct
+// quantifiers in the code below.
 pub open spec fn mul(a: nat, b: nat) -> nat {
-    builtin::mul(a, b)
+    a * b
 }
 
 // This function is also part of the specification
