@@ -5,29 +5,25 @@ HumanEval/20
 /*
 ### VERUS BEGIN
 */
-use vstd::prelude::*;
 use vstd::math::abs;
+use vstd::prelude::*;
 
 verus! {
 
 // TODO: Put your solution (the specification, implementation, and proof) to the task here
-
 // Implementation
 fn closest_pair(numbers: Vec<i32>) -> (res: (i32, i32))
     requires
         numbers.len() >= 2,
     ensures
         res.0 <= res.1,
-        exists |i: int, j: int| 
-            (0 <= i < numbers.len()) &&
-            (0 <= j < numbers.len()) &&
-            (i != j) &&
-            (res.0 == numbers[i] && res.1 == numbers[j]),
-        forall |i: int, j: int| 
-            (0 <= i < numbers.len()) &&
-            (0 <= j < numbers.len()) &&
-            (i != j) ==>
-            (abs(numbers[i] - numbers[j]) >= abs(res.0 - res.1)),
+        exists|i: int, j: int|
+            (0 <= i < numbers.len()) && (0 <= j < numbers.len()) && (i != j) && (res.0 == numbers[i]
+                && res.1 == numbers[j]),
+        forall|i: int, j: int|
+            (0 <= i < numbers.len()) && (0 <= j < numbers.len()) && (i != j) ==> (abs(
+                numbers[i] - numbers[j],
+            ) >= abs(res.0 - res.1)),
 {
     let mut closest_pair_high = numbers[0];
     let mut closest_pair_low = numbers[1];
@@ -44,51 +40,55 @@ fn closest_pair(numbers: Vec<i32>) -> (res: (i32, i32))
             1 <= i <= numbers.len(),
             closest_pair_low <= closest_pair_high,
             min_diff == closest_pair_high - closest_pair_low,
-            exists |ii: int, jj: int| 
-                (0 <= ii < numbers.len()) &&
-                (0 <= jj < numbers.len()) &&
-                (ii != jj) &&
-            (closest_pair_low == numbers[ii] && closest_pair_high == numbers[jj]),
-                            forall |k: int, l: int| 
-                    (0 <= k < i) && (0 <= l < i) && (k != l) ==>
-                    (abs(numbers[k] - numbers[l]) >= min_diff),
+            exists|ii: int, jj: int|
+                (0 <= ii < numbers.len()) && (0 <= jj < numbers.len()) && (ii != jj) && (
+                closest_pair_low == numbers[ii] && closest_pair_high == numbers[jj]),
+            forall|k: int, l: int|
+                (0 <= k < i) && (0 <= l < i) && (k != l) ==> (abs(numbers[k] - numbers[l])
+                    >= min_diff),
         decreases numbers.len() - i,
+    {
+        assert(0 <= i < numbers.len());
+        let mut j = 0;
+        while j < i
+            invariant
+                0 <= j < numbers.len(),
+                0 <= i < numbers.len(),
+                closest_pair_low <= closest_pair_high,
+                min_diff == closest_pair_high - closest_pair_low,
+                exists|ii: int, jj: int|
+                    (0 <= ii < numbers.len()) && (0 <= jj < numbers.len()) && (ii != jj) && (
+                    closest_pair_low == numbers[ii] && closest_pair_high == numbers[jj]),
+                forall|k: int| (0 <= k < j) ==> (abs(numbers[k] - numbers[i as int]) >= min_diff),
+                forall|k: int, l: int|
+                    (0 <= k < i) && (0 <= l < i) && (k != l) ==> (abs(numbers[k] - numbers[l])
+                        >= min_diff),
+            decreases i - j,
         {
-            assert(0 <= i < numbers.len());
-            let mut j = 0;
-            while j < i
-                invariant
-                    0 <= j < numbers.len(),
-                    0 <= i < numbers.len(),
-                    closest_pair_low <= closest_pair_high,
-                    min_diff == closest_pair_high - closest_pair_low,
-                    exists |ii: int, jj: int| 
-                        (0 <= ii < numbers.len()) &&
-                        (0 <= jj < numbers.len()) &&
-                        (ii != jj) &&
-                        (closest_pair_low == numbers[ii] && closest_pair_high == numbers[jj]),
-                    forall |k: int| 
-                        (0 <= k < j) ==> 
-                        (abs(numbers[k] - numbers[i as int]) >= min_diff),
-                    forall |k: int, l: int| 
-                        (0 <= k < i) && (0 <= l < i) && (k != l) ==>
-                        (abs(numbers[k] - numbers[l]) >= min_diff),
-                decreases i - j,
-            {
-                let diff = if numbers[i] < numbers[j] {
-                    numbers[j] as i64 - numbers[i] as i64
+            let diff = if numbers[i] < numbers[j] {
+                numbers[j] as i64 - numbers[i] as i64
+            } else {
+                numbers[i] as i64 - numbers[j] as i64
+            };
+            if diff < min_diff {
+                closest_pair_low =
+                if numbers[i] < numbers[j] {
+                    numbers[i]
                 } else {
-                    numbers[i] as i64 - numbers[j] as i64
+                    numbers[j]
                 };
-                if diff < min_diff {
-                    closest_pair_low = if numbers[i] < numbers[j] { numbers[i] } else { numbers[j] };
-                    closest_pair_high = if numbers[i] > numbers[j] { numbers[i] } else { numbers[j] };
-                    min_diff = closest_pair_high as i64 - closest_pair_low as i64;
-                }
-                j += 1;
+                closest_pair_high =
+                if numbers[i] > numbers[j] {
+                    numbers[i]
+                } else {
+                    numbers[j]
+                };
+                min_diff = closest_pair_high as i64 - closest_pair_low as i64;
             }
-            i += 1;
+            j += 1;
         }
+        i += 1;
+    }
 
     return (closest_pair_low, closest_pair_high);
 }
