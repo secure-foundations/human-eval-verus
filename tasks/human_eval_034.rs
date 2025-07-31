@@ -90,6 +90,7 @@ fn sort_seq(s: &Vec<i32>) -> (ret: Vec<i32>)
             forall|j: int, k: int|
                 0 <= j < i <= k < sorted@.len() ==> sorted@.index(j) <= sorted@.index(k),
             sorted@.len() == s@.len(),
+        decreases (sorted.len() - i),
     {
         let mut min_index: usize = i;
         let mut j: usize = i + 1;
@@ -97,6 +98,7 @@ fn sort_seq(s: &Vec<i32>) -> (ret: Vec<i32>)
             invariant
                 i <= min_index < j <= sorted.len(),
                 forall|k: int| i <= k < j ==> sorted@.index(min_index as int) <= sorted@.index(k),
+            decreases (sorted.len() - j),
         {
             if sorted[j] < sorted[min_index] {
                 min_index = j;

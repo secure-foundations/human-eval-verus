@@ -40,6 +40,7 @@ fn checked_mul_thrice(x: u32, y: u32, z: u32) -> (ret: Option<u32>)
 {
     // x,y,z == 0 done separately to invoke lemma_mul_increases which requires x > 0
     if (x == 0 || y == 0 || z == 0) {
+        assert(0 == x * y * z);
         return Some(0);
     }
     assert(x > 0 && y > 0 && z > 0);
@@ -76,6 +77,7 @@ fn is_multiply_prime(x: u32) -> (ans: bool)
                 (spec_prime(i) && spec_prime(j) && spec_prime(k) && i <= a && j <= x && k <= x)
                     ==> x != i * j * k,
             a <= x,
+        decreases x - a,
     {
         a += 1;
         if prime(a) {
@@ -88,6 +90,7 @@ fn is_multiply_prime(x: u32) -> (ans: bool)
                     spec_prime(a as int),
                     a <= x,
                     b <= x,
+                decreases x - b,
             {
                 b += 1;
                 if prime(b) {
@@ -100,6 +103,7 @@ fn is_multiply_prime(x: u32) -> (ans: bool)
                             a <= x,
                             b <= x,
                             c <= x,
+                        decreases x - c,
                     {
                         c += 1;
                         let prod = checked_mul_thrice(a, b, c);

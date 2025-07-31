@@ -25,6 +25,7 @@ fn pairs_sum_to_zero(nums: &[i32], target: i32) -> (found: bool)
         invariant
             0 <= i <= nums.len(),
             forall|u: int, v: int| 0 <= u < v < nums.len() && u < i ==> nums[u] + nums[v] != target,
+        decreases nums.len() - i,
     {
         let mut j = i + 1;
         while j < nums.len()
@@ -33,6 +34,7 @@ fn pairs_sum_to_zero(nums: &[i32], target: i32) -> (found: bool)
                 forall|u: int, v: int|
                     0 <= u < v < nums.len() && u < i ==> nums[u] + nums[v] != target,
                 forall|u: int| i < u < j ==> nums[i as int] + nums[u] != target,
+            decreases nums.len() - j,
         {
             if nums[i] + nums[j] == target {
                 return true;
