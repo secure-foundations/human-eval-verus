@@ -11,7 +11,7 @@ jobs:
 
       - name: Install Rust toolchain
         run: |
-          rustup install 1.82.0-x86_64-unknown-linux-gnu
+          rustup install 1.88.0-x86_64-unknown-linux-gnu
 
       - name: Get the URL for the latest Verus release
         id: verus-release-info
