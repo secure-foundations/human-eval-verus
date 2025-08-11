@@ -106,6 +106,7 @@ pub fn intersperse(numbers: Vec<u64>, delimiter: u64) -> (result: Vec<u64>)
                 result.len() == 2 * index,
                 forall|i: int| 0 <= i < index ==> #[trigger] result[even(i)] == numbers[i],
                 forall|i: int| 0 <= i < index ==> #[trigger] result[odd(i)] == delimiter,
+            decreases numbers.len() - 1 - index,
         {
             result.push(numbers[index]);
             result.push(delimiter);

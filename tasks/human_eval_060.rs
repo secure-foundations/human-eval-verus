@@ -70,6 +70,7 @@ fn sum_to_n(n: u32) -> (sum: Option<u32>)
             i <= n < 92682,
             res == spec_sum_to_n(i as nat),
             res <= u32::MAX,
+        decreases n - i,
     {
         i += 1;
         proof {

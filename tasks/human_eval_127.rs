@@ -52,6 +52,7 @@ fn is_prime_2(num: u64) -> (result: bool)
         invariant
             2 <= i <= num,
             result <==> spec_prime_helper(num as int, i as int),
+        decreases num - i,
     {
         if num % i == 0 {
             result = false;

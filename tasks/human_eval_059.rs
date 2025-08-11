@@ -30,6 +30,7 @@ fn is_prime(num: u32) -> (result: bool)
         invariant
             2 <= i <= num,
             result <==> spec_prime_helper(num as int, i as int),
+        decreases num - i,
     {
         if num % i == 0 {
             result = false;
@@ -56,6 +57,7 @@ fn largest_prime_factor(n: u32) -> (largest: u32)
             spec_prime(largest as int),
             n % largest == 0,
             forall|p| 0 <= p <= j && spec_prime(p) && n as int % p == 0 ==> p <= largest,
+        decreases n - j,
     {
         j += 1;
         let flag = is_prime(j);

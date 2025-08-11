@@ -45,6 +45,7 @@ fn digit_sum(text: &[char]) -> (sum: u128)
                     #[trigger] text@.subrange(0, j),
                 )) <= u64::MAX * index),
             u64::MIN * index <= sum <= u64::MAX * index,
+        decreases text@.len() - index,
     {
         if (text[index] >= 'A' && text[index] <= 'Z') {
             assert(text@.subrange(0, index as int) =~= text@.subrange(

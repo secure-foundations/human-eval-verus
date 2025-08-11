@@ -13,7 +13,7 @@ use vstd::prelude::*;
 verus! {
 
 pub open spec fn mul(a: nat, b: nat) -> nat {
-    builtin::mul(a, b)
+    vstd::prelude::mul(a, b)
 }
 
 /// Specification for what it means for d to divide a
@@ -73,6 +73,7 @@ fn largest_divisor(n: u32) -> (ret: u32)
             n > 0,
             i < n,
             forall|k: u32| i < k < n ==> !divides(k as nat, n as nat),
+        decreases i,
     {
         if n % i == 0 {
             assert(divides(i as nat, n as nat)) by {

@@ -440,17 +440,18 @@ pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
         k_counter = k_counter - 1;
 
         //proving adjacency
+        let ghost grid = grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int));
         assert(forall|i: int|
             (0 <= #[trigger] (i + 0) < path@.map_values(|j: u8| j as int).len() - 1) ==> (exists|
                 i0: int,
                 j0: int,
             |
-                (is_adjacent::<N>(
-                    grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
-                    path@.map_values(|j: u8| j as int)[i],
-                    path@.map_values(|j: u8| j as int)[(i + 1)],
-                    (i0, j0),
-                ))));
+                ({
+                let m = path@.map_values(|j: u8| j as int)[i];
+                let n = path@.map_values(|j: u8| j as int)[(i + 1)];
+                #[trigger] grid[i0][j0] == m &&
+                is_adjacent::<N>(grid, m, n, (i0, j0))
+                })));
     }
     assert(forall|i: int|
         (0 <= i + 0 < path@.len() - 1) ==> adjacent_numbers::<N>(

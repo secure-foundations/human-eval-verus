@@ -103,6 +103,7 @@ fn sort_third(l: Vec<i32>) -> (l_prime: Vec<i32>)
             forall|i: int, j: int|
                 0 <= i < pos_being_set_to_smallest && i < j < l_len && i % 3 == 0 && j % 3 == 0
                     ==> l_prime[i] <= l_prime[j],
+        decreases l_len + 3 - pos_being_set_to_smallest,
     {
         // Iterate `pos_during_scan_for_smallest` by 3 from `pos_being_set_to_smallest`
         // to `l_len`. Keep track of the position of the smallest element found so far
@@ -125,6 +126,7 @@ fn sort_third(l: Vec<i32>) -> (l_prime: Vec<i32>)
                 forall|i: int, j: int|
                     0 <= i < pos_being_set_to_smallest && i < j < l_len && i % 3 == 0 && j % 3 == 0
                         ==> l_prime[i] <= l_prime[j],
+            decreases l_len + 3 - pos_during_scan_for_smallest,
         {
             if l_prime[pos_during_scan_for_smallest] < l_prime[pos_of_smallest_found_so_far] {
                 pos_of_smallest_found_so_far = pos_during_scan_for_smallest;

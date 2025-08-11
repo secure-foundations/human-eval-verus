@@ -28,6 +28,8 @@ fn derivative(xs: &Vec<u32>) -> (ret: Vec<u64>)
         invariant
             xs@.map(|i: int, x| i * x).subrange(1, i as int) =~= ret@.map_values(|x| x as int),
             1 <= i <= xs.len() <= u32::MAX,
+        decreases
+            xs.len() - i,
     {
         proof {
             // Prove that the multiplication does not overflow
@@ -37,8 +39,10 @@ fn derivative(xs: &Vec<u32>) -> (ret: Vec<u64>)
                 i as int,
                 u32::MAX as int,
             );
-            assert(u32::MAX * u32::MAX <= u64::MAX);
-            assert((i as u64) * (xs[i as int] as u64) == i as int * xs[i as int]);
+            assert((i as u64) * (xs[i as int] as u64) <= u64::MAX) by {
+                assert(u32::MAX * u32::MAX <= u64::MAX);
+                assert((i as u64) * (xs[i as int] as u64) == i as int * xs[i as int]);
+            }
         }
         ret.push((i as u64) * (xs[i] as u64));
 

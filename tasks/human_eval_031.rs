@@ -46,6 +46,7 @@ fn is_prime_impl(n: u8) -> (res: bool)
         invariant
             2 <= k <= n,
             res == is_prime_so_far(n as nat, k as nat),
+        decreases n - k,
     {
         assert((is_prime_so_far(n as nat, k as nat) && (n as nat) % (k as nat) != 0)
             == is_prime_so_far(n as nat, (k + 1) as nat));

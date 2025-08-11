@@ -52,6 +52,7 @@ fn fibfib(x: u32) -> (ret: Option<u32>)
             None => spec_fibfib(x as nat) > u32::MAX,
             Some(f) => f == spec_fibfib(x as nat),
         },
+    decreases x,
 {
     if x > 39 {
         proof {

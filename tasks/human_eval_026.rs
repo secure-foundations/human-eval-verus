@@ -37,6 +37,7 @@ fn count_frequency(elements: &Vec<i64>, key: i64) -> (frequency: usize)
             0 <= index <= elements.len(),
             0 <= counter <= index,
             count_frequency_spec(elements@.subrange(0, index as int), key) == counter,
+        decreases elements.len() - index,
     {
         if (elements[index] == key) {
             counter += 1;

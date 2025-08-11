@@ -124,6 +124,7 @@ pub fn brazilian_factorial_impl(n: u64) -> (ret: Option<u64>)
         };
 
         fact_i = start * fact_i;
+        assert(factorial(start as nat) == fact_i);
 
         special_fact = fact_i * special_fact;
 

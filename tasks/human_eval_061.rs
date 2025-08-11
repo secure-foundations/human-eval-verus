@@ -46,6 +46,7 @@ fn correct_bracketing(brackets: &str) -> (ret: bool)
             (stack_size as int, b) == spec_bracketing_helper(brackets@.subrange(0, i as int)),
             stack_size <= i <= brackets@.len() <= i32::MAX,
             stack_size >= -i >= -brackets@.len() >= i32::MIN,
+        decreases brackets@.len() - i,
     {
         let c = brackets.get_char(i);
         let ghost prev = spec_bracketing_helper(brackets@.subrange(0, i as int));

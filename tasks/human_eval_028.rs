@@ -51,6 +51,7 @@ fn concatenate_impl(strings: Vec<Vec<char>>) -> (joined: Vec<char>)
                 strings.deep_view(),
                 i as nat,
             ),
+        decreases strings.len() - i,
     {
         assert(concatenate(strings.deep_view()) == joined@ + strings[i as int]@ + concat_helper(
             strings.deep_view(),

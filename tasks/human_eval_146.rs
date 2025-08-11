@@ -23,6 +23,7 @@ spec fn extract_first_digit_spec(n: int) -> int
 fn extract_first_digit(n: u32) -> (res: u32)
     ensures
         res == extract_first_digit_spec(n as int),
+    decreases n,
 {
     if n < 10 {
         n
@@ -89,6 +90,7 @@ fn special_filter(numbers: &Vec<i32>) -> (count: usize)
             0 <= index <= numbers.len(),
             0 <= counter <= index,
             counter == special_filter_spec(numbers@.subrange(0, index as int)),
+        decreases numbers.len() - index,
     {
         if (is_valid_element(numbers[index])) {
             counter += 1;

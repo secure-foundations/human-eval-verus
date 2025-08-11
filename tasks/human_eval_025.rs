@@ -326,6 +326,7 @@ pub fn factorize(n: u8) -> (factorization: Vec<u8>)
             forall|i: nat, j: nat|
                 (1 < i <= j < factorization.len()) ==> ((#[trigger] factorization[i as int] as nat)
                     <= (#[trigger] factorization[j as int] as nat) <= m),
+        decreases n + 2 - m, k,
     {
         if (k as u16 % m == 0) {
             assert(is_prime(m as nat)) by { lemma_first_divisor_is_prime(k as nat, m as nat) };
@@ -354,7 +355,10 @@ pub fn factorize(n: u8) -> (factorization: Vec<u8>)
             assert((k as int) == ((k as int) / (m as int)) * (m as int)) by {
                 lemma_fundamental_div_mod(k as int, m as int)
             };
-
+            proof { 
+                // Prove that we're still making progress towards termination
+                lemma_div_decreases(k as int, m as int);
+            }
             k = k / m as u8;
         } else {
             m = m + 1;

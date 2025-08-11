@@ -45,6 +45,7 @@ fn fib(n: u32) -> (ret: Option<u32>)
             None => spec_fib(n as nat) > u32::MAX,
             Some(f) => f == spec_fib(n as nat),
         },
+    decreases n,
 {
     if n > 47 {
         proof {

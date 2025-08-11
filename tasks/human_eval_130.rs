@@ -64,6 +64,7 @@ fn tri(n: u32) -> (result: Vec<Option<u32>>)
                     0 <= j < i ==> ((result[j].is_some() ==> result[j].unwrap() == spec_tri(
                         j as nat,
                     )) && (result[j].is_none() ==> spec_tri(j as nat) > u32::MAX)),
+            decreases n + 1 - i,
         {
             if i % 2 == 0 {
                 result.push(Some(1 + (i / 2)));

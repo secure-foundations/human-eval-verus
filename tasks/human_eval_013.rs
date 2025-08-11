@@ -46,6 +46,7 @@ fn compute_gcd(a: u64, b: u64) -> (g: u64)
     loop
         invariant
             gcd(a1 as nat, b1 as nat) == gcd(a as nat, b as nat),
+        decreases b1,
     {
         if a1 == 0 {
             return b1;

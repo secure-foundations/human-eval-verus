@@ -130,6 +130,7 @@ pub fn number_to_char_impl(n: u8) -> (char_vec: Vec<char>)
     while (i > 0)
         invariant
             number_to_char(n as nat) == number_to_char(i as nat).add(output@),
+        decreases i,
     {
         let m = i % 10;
         let current = single_digit_number_to_char_impl(m);
