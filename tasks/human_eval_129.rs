@@ -447,10 +447,9 @@ pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
                 j0: int,
             |
                 ({
-                let m = path@.map_values(|j: u8| j as int)[i];
-                let n = path@.map_values(|j: u8| j as int)[(i + 1)];
-                #[trigger] grid[i0][j0] == m &&
-                is_adjacent::<N>(grid, m, n, (i0, j0))
+                    let m = path@.map_values(|j: u8| j as int)[i];
+                    let n = path@.map_values(|j: u8| j as int)[(i + 1)];
+                    #[trigger] grid[i0][j0] == m && is_adjacent::<N>(grid, m, n, (i0, j0))
                 })));
     }
     assert(forall|i: int|

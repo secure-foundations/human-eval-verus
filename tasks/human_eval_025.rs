@@ -355,7 +355,7 @@ pub fn factorize(n: u8) -> (factorization: Vec<u8>)
             assert((k as int) == ((k as int) / (m as int)) * (m as int)) by {
                 lemma_fundamental_div_mod(k as int, m as int)
             };
-            proof { 
+            proof {
                 // Prove that we're still making progress towards termination
                 lemma_div_decreases(k as int, m as int);
             }

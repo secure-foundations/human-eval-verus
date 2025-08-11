@@ -73,16 +73,16 @@ fn generate_integers(a: u32, b: u32) -> (result: Vec<u32>)
         if i % 2 == 0 {
             result.push(i);
             assert(result@.contains(i)) by {
-                assert(result@[result@.len() - 1] == i);    // trigger
+                assert(result@[result@.len() - 1] == i);  // trigger
             }
             assert forall|x: int|
-                    vmin(a as int, b as int) <= x < i && 2 <= x <= 8 && x % 2 == 0
-                        implies #[trigger] result@.contains(x as u32) by {
+                vmin(a as int, b as int) <= x < i && 2 <= x <= 8 && x % 2
+                    == 0 implies #[trigger] result@.contains(x as u32) by {
                 if x == i {
                 } else {
                     assert(old_result.contains(x as u32));
-                    let i = choose |i| 0 <= i < old_result.len() && old_result[i] == x as u32;
-                    assert(result@[i] == x as u32);   // trigger
+                    let i = choose|i| 0 <= i < old_result.len() && old_result[i] == x as u32;
+                    assert(result@[i] == x as u32);  // trigger
                     assert(result@.contains(x as u32));
                 }
             }

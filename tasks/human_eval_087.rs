@@ -89,9 +89,7 @@ pub open spec fn coords_matches_lst(
 proof fn coords_distinct_after_push(coords: Seq<(usize, usize)>, x: usize, y: usize)
     requires
         coords_distinct(coords),
-        forall|k: int|
-            0 <= k < coords.len() ==> #[trigger]
-            coords[k].0 < x || coords[k].1 > y,
+        forall|k: int| 0 <= k < coords.len() ==> #[trigger] coords[k].0 < x || coords[k].1 > y,
     ensures
         coords_distinct(coords.push((x, y))),
 {
