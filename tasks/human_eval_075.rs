@@ -120,7 +120,7 @@ fn is_multiply_prime(x: u32) -> (ans: bool)
             * k);
     // prove that that even if the factors are not in the range [2, x], the product is still not equal to x
     assert forall|i: int, j: int, k: int|
-        spec_prime(i) && spec_prime(j) && spec_prime(k) ==> x != i * j * k by {
+        spec_prime(i) && spec_prime(j) && spec_prime(k) implies x != i * j * k by {
         if (i > 1 && j > 1 && k > 1 && (i > x || j > x || k > x)) {
             broadcast use group_mul_properties;
 
