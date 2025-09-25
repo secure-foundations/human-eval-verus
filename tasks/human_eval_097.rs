@@ -6,6 +6,12 @@ HumanEval/97
 ### VERUS BEGIN
 */
 use vstd::prelude::*;
+use vstd::arithmetic::div_mod::*;
+use vstd::math::abs as vabs;
+
+use vstd::arithmetic::mul::{
+    lemma_mul_upper_bound
+};
 
 verus! {
 
