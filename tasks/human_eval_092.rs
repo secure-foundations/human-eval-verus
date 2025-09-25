@@ -53,6 +53,7 @@ fn any_int(x: i32, y: i32, z: i32) -> (result: bool)
         };
 
     check1 || check2 || check3
+}
 
 } // verus!
 fn main() {}
