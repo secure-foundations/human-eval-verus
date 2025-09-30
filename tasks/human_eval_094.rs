@@ -46,7 +46,7 @@ fn is_prime(n: u32) -> (res: bool)
 }
 
 pub open spec fn spec_sum_digits(n: nat) -> nat
-    decreases n
+    decreases n,
 {
     if n < 10 {
         n
@@ -55,13 +55,12 @@ pub open spec fn spec_sum_digits(n: nat) -> nat
     }
 }
 
-pub proof fn sum_digits_decreases(x:nat)
+pub proof fn sum_digits_decreases(x: nat)
     requires
-        x >= 10
+        x >= 10,
     ensures
-        spec_sum_digits(x) <= x
-    decreases
-        x
+        spec_sum_digits(x) <= x,
+    decreases x,
 {
     let sub_x = x / 10;
     let inc_x = x % 10;
@@ -69,52 +68,47 @@ pub proof fn sum_digits_decreases(x:nat)
     if sub_x >= 10 {
         sum_digits_decreases(sub_x);
         assert(inc_x + sub_x <= x + 10);
-    }
-    else {
+    } else {
         assert(inc_x + spec_sum_digits(sub_x) <= sub_x + 10);
     }
 }
 
 fn sum_digits(n: u32) -> (count: u32)
     ensures
-        count == spec_sum_digits(n as nat)
-    decreases
-        n
+        count == spec_sum_digits(n as nat),
+    decreases n,
 {
     if n < 10 {
         n
-    }
-    else {
-        assert(spec_sum_digits((n as nat)) <= n) by {
-            sum_digits_decreases(n as nat)
-        };
-        (n % 10) + sum_digits(n/10)
+    } else {
+        assert(spec_sum_digits((n as nat)) <= n) by { sum_digits_decreases(n as nat) };
+        (n % 10) + sum_digits(n / 10)
     }
 }
 
 pub open spec fn spec_find_largest_prime_so_far(s: Seq<nat>, i: nat) -> nat
-    recommends 0 <= i <= s.len()
-    decreases i
+    recommends
+        0 <= i <= s.len(),
+    decreases i,
 {
-    if i <= 0 { 
+    if i <= 0 {
         0
     } else {
-        let first_i = s.take(i as int); // first i digits
+        let first_i = s.take(i as int);  // first i numbers
 
-        // largest of the first i-i digits
-        let largest_in_front = spec_find_largest_prime_so_far(s, (i-1) as nat);
+        // largest of the first i-i numbers in the list
+        let largest_in_front = spec_find_largest_prime_so_far(s, (i - 1) as nat);
 
-        // is the i'th digit prime and bigger than the largest of the first i-1 digits?
-        if is_prime_spec(first_i.last()) && first_i.last() > largest_in_front { 
+        // is the i'th number prime and bigger than the largest of the first i-1 numbers?
+        if is_prime_spec(first_i.last()) && first_i.last() > largest_in_front {
             first_i.last()
         } else {
             largest_in_front
         }
     }
 }
- 
-pub open spec fn spec_find_largest_prime(s: Seq<nat>) -> nat
-{
+
+pub open spec fn spec_find_largest_prime(s: Seq<nat>) -> nat {
     spec_find_largest_prime_so_far(s, s.len())
 }
 
@@ -123,27 +117,28 @@ fn find_largest_prime(lst: Vec<u32>) -> (ret: u32)
         ret == spec_find_largest_prime(lst@.map_values(|val: u32| val as nat)),
 {
     let mut largest_prime = 0;
-    for i in 0..lst.len() 
+    for i in 0..lst.len()
         invariant
             largest_prime == 0 || is_prime_spec(largest_prime as nat),
-            largest_prime == spec_find_largest_prime_so_far(lst@.map_values(|val: u32| val as nat), i as nat),
+            largest_prime == spec_find_largest_prime_so_far(
+                lst@.map_values(|val: u32| val as nat),
+                i as nat,
+            ),
     {
-        let num = lst[i]; 
+        let num = lst[i];
         if is_prime(num) && num > largest_prime {
             largest_prime = num;
-        } 
+        }
     }
     largest_prime
-
 }
 
+// note: "skjkasdkd" is the specified function name
 fn skjkasdkd(lst: Vec<u32>) -> (ret: u32)
     ensures
         ret == spec_sum_digits(
-            spec_find_largest_prime(
-                lst@.map_values(|val: u32| val as nat)
-            ) as nat
-        ) || ret == 0
+            spec_find_largest_prime(lst@.map_values(|val: u32| val as nat)) as nat,
+        ),
 {
     let largest_prime = find_largest_prime(lst);
     let total = sum_digits(largest_prime);
@@ -183,6 +178,7 @@ skjkasdkd
 
 /*
 ### CANONICAL SOLUTION
+def skjkasdkd(lst):
     def isPrime(n):
         for i in range(2,int(n**0.5)+1):
             if n%i==0:
