@@ -5,11 +5,50 @@ HumanEval/97
 /*
 ### VERUS BEGIN
 */
+use vstd::arithmetic::div_mod::*;
+use vstd::math::abs as vabs;
 use vstd::prelude::*;
+
+use vstd::arithmetic::mul::lemma_mul_upper_bound;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+pub proof fn lemma_mul_ub_mod_abs(x: int, y: int, a: int, b: int)
+    requires
+        a > 0,
+        b > 0,
+    ensures
+        0 <= (vabs(x) % (a as nat)) * (vabs(y) % (b as nat)) <= (a * b),
+{
+    lemma_mul_upper_bound((vabs(x) % (a as nat)) as int, a, (vabs(y) % (b as nat)) as int, b);
+}
+
+fn unit_digit(a: i32) -> (ret: i32)
+    ensures
+        ret as int == vabs(a as int) % 10,
+{
+    let result = if a < 0 {
+        -(a % 10)
+    } else {
+        a % 10
+    };
+    result
+}
+
+pub open spec fn multiply_spec(a: int, b: int) -> nat {
+    (vabs(a) % 10) * (vabs(b) % 10)
+}
+
+fn multiply(a: i32, b: i32) -> (ret: i32)
+    ensures
+        ret as int == multiply_spec(a as int, b as int),
+{
+    assert(0 <= (vabs(a as int) % 10) * (vabs(b as int) % 10) <= 100) by {
+        lemma_mul_ub_mod_abs(a as int, b as int, 10, 10)
+    };
+
+    unit_digit(a) * unit_digit(b)
+}
 
 } // verus!
 fn main() {}

@@ -9,7 +9,42 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+spec fn any_int_spec(x: int, y: int, z: int) -> bool {
+    (x == y + z) || (y == x + z) || (z == x + y)
+}
+
+fn any_int(x: i32, y: i32, z: i32) -> (result: bool)
+    ensures
+        result <==> any_int_spec(x as int, y as int, z as int),
+{
+    // explicit range checks allow us to drop range requires statements
+    // on our signature
+    let check1 = if y > 0 && z > 0 && y > i32::MAX - z {
+        false
+    } else if y < 0 && z < 0 && y < i32::MIN - z {
+        false
+    } else {
+        y + z == x
+    };
+
+    let check2 = if x > 0 && z > 0 && x > i32::MAX - z {
+        false
+    } else if x < 0 && z < 0 && x < i32::MIN - z {
+        false
+    } else {
+        x + z == y
+    };
+
+    let check3 = if x > 0 && y > 0 && x > i32::MAX - y {
+        false
+    } else if x < 0 && y < 0 && x < i32::MIN - y {
+        false
+    } else {
+        x + y == z
+    };
+
+    check1 || check2 || check3
+}
 
 } // verus!
 fn main() {}
