@@ -21,6 +21,7 @@ fn has_close_elements(numbers: &[i64], threshold: i64) -> (result: bool)
     // just return `false`.
     if threshold <= 0 {
         assert(forall|i: int, j: int|
+            #![trigger numbers[i], numbers[j]]
             0 <= i < j < numbers@.len() ==> abs(numbers[i] - numbers[j]) >= 0 >= threshold);
         return false;
     }
