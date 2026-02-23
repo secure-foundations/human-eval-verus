@@ -90,6 +90,7 @@ pub open spec fn is_minpath<const N: usize>(grid: Seq<Seq<int>>, path: Seq<int>)
 }
 
 // implementation
+#[verifier::spinoff_prover]
 pub fn find_smallest_adjacent_to_one<const N: usize>(grid: [[u8; N]; N]) -> (ret: (
     (usize, usize),
     (usize, usize),
