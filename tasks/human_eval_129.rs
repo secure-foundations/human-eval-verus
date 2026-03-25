@@ -363,6 +363,7 @@ proof fn lemma_less_than_step_odd<const N: usize>(
     }
 }
 
+#[verifier::spinoff_prover]
 pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
     requires
         no_repeats_in_grid::<N>(
