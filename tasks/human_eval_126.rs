@@ -5,14 +5,70 @@ HumanEval/126
 /*
 ### VERUS BEGIN
 */
+
 use vstd::prelude::*;
 
 verus! {
 
 // TODO: Put your solution (the specification, implementation, and proof) to the task here
+fn is_sorted(v: Vec<i32>) -> (ret: bool)
+    ensures
+        ret == (forall|i: int, j: int| 0 <= i < j < v.len() ==> v[i] < v[j]),
+{
+    let mut ret = true;
+    let mut idx = 0;
 
-} // verus!
-fn main() {}
+    if v.len() == 0 || v.len() == 1 {
+        return true;
+    }
+
+    while idx < v.len() - 1
+        invariant
+            0 <= idx < v.len(),
+            ret == (forall|i: int, j: int| 0 <= i < j <= idx ==> v[i] < v[j]),
+        decreases v.len() - idx
+    {
+        if v[idx] >= v[idx + 1] {
+            ret = false;
+            return ret;
+        }
+        idx += 1;
+    }
+    ret
+}
+
+fn static_checks() {
+    let x = is_sorted(vec![5]);
+    assert(x);
+    let x = is_sorted(vec![1, 2, 3, 4, 5]);
+    assert(x);
+    let x = is_sorted(vec![1, 3, 2, 4, 5]);
+    assert(!x);
+    let x = is_sorted(vec![1, 2, 3, 4, 5, 6]);
+    assert(x);
+    let x = is_sorted(vec![1, 2, 3, 4, 5, 6, 7]);
+    assert(x);
+    let x = is_sorted(vec![1, 3, 2, 4, 5, 6, 7]);
+    assert(!x);
+    let x = is_sorted(vec![1, 2, 2, 3, 3, 4]);
+    assert(!x);
+    let x = is_sorted(vec![1, 2, 2, 2, 3, 4]);
+    assert(!x);
+}
+
+
+}
+
+fn main() {
+    assert!(is_sorted(vec![5]));
+    assert!(!is_sorted(vec![1, 3, 2, 4, 5]));
+    assert!(is_sorted(vec![1, 2, 3, 4, 5, 6]));
+    assert!(is_sorted(vec![1, 2, 3, 4, 5, 6, 7]));
+    assert!(!is_sorted(vec![1, 3, 2, 4, 5, 6, 7]));
+    assert!(!is_sorted(vec![1, 2, 2, 3, 3, 4]));
+    assert!(!is_sorted(vec![1, 2, 2, 2, 3, 4]));
+    println!("All tests passed!");
+}
 
 /*
 ### VERUS END
