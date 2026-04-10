@@ -52,16 +52,20 @@ verus! {
         }
     }
 
-    fn solution(lst: Vec<i32>) -> (out: i32)
+    fn solution(lst: Vec<i32>) -> (out: i64)
+        requires lst.len() < i32::MAX 
         ensures
             out as int == odd_even_pos_sum_from(lst@.map(|_i, x| x as int), 0),
     {
-        let mut acc: i32 = 0;
+        let mut acc: i64 = 0;
         let mut idx: usize = 0;
 
         while idx < lst.len()
             invariant
+                lst.len() < i32::MAX,
                 0 <= idx <= lst.len(),
+                acc <= (idx as int) * (i32::MAX as int),
+                acc >= (idx as int) * (i32::MIN as int),
                 acc as int ==
                     odd_even_pos_sum_from(
                         lst@.subrange(0, idx as int).map(|_i, x| x as int),
@@ -70,9 +74,7 @@ verus! {
             decreases lst.len() - idx
         {
             if idx % 2 == 0 && lst[idx] % 2 != 0 {
-                assume(acc as int + lst[idx as int] as int <= i32::MAX as int);
-                assume(acc as int + lst[idx as int] as int >= i32::MIN as int);
-                acc = acc + lst[idx];
+                acc = acc + (lst[idx] as i64);
             }
 
             proof {
