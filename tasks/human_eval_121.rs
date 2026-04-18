@@ -1,3 +1,6 @@
+
+// 121
+
 /*
 ### ID
 HumanEval/121
@@ -8,6 +11,7 @@ HumanEval/121
 
 
 // TODO: Put your solution (the specification, implementation, and proof) to the task here
+
 
 use vstd::prelude::*;
 
@@ -53,22 +57,22 @@ verus! {
     }
 
     fn solution(lst: Vec<i32>) -> (out: i64)
-        requires lst.len() < i32::MAX 
+        requires lst.len() <= i32::MAX
         ensures
-            out as int == odd_even_pos_sum_from(lst@.map(|_i, x| x as int), 0),
+            out as int == odd_even_pos_sum_from(lst@.map_values(|x| x as int), 0),
     {
         let mut acc: i64 = 0;
         let mut idx: usize = 0;
 
         while idx < lst.len()
             invariant
-                lst.len() < i32::MAX,
+                lst.len() <= i32::MAX,
                 0 <= idx <= lst.len(),
                 acc <= (idx as int) * (i32::MAX as int),
                 acc >= (idx as int) * (i32::MIN as int),
                 acc as int ==
                     odd_even_pos_sum_from(
-                        lst@.subrange(0, idx as int).map(|_i, x| x as int),
+                        lst@.subrange(0, idx as int).map_values(|x| x as int),
                         0
                     ),
             decreases lst.len() - idx
@@ -79,13 +83,13 @@ verus! {
 
             proof {
                 let prefix =
-                    lst@.subrange(0, idx as int).map(|_i, x| x as int);
+                    lst@.subrange(0, idx as int).map_values(|x| x as int);
                 let next =
-                    lst@.subrange(idx as int, idx + 1).map(|_i, x| x as int);
+                    lst@.subrange(idx as int, idx + 1).map_values(|x| x as int);
 
                 assert(next.len() == 1);
                 assert(
-                    lst@.subrange(0, idx + 1).map(|_i, x| x as int)
+                    lst@.subrange(0, idx + 1).map_values(|x| x as int)
                         ==
                     prefix + next
                 );
@@ -96,9 +100,9 @@ verus! {
         }
 
         assert(
-            lst@.map(|_i, x| x as int)
+            lst@.map_values(|x| x as int)
                 ==
-            lst@.subrange(0, idx as int).map(|_i, x| x as int)
+            lst@.subrange(0, idx as int).map_values(|x| x as int)
         );
         acc
     }
@@ -139,7 +143,6 @@ fn main() {
     assert_eq!(solution(vec![3, 13, 2, 9]), 3);
     println!("All tests passed!");
 }
-
 
 
 /*
