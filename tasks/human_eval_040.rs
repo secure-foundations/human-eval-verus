@@ -15,7 +15,7 @@ spec fn triples_sum_to_zero_spec(v: Seq<int>) -> bool {
 
 fn triples_sum_to_zero(s: Vec<i32>) -> (out: bool)
     ensures
-        out == triples_sum_to_zero_spec(s@.map(|_i: int, x: i32| x as int)),
+        out == triples_sum_to_zero_spec(s@.map_values(|x: i32| x as int)),
 {
     if s.len() < 3 {
         return false;
@@ -56,12 +56,9 @@ fn triples_sum_to_zero(s: Vec<i32>) -> (out: bool)
                 if ((s[i] as i64) + (s[j] as i64) + (s[k] as i64) == 0) {
                     assert(0 <= i < j < k < s.len());
                     assert(s[i as int] + s[j as int] + s[k as int] == 0);
-                    assert(0 <= i < j < k < s.len() && (s[i as int] + s[j as int] + s[k as int]
-                        == 0));
-
-                    let ghost sv = s@.map(|_i: int, x: i32| x as int);
 
                     proof {
+                        let ghost sv = s@.map_values(|x: i32| x as int);
                         // Needed to convince verifier that mapings and s comparation are related
                         assert(sv[i as int] == s[i as int] as int);
                         assert(sv[j as int] == s[j as int] as int);
@@ -85,7 +82,7 @@ fn static_assert() {
     let v = vec![1, 3, -2, 1];
     let x2 = triples_sum_to_zero(v);
     proof {
-        let seq = v@.map(|_i: int, x: i32| x as int);
+        let seq = v@.map_values(|x: i32| x as int);
         assert(seq[0] + seq[2] + seq[3] == 0);
         assert(triples_sum_to_zero_spec(seq));
     }
@@ -97,7 +94,7 @@ fn static_assert() {
     let v = vec![2, 4, -5, 3, 9, 7];
     let x4 = triples_sum_to_zero(vec![2, 4, -5, 3, 9, 7]);
     proof {
-        let seq = v@.map(|_i: int, x: i32| x as int);
+        let seq = v@.map_values(|x: i32| x as int);
         assert(seq[0] + seq[2] + seq[3] == 0);
         assert(triples_sum_to_zero_spec(seq));
     }
