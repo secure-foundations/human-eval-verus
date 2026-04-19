@@ -26,9 +26,9 @@ jobs:
       - name: run Verus
         working-directory: ./tasks
         run: |
-          # Run `verus` on each file, collecting failures if any
+          # Run `verus` on each task, collecting failures if any
           ANYFAILED=""
-          for i in *.rs; do
+          for i in human_eval_*.rs; do
             echo -n "[verus] $i: "
             if ../verus-x86-linux/verus "$i" >/dev/null 2>/dev/null; then
               echo "success"
