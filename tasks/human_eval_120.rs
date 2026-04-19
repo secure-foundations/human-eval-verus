@@ -77,8 +77,6 @@ proof fn swap_preserves_multiset(s1: Seq<i32>, s2: Seq<i32>, i: int, j: int)
 
 fn sort_seq(s: &Vec<i32>) -> (ret: Vec<i32>)
     ensures
-//forall|i: int, j: int| 0 <= i < j < ret@.len() ==> ret@.index(i) <= ret@.index(j),
-
         sorted(ret@),
         ret@.len() == s@.len(),
         s@.to_multiset() == ret@.to_multiset(),
@@ -158,11 +156,7 @@ proof fn lemma_remove_first_element_removes_from_multiset(s1: Seq<i32>)
     assert(s1.remove(0) =~= s1.drop_first());
 }
 
-proof fn lemma_if_two_seqs_same_muiltisets_and_one_contain_one_element_the_other_also(
-    s1: Seq<i32>,
-    s2: Seq<i32>,
-    el: i32,
-)
+proof fn lemma_seq_to_multiset_implies_containment(s1: Seq<i32>, s2: Seq<i32>, el: i32)
     requires
         s1.to_multiset() == s2.to_multiset(),
     ensures
@@ -208,8 +202,8 @@ proof fn sorted_unique_lemma(s1: Seq<i32>, s2: Seq<i32>)
         assert(forall|i: int| 0 <= i < s2.len() ==> s1[0] < #[trigger] s2[i]);
         assert(s1.contains(s1[0]));
         assert(s2.contains(s2[0]));
-        lemma_if_two_seqs_same_muiltisets_and_one_contain_one_element_the_other_also(s1, s2, s1[0]);
-        lemma_if_two_seqs_same_muiltisets_and_one_contain_one_element_the_other_also(s1, s2, s2[0]);
+        lemma_seq_to_multiset_implies_containment(s1, s2, s1[0]);
+        lemma_seq_to_multiset_implies_containment(s1, s2, s2[0]);
         assert(exists|i: int| 0 <= i < s2.len() ==> s2[i] == s1[0]);
         assert(false);
     }
@@ -218,8 +212,8 @@ proof fn sorted_unique_lemma(s1: Seq<i32>, s2: Seq<i32>)
         assert(forall|i: int| 0 <= i < s1.len() ==> s2[0] < #[trigger] s1[i]);
         assert(s1.contains(s1[0]));
         assert(s2.contains(s2[0]));
-        lemma_if_two_seqs_same_muiltisets_and_one_contain_one_element_the_other_also(s1, s2, s1[0]);
-        lemma_if_two_seqs_same_muiltisets_and_one_contain_one_element_the_other_also(s1, s2, s2[0]);
+        lemma_seq_to_multiset_implies_containment(s1, s2, s1[0]);
+        lemma_seq_to_multiset_implies_containment(s1, s2, s2[0]);
         assert(exists|i: int| 0 <= i < s1.len() ==> s1[i] == s2[0]);
         assert(false);
     }
@@ -245,7 +239,7 @@ fn maximum(v: Vec<i32>, k: usize) -> (o: Vec<i32>)
         k <= v.len(),
     ensures
         sorted(o@),
-        (o@.len() == k as int),
+        o@.len() == k as int,
         exists|vs: Seq<i32>|
             {
                 &&& #[trigger] is_sorted_from_base_seq(v@, vs)
