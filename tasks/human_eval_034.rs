@@ -123,6 +123,7 @@ fn sort_seq(s: &Vec<i32>) -> (ret: Vec<i32>)
     sorted
 }
 
+#[verifier::loop_isolation(false)]
 fn unique_sorted(s: Vec<i32>) -> (result: Vec<i32>)
     requires
         forall|i: int, j: int| 0 <= i < j < s.len() ==> s[i] <= s[j],
