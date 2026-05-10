@@ -10,8 +10,8 @@ use vstd::arithmetic::div_mod::{
     lemma_fundamental_div_mod, lemma_fundamental_div_mod_converse,
 };
 use vstd::arithmetic::mul::{
-    lemma_mul_inequality, lemma_mul_is_distributive_add, lemma_mul_is_distributive_add_other_way,
-    lemma_mul_unary_negation,
+    lemma_mul_inequality, lemma_mul_is_commutative, lemma_mul_is_distributive_add,
+    lemma_mul_is_distributive_add_other_way, lemma_mul_unary_negation,
 };
 use vstd::prelude::*;
 
@@ -230,6 +230,9 @@ fn divide_i32_by_u32(x: i32, d: u32) -> (qr: (i32, u32))
             lemma_mul_unary_negation(d as int, (neg_x_div_d + 1) as int);
             lemma_mul_is_distributive_add(d as int, neg_x_div_d as int, 1);
             assert(x == d as int * (-neg_x_div_d - 1) + (d - neg_x_mod_d) as int);
+            assert(x == (-neg_x_div_d - 1) * d as int + (d - neg_x_mod_d) as int) by {
+                lemma_mul_is_commutative(d as int, -neg_x_div_d - 1);
+            }
             lemma_fundamental_div_mod_converse(
                 x as int,
                 d as int,

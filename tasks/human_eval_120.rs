@@ -182,7 +182,7 @@ proof fn sorted_unique_lemma(s1: Seq<i32>, s2: Seq<i32>)
     decreases s1.len(),
 {
     if s1.len() == 0 {
-        return ;
+        return;
     }
     assert(s2.len() > 0);
 
