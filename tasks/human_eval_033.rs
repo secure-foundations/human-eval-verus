@@ -49,7 +49,7 @@ proof fn lemma_update_effect_on_count<T>(s: Seq<T>, i: int, v: T, x: T)
     decreases s.len(),
 {
     if s.len() == 0 {
-        return ;
+        return;
     }
     if i == 0 {
         assert(s.update(i, v) =~= seq![v] + s.skip(1));

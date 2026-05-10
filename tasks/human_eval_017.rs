@@ -73,7 +73,7 @@ pub fn parse_music(s: &str) -> (res: Option<Vec<u8>>)
 
         if c == ' ' {
             i += 1;
-            continue ;
+            continue;
         }
         if i < s_len - 1 {
             let c2 = s.get_char(i + 1);
@@ -81,11 +81,11 @@ pub fn parse_music(s: &str) -> (res: Option<Vec<u8>>)
             if c == 'o' && c2 == '|' {
                 beats.push(2);
                 i += 2;
-                continue ;
+                continue;
             } else if c == '.' && c2 == '|' {
                 beats.push(1);
                 i += 2;
-                continue ;
+                continue;
             }
         }
         if c == 'o' {
