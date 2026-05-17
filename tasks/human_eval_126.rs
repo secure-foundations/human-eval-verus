@@ -40,7 +40,7 @@ proof fn lemma_3eq_row_count_eq_greater_3(v: Seq<int>, i: int)
     ensures
         count(v, v[i]) >= 3,
 {
-    // decomposiiotn array in two 3 parts vp3 (until the 3 equal ) v3 (three equal) vsf (the final part)
+    // decompose the array v into 3 parts: vp3 (until the 3 equal ) v3 (three equal) vsf (the final part)
     // after proving count on v3 is 3, it follows that for all is 3 or greater (with concatenations lemmas)
     let val = v[i as int];
     let vsn = v.subrange(0, (i + 1) as int);
@@ -423,8 +423,6 @@ proof fn lemma_repeated_eq_imply_count(v: Seq<int>, w: int)
 }
 
 fn is_sorted(v: Vec<i32>) -> (ret: bool)
-    requires
-        v.len() <= i32::MAX,
     ensures
         ret == ((forall|i: int, j: int| 0 <= i <= j < v.len() ==> v[i] <= v[j]) && (forall|i: int|
             0 <= i < v.len() ==> count(v@.map_values(|x| x as int), v@[i] as int) <= 2)),
