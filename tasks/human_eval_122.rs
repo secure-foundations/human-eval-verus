@@ -37,8 +37,7 @@ fn add_elements(arr: Vec<i32>, k: u32) -> (result: i64)
     for i in 0..k
         invariant
             k <= arr.len(),
-            i32::MIN * i <= res,
-            res <= i32::MAX * i,
+            i32::MIN * i <= res <= i32::MAX * i,
             res == add_elements_spec(arr@, i as nat),
     {
         assert(arr@.take(i as int + 1).drop_last() =~= arr@.take(i as int));
