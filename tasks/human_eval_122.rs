@@ -9,7 +9,44 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
+/// Specification for taking the sum of the elements with at most
+/// two digits from the first k elements of a sequence
+pub open spec fn add_elements_spec(arr: Seq<i32>, k: nat) -> int {
+    arr.take(k as int).fold_left(
+        0,
+        |acc: int, x: i32|
+            {
+                if -99 <= x <= 99 {
+                    acc + x
+                } else {
+                    acc
+                }
+            },
+    )
+}
+
+/// Implementation of add_elements
+fn add_elements(arr: Vec<i32>, k: u32) -> (result: i64)
+    requires
+        1 <= arr.len() <= 100,
+        1 <= k <= arr.len(),
+    ensures
+        result as int == add_elements_spec(arr@, k as nat),
+{
+    let mut res: i64 = 0;
+    for i in 0..k
+        invariant
+            k <= arr.len(),
+            i32::MIN * i <= res <= i32::MAX * i,
+            res == add_elements_spec(arr@, i as nat),
+    {
+        assert(arr@.take(i as int + 1).drop_last() =~= arr@.take(i as int));
+        if -99 <= arr[i as usize] && arr[i as usize] <= 99 {
+            res += arr[i as usize] as i64;
+        }
+    }
+    res
+}
 
 } // verus!
 fn main() {}
