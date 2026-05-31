@@ -21,15 +21,15 @@ spec fn is_prime(n: nat) -> bool {
     }
 }
 
-spec fn primes_bellow(n: nat) -> Seq<nat>
+spec fn primes_below(n: nat) -> Seq<nat>
     decreases n,
 {
     if n <= 2 {
         seq![]
     } else {
-        let prev = primes_bellow((n - 1) as nat);
+        let prev = primes_below((n - 1) as nat);
         if is_prime((n - 1) as nat) {
-            prev + seq![(n - 1) as nat]
+            prev.push((n - 1) as nat)
         } else {
             prev
         }
@@ -71,23 +71,19 @@ fn count_up_to(n: i32) -> (r: Vec<i32>)
     requires
         n >= 0,
     ensures
-        primes_bellow(n as nat) == r@.map_values(|x| x as nat),
+        primes_below(n as nat) == r@.map_values(|x| x as nat),
 {
     let mut r: Vec<i32> = Vec::new();
     if (n == 0 || n == 1) {
         return r;
     }
-    let mut possible_prime = 2;
-    while (possible_prime < n)
+    for possible_prime in 2..n
         invariant
-            2 <= possible_prime <= n,
-            primes_bellow(possible_prime as nat) == r@.map_values(|x| x as nat),
-        decreases n - possible_prime,
+            primes_below(possible_prime as nat) == r@.map_values(|x| x as nat),
     {
         if (check_prime(possible_prime)) {
             r.push(possible_prime);
         }
-        possible_prime += 1;
     }
     r
 }
@@ -96,7 +92,7 @@ fn static_checks() {
     let x = count_up_to(5);
     let v = vec![2,3];
     assert(x@.map_values(|x| x as nat) == v@.map_values(|x| x as nat)) by {
-        reveal_with_fuel(primes_bellow, 4);
+        reveal_with_fuel(primes_below, 4);
         assert(!is_prime(0));
         assert(!is_prime(1));
         assert(is_prime(2));
