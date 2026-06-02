@@ -6,11 +6,11 @@ HumanEval/98
 ### VERUS BEGIN
 */
 use vstd::prelude::*;
-use vstd::set::group_set_axioms;
+use vstd::set::group_set_lemmas;
 
 verus! {
 
-broadcast use group_set_axioms;
+broadcast use group_set_lemmas;
 
 spec fn spec_is_upper_vowel(c: char) -> bool {
     c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U'
@@ -26,16 +26,15 @@ fn is_upper_vowel(c: char) -> (is: bool)
 #[verifier::loop_isolation(false)]
 fn count_upper(s: &[char]) -> (cnt: usize)
     ensures
-        cnt == Set::new(|i: int| 0 <= i < s.len() && i % 2 == 0 && spec_is_upper_vowel(s[i])).len(),
+        cnt == Set::range(0, s.len() as int).filter(|i: int| i % 2 == 0 && spec_is_upper_vowel(s[i])).len(),
 {
     let ghost mut found = set![];
     let mut cnt = 0;
     for i in 0..s.len()
         invariant
             found.len() <= i,
-            found.finite(),
             cnt == found.len(),
-            found =~= Set::new(|j: int| 0 <= j < i && j % 2 == 0 && spec_is_upper_vowel(s[j])),
+            found =~= Set::range(0, i as int).filter(|j: int| j % 2 == 0 && spec_is_upper_vowel(s[j])),
     {
         if i % 2 == 0 && is_upper_vowel(s[i]) {
             cnt = cnt + 1;
