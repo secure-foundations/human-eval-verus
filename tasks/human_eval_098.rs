@@ -26,7 +26,9 @@ fn is_upper_vowel(c: char) -> (is: bool)
 #[verifier::loop_isolation(false)]
 fn count_upper(s: &[char]) -> (cnt: usize)
     ensures
-        cnt == Set::range(0, s.len() as int).filter(|i: int| i % 2 == 0 && spec_is_upper_vowel(s[i])).len(),
+        cnt == Set::range(0, s.len() as int).filter(
+            |i: int| i % 2 == 0 && spec_is_upper_vowel(s[i]),
+        ).len(),
 {
     let ghost mut found = set![];
     let mut cnt = 0;
@@ -34,7 +36,9 @@ fn count_upper(s: &[char]) -> (cnt: usize)
         invariant
             found.len() <= i,
             cnt == found.len(),
-            found =~= Set::range(0, i as int).filter(|j: int| j % 2 == 0 && spec_is_upper_vowel(s[j])),
+            found =~= Set::range(0, i as int).filter(
+                |j: int| j % 2 == 0 && spec_is_upper_vowel(s[j]),
+            ),
     {
         if i % 2 == 0 && is_upper_vowel(s[i]) {
             cnt = cnt + 1;
