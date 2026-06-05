@@ -45,7 +45,7 @@ fn double_the_difference(v: Vec<i32>) -> (out: Option<u64>)
         ({
             let expected_sum = double_the_difference_spec(v@.map_values(|x: i32| x as int));
             match out {
-                Some(val) => val as int == expected_sum && expected_sum <= u64::MAX as int,
+                Some(val) => val as int == expected_sum,
                 None => expected_sum > u64::MAX as int,
             }
         }),
