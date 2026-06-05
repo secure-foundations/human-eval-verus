@@ -72,7 +72,7 @@ spec fn apply_swaps(lst1: Seq<int>, lst2: Seq<int>, swaps: Seq<(int, int)>) -> (
     }
 }
 
-spec fn swaps_sequence_transform_lst1_is_a_even_list(
+spec fn swaps_sequence_transforms_lst1_into_an_even_list(
     lst1: Seq<int>,
     lst2: Seq<int>,
     swaps: Seq<(int, int)>,
@@ -81,8 +81,11 @@ spec fn swaps_sequence_transform_lst1_is_a_even_list(
     all_elements_are_even(res.0)
 }
 
-spec fn exist_a_swap_transforms_lst1_in_a_even_list(lst1: Seq<int>, lst2: Seq<int>) -> bool {
-    exists|s: Seq<(int, int)>| swaps_sequence_transform_lst1_is_a_even_list(lst1, lst2, s)
+spec fn exists_a_swap_that_transforms_lst1_into_an_even_list(
+    lst1: Seq<int>,
+    lst2: Seq<int>,
+) -> bool {
+    exists|s: Seq<(int, int)>| swaps_sequence_transforms_lst1_into_an_even_list(lst1, lst2, s)
 }
 
 spec fn count_odd(s: Seq<int>) -> nat
@@ -144,15 +147,13 @@ proof fn count_greater_implies_swap_existence(lst1: Seq<int>, lst2: Seq<int>)
         lst1.len() > 0,
         lst2.len() > 0,
     ensures
-        (count_even(lst2) >= count_odd(lst1)) == exist_a_swap_transforms_lst1_in_a_even_list(
-            lst1,
-            lst2,
-        ),
+        (count_even(lst2) >= count_odd(lst1))
+            == exists_a_swap_that_transforms_lst1_into_an_even_list(lst1, lst2),
 {
     if count_even(lst2) >= count_odd(lst1) {
         enough_evens_implies_swap_existence(lst1, lst2);
     }
-    if (exist_a_swap_transforms_lst1_in_a_even_list(lst1, lst2)) {
+    if (exists_a_swap_that_transforms_lst1_into_an_even_list(lst1, lst2)) {
         swap_existence_implies_enough_evens(lst1, lst2);
     }
 }
@@ -192,14 +193,14 @@ proof fn lemma_apply_swaps_conservation(lst1: Seq<int>, lst2: Seq<int>, swaps: S
 
 proof fn swap_existence_implies_enough_evens(lst1: Seq<int>, lst2: Seq<int>)
     requires
-        exist_a_swap_transforms_lst1_in_a_even_list(lst1, lst2),
+        exists_a_swap_that_transforms_lst1_into_an_even_list(lst1, lst2),
     ensures
         count_even(lst2) >= count_odd(lst1),
 {
     if (count_even(lst2) < count_odd(lst1)) {
         reveal_with_fuel(count_odd, 2);
         let v = choose|s: Seq<(int, int)>|
-            swaps_sequence_transform_lst1_is_a_even_list(lst1, lst2, s);
+            swaps_sequence_transforms_lst1_into_an_even_list(lst1, lst2, s);
 
         let res = apply_swaps(lst1, lst2, v);
         lemma_apply_swaps_conservation(lst1, lst2, v);
@@ -218,7 +219,7 @@ proof fn swap_existence_implies_enough_evens(lst1: Seq<int>, lst2: Seq<int>)
         // Joining these
         // count_odd(lst1) + count_odd(lst2) == count_odd(rest2) <= |lst2| == count_odd(lst2) + cout_even(lst2)
         // count_odd(lst1) <= count_even(lst2)
-        // Reasing a contradiction
+        // Reaching a contradiction
 
         assert(count_odd(lst1) <= count_even(lst2));
         assert(false);
@@ -339,15 +340,19 @@ proof fn enough_evens_implies_swap_existence(lst1: Seq<int>, lst2: Seq<int>)
         lst2.len() > 0,
         count_even(lst2) >= count_odd(lst1),
     ensures
-        exist_a_swap_transforms_lst1_in_a_even_list(lst1, lst2),
+        exists_a_swap_that_transforms_lst1_into_an_even_list(lst1, lst2),
     decreases count_odd(lst1),
 {
     if (count_even(lst1) > 0 && count_odd(lst1) == 0) {
         // If already on the goal a simple same swap gets me same even list
-        let res = swaps_sequence_transform_lst1_is_a_even_list(lst1, lst2, seq![(0, 0), (0, 0)]);
+        let res = swaps_sequence_transforms_lst1_into_an_even_list(
+            lst1,
+            lst2,
+            seq![(0, 0), (0, 0)],
+        );
         same_swap_no_change_seq(lst1, lst2, seq![(0, 0), (0, 0)]);
         elements_all_even_implies_counts(lst1);
-        assert(exist_a_swap_transforms_lst1_in_a_even_list(lst1, lst2));
+        assert(exists_a_swap_that_transforms_lst1_into_an_even_list(lst1, lst2));
     } else {
         reveal_with_fuel(count_odd, 2);
         reveal_with_fuel(count_even, 2);
@@ -372,15 +377,16 @@ proof fn enough_evens_implies_swap_existence(lst1: Seq<int>, lst2: Seq<int>)
         assert(count_even(s2) == count_even(lst2) - 1);
         enough_evens_implies_swap_existence(s1, s2);
 
-        let v = choose|s: Seq<(int, int)>| swaps_sequence_transform_lst1_is_a_even_list(s1, s2, s);
+        let v = choose|s: Seq<(int, int)>|
+            swaps_sequence_transforms_lst1_into_an_even_list(s1, s2, s);
         let f = seq![(idx1, idx2)] + v;
-        assert(swaps_sequence_transform_lst1_is_a_even_list(lst1, lst2, f) == true) by {
+        assert(swaps_sequence_transforms_lst1_into_an_even_list(lst1, lst2, f) == true) by {
             reveal_with_fuel(apply_swaps, 2);
             assert(f.drop_first() == v);
             assert(apply_swaps(lst1, lst2, f) == apply_swaps(s1, s2, v));
-            assert(swaps_sequence_transform_lst1_is_a_even_list(s1, s2, v));
+            assert(swaps_sequence_transforms_lst1_into_an_even_list(s1, s2, v));
         }
-        assert(exist_a_swap_transforms_lst1_in_a_even_list(lst1, lst2));
+        assert(exists_a_swap_that_transforms_lst1_into_an_even_list(lst1, lst2));
     }
 }
 
@@ -391,7 +397,7 @@ fn exchange(lst1: Vec<i32>, lst2: Vec<i32>) -> (out: bool)
         lst1.len() > 0,
         lst2.len() > 0,
     ensures
-        out == exist_a_swap_transforms_lst1_in_a_even_list(
+        out == exists_a_swap_that_transforms_lst1_into_an_even_list(
             lst1@.map_values(|x| x as int),
             lst2@.map_values(|x| x as int),
         ),
