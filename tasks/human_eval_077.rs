@@ -33,7 +33,6 @@ proof fn lemma_cube_is_monotomic(x1: nat, x2: nat)
     {};
 }
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
 proof fn lemma_i_cube_not_overlows(i: u64)
     requires
         i <= 2642245,
@@ -55,16 +54,14 @@ proof fn lemma_i_cube_not_overlows(i: u64)
     {};
 }
 
-proof fn lemma_i_bigger_2642245_no_cube(i: u64, n: u64)
+proof fn lemma_no_cube_after_2642245(i: u64, n: u64)
     requires
         i >= 2642245,
-        forall|x: u64| x <= i ==> cube(x as nat) != n,
     ensures
-        !(exists|x: u64| (cube(x as nat) == n as nat)),
+        forall|x: u64| x > i ==> cube(x as nat) > n,
 {
-    assert(!(exists|x: u64| (cube(x as nat) == n as nat))) by {
-        assert(forall|x: u64| x <= i ==> cube(x as nat) != n);
-        assert forall|p: u64| #![auto] i < p implies cube(p as nat) != n by {
+    assert(forall|x: u64| x > i ==> cube(x as nat) > n) by {
+        assert forall|p: u64| #![auto] i < p implies cube(p as nat) > n by {
             n <= u64::MAX;
             lemma_cube_is_monotomic(2642246, p as nat);
             lemma_2642245_cubed_can_be_represented_in_u64();
@@ -75,18 +72,30 @@ proof fn lemma_i_bigger_2642245_no_cube(i: u64, n: u64)
     };
 }
 
-proof fn lemma_not_exist_any_cube_bigger_than_i(i: u64, n: u64)
+proof fn lemma_no_cube_exists_after_an_i_that_is_already_bigger(i: u64, n: u64)
     requires
         cube(i as nat) > n,
-        forall|x: u64| x <= i ==> cube(x as nat) != n,
     ensures
-        !(exists|x: u64| (cube(x as nat) == n as nat)),
+        forall|x: u64| x >= i ==> cube(x as nat) > n,
 {
-    assert(!(exists|x: u64| (cube(x as nat) == n as nat))) by {
-        assert(forall|x: u64| x <= i ==> cube(x as nat) != n);
-        assert forall|p: u64| #![auto] i < p implies cube(p as nat) != n by {
+    assert(forall|x: u64| x >= i ==> cube(x as nat) > n) by {
+        assert forall|p: u64| #![auto] i <= p implies cube(p as nat) > n by {
             n <= u64::MAX;
             lemma_cube_is_monotomic(i as nat, p as nat);
+        };
+    };
+}
+
+proof fn lemma_no_cube_exists_before_an_i_that_is_already_smaller(i: u64, n: u64)
+    requires
+        cube(i as nat) < n,
+    ensures
+        forall|x: u64| x <= i ==> cube(x as nat) < n,
+{
+    assert(forall|x: u64| x <= i ==> cube(x as nat) < n) by {
+        assert forall|p: u64| #![auto] i >= p implies cube(p as nat) < n by {
+            n <= u64::MAX;
+            lemma_cube_is_monotomic(p as nat, i as nat);
         };
     };
 }
@@ -97,60 +106,52 @@ fn iscube(n: u64) -> (out: bool)
     ensures
         out == exists|x: u64| (cube(x as nat) == n as nat),
 {
-    if (n == 0) {
-        assert(cube(0 as nat) == n as nat);
-        return true;
+    let mut left = 0;
+    let mut right = 2642245;
+
+    proof {
+        assert(forall|x: u64| x > right ==> cube(x as nat) > n) by {
+            lemma_no_cube_after_2642245(right, n);
+        }
     }
-    if (n == 1) {
-        assert(cube(1 as nat) == n as nat);
-        return true;
-    }
-    for i in 0..(n + 1)
+
+    while (left <= right)
         invariant
-            i <= 2642245,
-            forall|x: u64| x < i ==> cube(x as nat) != n,
+            0 <= left <= right <= 2642245,
+            forall|x: u64| x < left ==> cube(x as nat) < n,
+            forall|x: u64| x > right ==> cube(x as nat) > n,
+        decreases right - left,
     {
+        let i = (right + left) / 2;
         proof {
             lemma_i_cube_not_overlows(i);
         }
         ;
         assert(i * i * i == cube(i as nat));
-
         let v: u64 = i * i * i;
         if (v == n) {
             assert(exists|x: u64| (cube(x as nat) == n as nat));
             return true;
-        }
-        if (v > n) {
-            assert(!exists|x: u64| (cube(x as nat) == n as nat)) by {
-                lemma_not_exist_any_cube_bigger_than_i(i, n);
-            };
-            return false;
-        }
-        if (i >= 2642245) {
-            assert(!(exists|x: u64| (cube(x as nat) == n as nat))) by {
-                lemma_i_bigger_2642245_no_cube(i, n);
+        } else if (left == right) {
+            proof {
+                assert(forall|x: u64| x < left ==> cube(x as nat) != n as nat);
+                assert(forall|x: u64| x > right ==> cube(x as nat) != n as nat);
+                assert(cube(left as nat) != n as nat);
             }
             return false;
+        } else if (v > n) {
+            proof {
+                lemma_no_cube_exists_after_an_i_that_is_already_bigger(i, n);
+            }
+            right = i;
+        } else if (v < n) {
+            proof {
+                lemma_no_cube_exists_before_an_i_that_is_already_smaller(i, n);
+            }
+            left = i + 1;
         }
     }
 
-    // This is infact unreachable
-    assert(!(exists|x: u64| (cube(x as nat) == n as nat))) by {
-        if (n > 2642245) {
-            assert(forall|x: u64| x < 2642245 ==> cube(x as nat) != n);
-            lemma_i_bigger_2642245_no_cube(2642245, n);
-        } else {
-            assert(forall|x: u64| x <= n ==> cube(x as nat) != n);
-            let nnat = n as nat;
-            assert(cube(nnat) > nnat) by (nonlinear_arith)
-                requires
-                    nnat >= 2,
-            {}
-            lemma_not_exist_any_cube_bigger_than_i(n, n);
-            assert(!(exists|x: u64| (cube(x as nat) == n as nat)));
-        }
-    }
     return false;
 }
 
