@@ -222,15 +222,18 @@ const MAX_FUEL: u32 = 20;
 /// Implementation of get_odd_collatz
 /// With the conservative assuption that x grows at every iteration, x can
 /// exceed u64::MAX after 20 iterations which is why MAX_FUEL is set to 20
-fn get_odd_collatz(n: u32) -> (result: Vec<u64>)
+fn get_odd_collatz(n: u32) -> (result: Option<Vec<u64>>)
     ensures
-        sorted_by(result@, |x: u64, y: u64| x <= y),
-        result@.to_multiset() == get_odd_collatz_spec(n as u64, MAX_FUEL as int).to_multiset(),
-        result@.len() == get_odd_collatz_spec(n as u64, MAX_FUEL as int).len(),
+        result matches Some(result) ==> get_odd_collatz_spec(n as u64, MAX_FUEL as int).contains(1)
+            && sorted_by(result@, |x: u64, y: u64| x <= y) && result@.to_multiset()
+            == get_odd_collatz_spec(n as u64, MAX_FUEL as int).to_multiset() && result@.len()
+            == get_odd_collatz_spec(n as u64, MAX_FUEL as int).len(),
+        result is None ==> !get_odd_collatz_spec(n as u64, MAX_FUEL as int).contains(1),
 {
     let mut odd_collatz = Vec::new();
     let mut x = n as u64;
     let mut fuel = MAX_FUEL;
+    let mut collatz_completed = false;
     proof {
         pows_concrete();
     }
@@ -244,10 +247,12 @@ fn get_odd_collatz(n: u32) -> (result: Vec<u64>)
             0 <= x <= (u32::MAX) * pow(3, (MAX_FUEL - fuel) as nat) + geo_prog(
                 (MAX_FUEL - fuel) as nat,
             ) <= u64::MAX,
+            collatz_completed <==> odd_collatz@.contains(1),
         decreases fuel,
     {
         if x == 1 {
             odd_collatz.push(1);
+            collatz_completed = true;
             fuel = 1;
         } else if x % 2 == 0 {
             x = x / 2;
@@ -265,7 +270,11 @@ fn get_odd_collatz(n: u32) -> (result: Vec<u64>)
             pows_concrete();
         }
     }
-    sort_seq(&odd_collatz)
+    if !collatz_completed {
+        None
+    } else {
+        Some(sort_seq(&odd_collatz))
+    }
 }
 
 } // verus!
