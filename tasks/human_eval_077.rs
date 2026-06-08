@@ -33,7 +33,7 @@ proof fn lemma_cube_is_monotomic(x1: nat, x2: nat)
     {};
 }
 
-proof fn lemma_i_cube_not_overlows(i: u64)
+proof fn lemma_i_cube_does_not_overflow(i: u64)
     requires
         i <= 2642245,
     ensures
@@ -124,7 +124,7 @@ fn iscube(n: u64) -> (out: bool)
     {
         let i = (right + left) / 2;
         proof {
-            lemma_i_cube_not_overlows(i);
+            lemma_i_cube_does_not_overflow(i);
         }
         ;
         assert(i * i * i == cube(i as nat));
