@@ -6,9 +6,8 @@ HumanEval/133
 ### VERUS BEGIN
 */
 use std::mem::take;
-use vstd::{arithmetic::overflow::CheckedU64, invariant, prelude::*};
 use vstd::arithmetic::mul::lemma_mul_cancels_negatives;
-
+use vstd::{arithmetic::overflow::CheckedU64, invariant, prelude::*};
 
 verus! {
 
@@ -75,9 +74,9 @@ fn sum_squares(v: Vec<i32>) -> (out: Option<u64>)
                 assert(val < 0);
                 let v1: int = ((-(val as i64)) as u64) as int;
                 let vx = v1;
-                assert((v1 * v1) >= 0); // Tentative to trigger lemma automatically did not worked
-                assert((v1 * v1) == (-v1) * (-v1) ) by {
-                    lemma_mul_cancels_negatives(v1,v1);
+                assert((v1 * v1) >= 0);  // Tentative to trigger lemma automatically did not worked
+                assert((v1 * v1) == (-v1) * (-v1)) by {
+                    lemma_mul_cancels_negatives(v1, v1);
                 };
             }
         }
