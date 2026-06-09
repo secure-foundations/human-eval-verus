@@ -63,22 +63,14 @@ fn sum_squares(v: Vec<i32>) -> (out: Option<u64>)
 
         assert(s@ as int == sum_squares_spec(v@.take((i + 1) as int).map_values(|x: i32| x as int)))
             by {
+            broadcast use lemma_mul_cancels_negatives;
+
             let prev_slice = v@.take(i as int).map_values(|x: i32| x as int);
             let cur_slice = v@.take((i + 1) as int).map_values(|x: i32| x as int);
             let singleton_vi_seq = seq![cur_slice[i as int]];
             assert(prev_slice + singleton_vi_seq =~= cur_slice);
             lemma_sum_squares_spec_concat(prev_slice, singleton_vi_seq);
             reveal_with_fuel(sum_squares_spec, 2);
-            if (v[i as int] < 0) {
-                let val: int = v[i as int] as int;
-                assert(val < 0);
-                let v1: int = ((-(val as i64)) as u64) as int;
-                let vx = v1;
-                assert((v1 * v1) >= 0);  // Tentative to trigger lemma automatically did not worked
-                assert((v1 * v1) == (-v1) * (-v1)) by {
-                    lemma_mul_cancels_negatives(v1, v1);
-                };
-            }
         }
     };
     assert(v@.take(v.len() as int) == v@);
