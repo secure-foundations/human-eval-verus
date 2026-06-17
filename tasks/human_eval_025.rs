@@ -45,6 +45,7 @@ proof fn lemma_fold_right_pull_out_nat(seq: Seq<nat>, k: nat)
     decreases seq.len(),
 {
     if seq.len() == 0 {
+        assert(1nat * k == k) by { lemma_mul_is_commutative(1, k as int); }
     } else {
         calc! {
             (==)
@@ -79,6 +80,7 @@ proof fn lemma_fold_right_pull_out_hybrid(seq: Seq<u8>, k: nat)
     decreases seq.len(),
 {
     if seq.len() == 0 {
+        assert(1nat * k == k) by { lemma_mul_is_commutative(1, k as int); }
     } else {
         calc! {
             (==)
@@ -177,6 +179,7 @@ proof fn lemma_multiple_mod_is_zero_new(m: int, n: int, k: int)
     assert((m * b) == n / a) by { lemma_div_multiples_vanish(m * b, a) };
 }
 
+#[verifier::spinoff_prover]
 proof fn lemma_factor_mod_is_zero(k: int, m: int, j: int)
     requires
         k % j != 0,
@@ -299,6 +302,7 @@ proof fn lemma_fold_right_equivalent_for_nat_u8(factorization: Seq<u8>)
     }
 }
 
+#[verifier::spinoff_prover]
 pub fn factorize(n: u8) -> (factorization: Vec<u8>)
     requires
         1 <= n <= u8::MAX,
