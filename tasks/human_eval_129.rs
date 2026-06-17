@@ -288,6 +288,7 @@ proof fn lemma_less_than_step_even<const N: usize>(
     }
 }
 
+#[verifier::spinoff_prover]
 proof fn lemma_less_than_step_odd<const N: usize>(
     path: Seq<int>,
     grid: [[u8; N]; N],
@@ -380,6 +381,9 @@ pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
             path@.map_values(|item| item as int),
         ),
 {
+    // Keep the grid-injectivity quantifier inside no_repeats_in_grid folded; min_path only
+    // forwards this predicate to its callees, and unfolding it triggers on every grid access.
+    hide(no_repeats_in_grid);
     let (ones_coordinates, smallest_coordinates, smallest) = find_smallest_adjacent_to_one(grid);
     let mut path: Vec<u8> = vec![];
     let mut k_counter = k;
@@ -445,17 +449,25 @@ pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
 
         //proving adjacency
         let ghost grid = grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int));
+        let ghost mapped = path@.map_values(|j: u8| j as int);
         assert(forall|i: int|
-            (0 <= #[trigger] (i + 0) < path@.map_values(|j: u8| j as int).len() - 1) ==> (exists|
-                i0: int,
-                j0: int,
-            |
+            (0 <= #[trigger] (i + 0) < mapped.len() - 1) ==> (exists|i0: int, j0: int|
                 ({
-                    let m = path@.map_values(|j: u8| j as int)[i];
-                    let n = path@.map_values(|j: u8| j as int)[(i + 1)];
+                    let m = mapped[i];
+                    let n = mapped[(i + 1)];
                     #[trigger] grid[i0][j0] == m && is_adjacent::<N>(grid, m, n, (i0, j0))
                 })));
+        // Restate in adjacent_numbers form so invariant clause 1 matches directly.
+        assert(forall|i: int|
+            (0 <= #[trigger] (i + 0) < mapped.len() - 1) ==> adjacent_numbers::<N>(
+                grid,
+                mapped[i],
+                mapped[(i + 1)],
+            ));
     }
+    // The loop is done; reveal the grid predicate so is_valid_path's value-bound clause
+    // (1 <= path[i] <= N*N, inherited from grid values) is available for the postcondition.
+    reveal(no_repeats_in_grid);
     assert(forall|i: int|
         (0 <= i + 0 < path@.len() - 1) ==> adjacent_numbers::<N>(
             grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),

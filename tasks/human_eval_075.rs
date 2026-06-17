@@ -56,9 +56,10 @@ fn checked_mul_thrice(x: u32, y: u32, z: u32) -> (ret: Option<u32>)
             None
         }
     } else {
-        broadcast use group_mul_properties;
-
-        assert(x * y * z >= y * z);
+        proof {
+            lemma_mul_ordering(x as int * y as int, z as int);
+        }
+        assert(x * y * z >= x * y);
         None
     }
 }

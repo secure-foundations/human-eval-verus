@@ -40,6 +40,7 @@ fn derivative(xs: &Vec<u32>) -> (ret: Vec<u64>)
             );
             assert((i as u64) * (xs[i as int] as u64) <= u64::MAX) by {
                 assert(u32::MAX * u32::MAX <= u64::MAX);
+                vstd::arithmetic::mul::lemma_mul_is_commutative(i as int, xs[i as int] as int);
                 assert((i as u64) * (xs[i as int] as u64) == i as int * xs[i as int]);
             }
         }
