@@ -45,7 +45,9 @@ proof fn lemma_fold_right_pull_out_nat(seq: Seq<nat>, k: nat)
     decreases seq.len(),
 {
     if seq.len() == 0 {
-        assert(1nat * k == k) by { lemma_mul_is_commutative(1, k as int); }
+        assert(1nat * k == k) by {
+            lemma_mul_is_commutative(1, k as int);
+        }
     } else {
         calc! {
             (==)
@@ -80,7 +82,9 @@ proof fn lemma_fold_right_pull_out_hybrid(seq: Seq<u8>, k: nat)
     decreases seq.len(),
 {
     if seq.len() == 0 {
-        assert(1nat * k == k) by { lemma_mul_is_commutative(1, k as int); }
+        assert(1nat * k == k) by {
+            lemma_mul_is_commutative(1, k as int);
+        }
     } else {
         calc! {
             (==)
