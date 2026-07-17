@@ -6,30 +6,10 @@ HumanEval/10
 ### VERUS BEGIN
 */
 use vstd::prelude::*;
+use vstd::slice::slice_subrange;
 
 verus! {
-
 // TODO: Put your solution (the specification, implementation, and proof) to the task here
-
-fn reverse(string: &[char]) -> (result: Vec<char>)
-    ensures
-        result.len() == string.len(),
-        forall |i: int| 0 <= i < string.len() ==> result[i] == string[string.len() - 1 - i],
-{
-    let mut reversed = Vec::new();
-    let mut i = string.len();
-    while i > 0
-        invariant
-            0 <= i <= string.len(),
-            reversed.len() == string.len() - i,
-            forall |j: int| 0 <= j < reversed.len() ==> reversed[j] == string[string.len() - 1 - j],
-        decreases i,
-    {
-        i -= 1;
-        reversed.push(string[i].clone());
-    }
-    reversed
-}
 
 spec fn spec_is_palindrome(string: Seq<char>) -> bool
 {
@@ -52,21 +32,11 @@ fn is_palindrome(string: &[char]) -> (result: bool)
         if string[i] != string[len - 1 - i] {
             return false;
         }
-        assert (string[i as int] == string[len - 1 - i]);
         i += 1;
     }
-
-    assert (forall |j: int| 0 <= j < len ==> #[trigger] string[j] == string[len - 1 - j]);
-    assert (forall |j: int| 0 <= j < len ==> #[trigger] string@[j] == string@[len - 1 - j]);
-    assert (forall |j: int| 0 <= j < len ==> #[trigger] string@[len - 1 - j] == string@.reverse()[j]);
-    assert (forall |j: int| 0 <= j < len ==> #[trigger] string@[j] == string@.reverse()[j]);
     assert (string@ =~= string@.reverse());
-    assert (spec_is_palindrome(string@));
-
     true
 }
-
-use vstd::slice::slice_subrange;
 
 proof fn palidrome_sandwich(a: Seq<char>, b: Seq<char>)
     requires
@@ -74,11 +44,6 @@ proof fn palidrome_sandwich(a: Seq<char>, b: Seq<char>)
     ensures
         spec_is_palindrome((a + b) + a.reverse()),
 {
-    assert (b == b.reverse());
-    assert (((a + b) + a.reverse()).reverse() == a.reverse().reverse() + (a + b).reverse());
-    assert (a.reverse().reverse() == a);
-    assert ((a + b).reverse() == b.reverse() + a.reverse());
-    assert ((a + b).reverse() == b + a.reverse());
     assert (((a + b) + a.reverse()).reverse() == a + b + a.reverse());
 }
 
@@ -89,9 +54,27 @@ proof fn palidrome_sandwich_reverse(a: Seq<char>, i: int)
     ensures
         spec_is_palindrome(a.subrange(i, a.len() - i)),
 {
-    assert forall |j: int| 0 <= j < a.len() - i - i implies a.subrange(i, a.len() - i)[j] == #[trigger] a.subrange(i, a.len() - i).reverse()[j] by {
-    }
     assert (a.subrange(i, a.len() - i) =~= a.subrange(i, a.len() - i).reverse());
+}
+
+fn reverse(string: &[char]) -> (result: Vec<char>)
+    ensures
+        result.len() == string.len(),
+        forall |i: int| 0 <= i < string.len() ==> result[i] == string[string.len() - 1 - i],
+{
+    let mut reversed = Vec::new();
+    let mut i = string.len();
+    while i > 0
+        invariant
+            0 <= i <= string.len(),
+            reversed.len() == string.len() - i,
+            forall |j: int| 0 <= j < reversed.len() ==> reversed[j] == string[string.len() - 1 - j],
+        decreases i,
+    {
+        i -= 1;
+        reversed.push(string[i].clone());
+    }
+    reversed
 }
 
 fn make_palindrome(string: Vec<char>) -> (result: Vec<char>)
@@ -115,38 +98,23 @@ fn make_palindrome(string: Vec<char>) -> (result: Vec<char>)
     }
 
     if !(beginning_of_suffix < len) {
-        assert (beginning_of_suffix == len);
         assert (string@.subrange(len as int, len as int) =~= Seq::<char>::empty());
     }
-    assert (spec_is_palindrome(string@.subrange(beginning_of_suffix as int, len as int)));
     let mut ret = string.clone();
     let mut app = reverse(slice_subrange(&string, 0, beginning_of_suffix));
     ret.append(&mut app);
 
-    assert (ret@ == string@ + string@.subrange(0, beginning_of_suffix as int).reverse());
-    assert (string@ == string@.subrange(0, beginning_of_suffix as int) + string@.subrange(beginning_of_suffix as int, len as int));
     assert (ret@ == (string@.subrange(0, beginning_of_suffix as int) + string@.subrange(beginning_of_suffix as int, len as int)) + string@.subrange(0, beginning_of_suffix as int).reverse());
     proof {
         palidrome_sandwich(string@.subrange(0, beginning_of_suffix as int), string@.subrange(beginning_of_suffix as int, len as int));
     }
-    assert (spec_is_palindrome(ret@));
-    assert (ret.len() == len + beginning_of_suffix);
-    assert (ret.len() <= len + len);
-
     assert forall |s: Seq<char>| #![auto] spec_is_palindrome(s) && s.len() >= len as int && s.subrange(0, string@.len() as int) == string@ implies ret@.len() <= s.len() by {
-        assert (spec_is_palindrome(s) && s.len() >= len as int && s.subrange(0, string@.len() as int) == string@);
         if (ret@.len() > s.len()) {
             palidrome_sandwich_reverse(s, s.len() - len);
-            assert (spec_is_palindrome(s.subrange(s.len() - len, len as int)));
-            assert (s.subrange(0, string@.len() as int) == string@);
             assert (s.subrange(s.len() - len, len as int) == s.subrange(0, string@.len() as int).subrange(s.len() - len, len as int));
-            assert (spec_is_palindrome(string@.subrange(s.len() - len, len as int)));
-            assert (s.len() - len < beginning_of_suffix);
-            assert (!spec_is_palindrome(string@.subrange(s.len() - len, len as int)));
-            assert (false);
         }
     }
-    return ret;
+    ret
 }
 } // verus!
 
