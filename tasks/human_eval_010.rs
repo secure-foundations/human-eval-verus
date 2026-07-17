@@ -112,6 +112,8 @@ fn make_palindrome(string: Vec<char>) -> (result: Vec<char>)
         if (ret@.len() > s.len()) {
             palidrome_sandwich_reverse(s, s.len() - len);
             assert (s.subrange(s.len() - len, len as int) == s.subrange(0, string@.len() as int).subrange(s.len() - len, len as int));
+            // contradicts with the instantialization of (0 <= bos < beginning_of_suffix ==> !spec_is_palindrome(string@.subrange(bos, len as int)))
+            // by taking bos = s.len() - len
         }
     }
     ret
