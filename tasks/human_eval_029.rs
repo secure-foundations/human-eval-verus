@@ -9,7 +9,6 @@ use vstd::prelude::*;
 
 verus! {
 
-// TODO: Put your solution (the specification, implementation, and proof) to the task here
 spec fn to_seq(s: Vec<Vec<char>>) -> Seq<Seq<char>> {
     s@.map_values(|v: Vec<char>| v@)
 }
