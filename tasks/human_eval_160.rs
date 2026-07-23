@@ -1417,7 +1417,7 @@ def do_algebra(operator, operand):
     Note:
         The length of operator list is equal to the length of operand list minus one.
         Operand is a list of of non-negative integers.
-        Operator list has at least one operator, and operand list has at least two ops.
+        Operator list has at least one operator, and operand list has at least two operands.
 
     """
 
