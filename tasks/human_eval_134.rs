@@ -6,6 +6,7 @@ HumanEval/134
 ### VERUS BEGIN
 */
 use vstd::prelude::*;
+use vstd::std_specs::char::is_white_space;
 
 verus! {
 
@@ -20,21 +21,10 @@ pub fn ex_is_alphabetic(c: char) -> (result: bool)
     c.is_alphabetic()
 }
 
-pub uninterp spec fn is_whitespace(c: char) -> (result: bool);
-
-#[verifier::external_fn_specification]
-#[verifier::when_used_as_spec(is_whitespace)]
-pub fn ex_is_whitespace(c: char) -> (result: bool)
-    ensures
-        result <==> (c.is_whitespace()),
-{
-    c.is_whitespace()
-}
-
 fn check_if_last_char_is_a_letter(txt: &str) -> (result: bool)
     ensures
         result <==> (txt@.len() > 0 && txt@.last().is_alphabetic() && (txt@.len() == 1
-            || txt@.index(txt@.len() - 2).is_whitespace())),
+            || is_white_space(txt@.index(txt@.len() - 2)))),
 {
     let len = txt.unicode_len();
     if len == 0 {
