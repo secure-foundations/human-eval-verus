@@ -86,6 +86,11 @@ proof fn lemma_div(a: nat, b: nat, d: nat)
         assert(k1 >= k2) by {
             // note: is there a better way to proof by contradiction?
             if (k1 < k2) {
+                assert(d > 0) by (nonlinear_arith)
+                    requires
+                        a == d * k1,
+                        a != 0,
+                ;
                 // note: using broadcast fails here
                 vstd::arithmetic::mul::lemma_mul_strict_inequality(k1 as int, k2 as int, d as int);
             }
