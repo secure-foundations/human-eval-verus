@@ -8,52 +8,22 @@ HumanEval/160
 use vstd::arithmetic::power::*;
 use vstd::prelude::*;
 
+/*
+Specification definitions to inspect
+* spec_i128_checked_pow, Operator::spec_apply_op, and Expr::eval evaluates an expression tree.
+* Operator::spec_precedence, Expr::root_precedence, and Expr::satisfy_precedence specify the precedence rules. An expression is valid if it satisfies the precedence rules.
+* Expr::operator and Expr::operand flatten an expression tree into operator and operand sequences.
+* construct_from is a spec function that constructs an expression tree from operator and operand sequences.
+* In lemma_construct_from, it is proved that the result satisfies the precedence rules, and
+* (operator, operand) --construct_from--> expr --(Expr::operator, Expr::operand)--> (operator, operand)
+* This two properties gurantee that construct_from gives the desired expression we want to evaluate.
+* The linear-time execution function eval_by_stack is verified to return construct_from(operator@, operand@).eval() for every valid input.
+*/
+
 verus! {
 
-// This part defines
-// - Some lemmas about vstd::arithmetic::power::pow
-// - A specification of checked_pow(n: i128, m: i128) -> Option<i128>, returns vstd::arithmetic::power::pow if n, m >= 0 and the result does not overflow, and None otherwise.
-// - An implementation of checked_pow(n: i128, m: i128) -> Option<i128> using loop and checked_mul which produce the same result as the specification.
-proof fn lemma_pow00()
-    ensures
-        pow(0, 0) == 1,
-{
-    lemma_pow0(0);
-}
-
-proof fn lemma_0pow(n: nat)
-    ensures
-        pow(0, n) == 0 || pow(0, n) == 1,
-{
-    if n == 0 {
-        lemma_pow00();
-    } else {
-        lemma0_pow(n);
-    }
-}
-
-proof fn lemma_pow_add1(n: int, m: nat)
-    ensures
-        pow(n, m + 1) == pow(n, m) * n,
-{
-    lemma_pow_adds(n, m, 1);
-    lemma_pow1(n);
-}
-
-proof fn lemma_pow_nonneg(n: int, m: nat)
-    requires
-        n >= 0,
-    ensures
-        pow(n, m) >= 0,
-{
-    if n > 0 {
-        lemma_pow_positive(n, m);
-    } else {
-        lemma_0pow(m);
-    }
-}
-
-spec fn spec_i128_checked_pow(n: i128, m: i128) -> (res: Option<i128>) {
+// A specification of checked_pow(n: i128, m: i128) -> Option<i128>, returns vstd::arithmetic::power::pow if n, m >= 0 and the result does not overflow, and None otherwise.
+spec fn spec_i128_checked_pow(n: i128, m: i128) -> Option<i128> {
     if n < 0 || m < 0 {
         None
     } else {
@@ -66,7 +36,8 @@ spec fn spec_i128_checked_pow(n: i128, m: i128) -> (res: Option<i128>) {
     }
 }
 
-exec fn i128_checked_pow(n: i128, m: i128) -> (res: Option<i128>)
+// An implementation of checked_pow(i128, i128) -> Option<i128> using loop and checked_mul which produce the same result as the specification.
+exec fn i128_checked_pow(n: i128, m: i128) -> Option<i128>
     returns
         spec_i128_checked_pow(n, m),
     decreases m,
@@ -74,70 +45,41 @@ exec fn i128_checked_pow(n: i128, m: i128) -> (res: Option<i128>)
     if n < 0 || m < 0 {
         return None;
     }
-    let mut ret: i128 = 1;
     proof {
-        lemma_pow0(n as int);
+        lemma_pow0(n as int);  // n ** 0 == 1
     }
+    if n == 0 {
+        if m == 0 {
+            return Some(1);
+        }
+        proof {
+            lemma0_pow(m as nat);  // 0 ** m == 0
+        }
+        return Some(0);
+    }
+    let mut ret: i128 = 1;
     for i in 0..m
         invariant
-            n >= 0,
+            n > 0,
             0 <= i <= m,
             ret as int == pow(n as int, i as nat),
         decreases m - i,
     {
         proof {
-            lemma_pow_add1(n as int, i as nat);
-            lemma_pow_nonneg(n as int, i as nat);
-            lemma_0pow((i + 1) as nat);
+            lemma_pow_adds(n as int, i as nat, 1);  // n ** (i + 1) == n ** i * n ** 1
+            lemma_pow1(n as int);  // n ** 1 == n
+            lemma_pow_positive(n as int, (i + 1) as nat);  // n ** i >= 0
+            lemma_pow_increases(n as nat, (i + 1) as nat, m as nat);  // n ** (i + 1) <= n ** m
         }
         match ret.checked_mul(n) {
-            None => {
-                if n != 0 {
-                    proof {
-                        lemma_pow_increases(n as nat, (i + 1) as nat, m as nat);
-                    }
-                }
-                return None;
-            },
-            Some(r) => {
-                ret = r;
-            },
+            None => return None,
+            Some(r) => ret = r,
         }
     }
     Some(ret)
 }
 
-// This part defines a tree structure definition to characterize expression without brackets.
-// For each of these level, define
-// - .operator() and .operand() to get the operator and operand sequence of the infix expression.
-// - .eval() to evaluate the expression and return None if overflow occurs in any step.
-// - .from_num(n: i128) to construct an expression from a single number n.
-// - .lemma_from_num(n: i128) to prove that .from_num(n) has no operator and the operand is [n]. (MulDivExpr & AddSubExpr)
-// - .eval_once() to evaluate the leftmost step of the expression and return Err(None) if overflow occurs in that step, or Err(Some(n)) if the expression is a single number n, or Ok(expr2) if the expression is evaluated to expr2 in that step.
-// - .lemma_eval_once() to prove that .eval_once() preserves .eval()
-// - .lemma_no_operator() to prove that if .operator() is empty, then the expression is a single number. (AddSubExpr)
-// - .lemma_len() to prove that the length of .operator() + 1 equals the length of .operand().
-#[derive(Debug)]
-pub enum PowExpr {
-    Base(i128),
-    Pow(i128, Box<PowExpr>),
-}
-
-#[derive(Debug)]
-pub enum MulDivExpr {
-    Factor(PowExpr),
-    Mul(Box<MulDivExpr>, Box<PowExpr>),
-    Div(Box<MulDivExpr>, Box<PowExpr>),
-}
-
-#[derive(Debug)]
-pub enum AddSubExpr {
-    Term(MulDivExpr),
-    Add(Box<AddSubExpr>, Box<MulDivExpr>),
-    Sub(Box<AddSubExpr>, Box<MulDivExpr>),
-}
-
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 enum Operator {
     Add,
     Sub,
@@ -146,1116 +88,547 @@ enum Operator {
     Pow,
 }
 
-impl PowExpr {
-    spec fn operator(&self) -> Seq<Operator>
-        decreases self,
-    {
-        match self {
-            PowExpr::Base(_) => seq![],
-            PowExpr::Pow(_, right) => seq![Operator::Pow].add(right.operator()),
-        }
-    }
-
-    spec fn operand(&self) -> Seq<i128>
-        decreases self,
-    {
-        match self {
-            PowExpr::Base(coe) => seq![*coe],
-            PowExpr::Pow(left, right) => seq![*left].add(right.operand()),
-        }
-    }
-
-    spec fn eval(&self) -> (res: Option<i128>)
-        decreases self,
-    {
-        match self {
-            PowExpr::Base(n) => { Some(*n) },
-            PowExpr::Pow(left, right) => {
-                match right.eval() {
-                    None => None,
-                    Some(res) => { spec_i128_checked_pow(*left, res) },
-                }
-            },
-        }
-    }
-
-    spec fn from_num(n: i128) -> PowExpr {
-        PowExpr::Base(n)
-    }
-
-    spec fn eval_once(self) -> Result<PowExpr, Option<i128>>
-        decreases self,
-    {
-        match self {
-            PowExpr::Base(n) => Err(Some(n)),
-            PowExpr::Pow(left, right) => {
-                match right.eval_once() {
-                    Err(None) => Err(None),
-                    Err(Some(n)) => {
-                        match spec_i128_checked_pow(left, n) {
-                            None => Err(None),
-                            Some(res) => Ok(PowExpr::from_num(res)),
-                        }
-                    },
-                    Ok(right) => Ok(PowExpr::Pow(left, Box::new(right))),
-                }
-            },
-        }
-    }
-
-    proof fn lemma_eval_once(&self)
-        ensures
-            self.eval_once() matches Ok(res) ==> self.eval() == res.eval(),
-            self.eval_once() matches Err(res) ==> self.eval() == res,
-        decreases self,
-    {
-        match self {
-            PowExpr::Base(_) => {},
-            PowExpr::Pow(_, right) => {
-                right.lemma_eval_once();
-            },
-        }
-    }
-
-    proof fn lemma_len(&self)
-        ensures
-            self.operator().len() + 1 == self.operand().len(),
-        decreases self,
-    {
-        match self {
-            PowExpr::Base(_) => {},
-            PowExpr::Pow(_, right) => {
-                right.lemma_len();
-            },
-        }
-    }
-}
-
-spec fn and_then2<T, U, V>(a: Option<T>, b: Option<U>, f: spec_fn(T, U) -> Option<V>) -> Option<V> {
-    match a {
-        None => None,
-        Some(x) => match b {
-            None => None,
-            Some(y) => f(x, y),
-        },
-    }
-}
-
-impl MulDivExpr {
-    spec fn operator(&self) -> Seq<Operator>
-        decreases self,
-    {
-        match self {
-            MulDivExpr::Factor(factor) => factor.operator(),
-            MulDivExpr::Mul(left, right) => left.operator().add(seq![Operator::Mul]).add(
-                right.operator(),
-            ),
-            MulDivExpr::Div(left, right) => left.operator().add(seq![Operator::Div]).add(
-                right.operator(),
-            ),
-        }
-    }
-
-    spec fn operand(&self) -> Seq<i128>
-        decreases self,
-    {
-        match self {
-            MulDivExpr::Factor(factor) => factor.operand(),
-            MulDivExpr::Mul(left, right) => left.operand().add(right.operand()),
-            MulDivExpr::Div(left, right) => left.operand().add(right.operand()),
-        }
-    }
-
-    spec fn eval(&self) -> Option<i128>
-        decreases self,
-    {
-        match self {
-            MulDivExpr::Factor(factor) => factor.eval(),
-            MulDivExpr::Mul(left, right) => and_then2(
-                left.eval(),
-                right.eval(),
-                |l: i128, r: i128| l.checked_mul(r),
-            ),
-            MulDivExpr::Div(left, right) => and_then2(
-                left.eval(),
-                right.eval(),
-                |l: i128, r: i128| l.checked_div(r),
-            ),
-        }
-    }
-
-    spec fn from_num(n: i128) -> MulDivExpr {
-        MulDivExpr::Factor(PowExpr::Base(n))
-    }
-
-    proof fn lemma_from_num(n: i128)
-        ensures
-            MulDivExpr::from_num(n).operator() == Seq::<Operator>::empty(),
-            MulDivExpr::from_num(n).operand() == seq![n],
-    {
-    }
-
-    spec fn eval_once(self) -> Result<MulDivExpr, Option<i128>>
-        decreases self,
-    {
-        match self {
-            MulDivExpr::Factor(factor) => {
-                match factor.eval_once() {
-                    Err(None) => Err(None),
-                    Err(Some(n)) => Err(Some(n)),
-                    Ok(factor) => Ok(MulDivExpr::Factor(factor)),
-                }
-            },
-            MulDivExpr::Mul(left, right) => {
-                match left.eval_once() {
-                    Err(None) => Err(None),
-                    Err(Some(n)) => {
-                        match right.eval_once() {
-                            Err(None) => Err(None),
-                            Err(Some(m)) => {
-                                match n.checked_mul(m) {
-                                    None => Err(None),
-                                    Some(res) => Ok(MulDivExpr::from_num(res)),
-                                }
-                            },
-                            Ok(right) => Ok(
-                                MulDivExpr::Mul(Box::new(MulDivExpr::from_num(n)), Box::new(right)),
-                            ),
-                        }
-                    },
-                    Ok(left) => Ok(MulDivExpr::Mul(Box::new(left), right)),
-                }
-            },
-            MulDivExpr::Div(left, right) => {
-                match left.eval_once() {
-                    Err(None) => Err(None),
-                    Err(Some(n)) => {
-                        match right.eval_once() {
-                            Err(None) => Err(None),
-                            Err(Some(m)) => {
-                                match n.checked_div(m) {
-                                    None => Err(None),
-                                    Some(res) => Ok(MulDivExpr::from_num(res)),
-                                }
-                            },
-                            Ok(right) => Ok(
-                                MulDivExpr::Div(Box::new(MulDivExpr::from_num(n)), Box::new(right)),
-                            ),
-                        }
-                    },
-                    Ok(left) => Ok(MulDivExpr::Div(Box::new(left), right)),
-                }
-            },
-        }
-    }
-
-    proof fn lemma_eval_once(&self)
-        ensures
-            self.eval_once() matches Ok(res) ==> self.eval() == res.eval(),
-            self.eval_once() matches Err(res) ==> self.eval() == res,
-        decreases self,
-    {
-        match self {
-            MulDivExpr::Factor(factor) => {
-                factor.lemma_eval_once();
-            },
-            MulDivExpr::Mul(left, right) => {
-                left.lemma_eval_once();
-                right.lemma_eval_once();
-            },
-            MulDivExpr::Div(left, right) => {
-                left.lemma_eval_once();
-                right.lemma_eval_once();
-            },
-        }
-    }
-
-    proof fn lemma_len(&self)
-        ensures
-            self.operator().len() + 1 == self.operand().len(),
-        decreases self,
-    {
-        match self {
-            MulDivExpr::Factor(factor) => {
-                factor.lemma_len();
-            },
-            MulDivExpr::Mul(left, right) => {
-                left.lemma_len();
-                right.lemma_len();
-            },
-            MulDivExpr::Div(left, right) => {
-                left.lemma_len();
-                right.lemma_len();
-            },
-        }
-    }
-}
-
-impl AddSubExpr {
-    spec fn operator(&self) -> Seq<Operator>
-        decreases self,
-    {
-        match self {
-            AddSubExpr::Term(term) => term.operator(),
-            AddSubExpr::Add(left, right) => left.operator().add(seq![Operator::Add]).add(
-                right.operator(),
-            ),
-            AddSubExpr::Sub(left, right) => left.operator().add(seq![Operator::Sub]).add(
-                right.operator(),
-            ),
-        }
-    }
-
-    spec fn operand(&self) -> Seq<i128>
-        decreases self,
-    {
-        match self {
-            AddSubExpr::Term(term) => term.operand(),
-            AddSubExpr::Add(left, right) => left.operand().add(right.operand()),
-            AddSubExpr::Sub(left, right) => left.operand().add(right.operand()),
-        }
-    }
-
-    spec fn eval(&self) -> Option<i128>
-        decreases self,
-    {
-        match self {
-            AddSubExpr::Term(term) => term.eval(),
-            AddSubExpr::Add(left, right) => {
-                let ghost left = left.eval();
-                let ghost right = right.eval();
-                and_then2(left, right, |l: i128, r: i128| l.checked_add(r))
-            },
-            AddSubExpr::Sub(left, right) => {
-                let ghost left = left.eval();
-                let ghost right = right.eval();
-                and_then2(left, right, |l: i128, r: i128| l.checked_sub(r))
-            },
-        }
-    }
-
-    spec fn from_num(n: i128) -> AddSubExpr {
-        AddSubExpr::Term(MulDivExpr::from_num(n))
-    }
-
-    proof fn lemma_from_num(n: i128)
-        ensures
-            AddSubExpr::from_num(n).operator() == Seq::<Operator>::empty(),
-            AddSubExpr::from_num(n).operand() == seq![n],
-    {
-    }
-
-    spec fn eval_once(self) -> Result<AddSubExpr, Option<i128>>
-        decreases self,
-    {
-        match self {
-            AddSubExpr::Term(term) => {
-                match term.eval_once() {
-                    Err(res) => Err(res),
-                    Ok(term) => Ok(AddSubExpr::Term(term)),
-                }
-            },
-            AddSubExpr::Add(left, right) => {
-                match left.eval_once() {
-                    Err(None) => Err(None),
-                    Err(Some(n)) => {
-                        match right.eval_once() {
-                            Err(None) => Err(None),
-                            Err(Some(m)) => {
-                                match spec_apply_op(n, m, Operator::Add) {
-                                    None => Err(None),
-                                    Some(res) => Ok(AddSubExpr::from_num(res)),
-                                }
-                            },
-                            Ok(right) => Ok(
-                                AddSubExpr::Add(Box::new(AddSubExpr::from_num(n)), Box::new(right)),
-                            ),
-                        }
-                    },
-                    Ok(left) => Ok(AddSubExpr::Add(Box::new(left), Box::new(*right))),
-                }
-            },
-            AddSubExpr::Sub(left, right) => {
-                match left.eval_once() {
-                    Err(None) => Err(None),
-                    Err(Some(n)) => {
-                        match right.eval_once() {
-                            Err(None) => Err(None),
-                            Err(Some(m)) => {
-                                match spec_apply_op(n, m, Operator::Sub) {
-                                    None => Err(None),
-                                    Some(res) => Ok(AddSubExpr::from_num(res)),
-                                }
-                            },
-                            Ok(right) => Ok(
-                                AddSubExpr::Sub(Box::new(AddSubExpr::from_num(n)), Box::new(right)),
-                            ),
-                        }
-                    },
-                    Ok(left) => Ok(AddSubExpr::Sub(Box::new(left), Box::new(*right))),
-                }
-            },
-        }
-    }
-
-    proof fn lemma_eval_once(&self)
-        ensures
-            self.eval_once() matches Ok(res) ==> self.eval() == res.eval(),
-            self.eval_once() matches Err(res) ==> self.eval() == res,
-        decreases self,
-    {
-        match self {
-            AddSubExpr::Term(term) => {
-                term.lemma_eval_once();
-            },
-            AddSubExpr::Add(left, right) => {
-                left.lemma_eval_once();
-                right.lemma_eval_once();
-            },
-            AddSubExpr::Sub(left, right) => {
-                left.lemma_eval_once();
-                right.lemma_eval_once();
-            },
-        }
-    }
-
-    proof fn lemma_no_operator(&self)
-        requires
-            self.operator().len() == 0,
-        ensures
-            self matches AddSubExpr::Term(MulDivExpr::Factor(PowExpr::Base(_))),
-    {
-    }
-
-    proof fn lemma_len(&self)
-        ensures
-            self.operator().len() + 1 == self.operand().len(),
-        decreases self,
-    {
-        match self {
-            AddSubExpr::Term(term) => {
-                term.lemma_len();
-            },
-            AddSubExpr::Add(left, right) => {
-                left.lemma_len();
-                right.lemma_len();
-            },
-            AddSubExpr::Sub(left, right) => {
-                left.lemma_len();
-                right.lemma_len();
-            },
-        }
-    }
-}
-
 // This part defines three helper functions and their specifications counterparts:
-// precedence(Operator), to get the precedence of an operator. It returns 1 for + and -, 2 for * and /, and 3 for ^.
+// precedence, to get the precedence of an operator. It returns 1 for + and -, 2 for * and /, and 3 for ^.
 // need_pop, to determine whether the operator on the top of the stack should be popped when a new operator is encountered.
-// apply_op, to apply an operator to two operands and return the result, or None if overflow occurs.
-spec fn spec_precedence(op: Operator) -> (res: u8) {
-    match op {
-        Operator::Add => 1u8,
-        Operator::Sub => 1u8,
-        Operator::Mul => 2u8,
-        Operator::Div => 2u8,
-        Operator::Pow => 3u8,
+// apply_op, to apply an operator to two operand and return the result, or None if overflow occurs.
+impl Operator {
+    spec fn spec_precedence(self) -> u8 {
+        match self {
+            Operator::Add | Operator::Sub => 1u8,
+            Operator::Mul | Operator::Div => 2u8,
+            Operator::Pow => 3u8,
+        }
     }
-}
 
-spec fn spec_need_pop(op1: Operator, op2: Operator) -> (res: bool) {
-    let p1 = spec_precedence(op1);
-    let p2 = spec_precedence(op2);
-    if p1 != p2 {
-        p1 > p2
-    } else {
-        match op1 {
-            Operator::Pow => false,
-            _ => true,
+    spec fn spec_need_pop(op1: Self, op2: Self) -> bool {
+        let p1 = op1.spec_precedence();
+        let p2 = op2.spec_precedence();
+        p1 > p2 || p1 == p2 && p1 != 3
+    }
+
+    spec fn spec_apply_op(self, left: i128, right: i128) -> Option<i128> {
+        match self {
+            Operator::Add => left.checked_add(right),
+            Operator::Sub => left.checked_sub(right),
+            Operator::Mul => left.checked_mul(right),
+            Operator::Div => left.checked_div(right),
+            Operator::Pow => spec_i128_checked_pow(left, right),
+        }
+    }
+
+    exec fn precedence(&self) -> u8
+        returns
+            self.spec_precedence(),
+    {
+        match self {
+            Operator::Add | Operator::Sub => 1u8,
+            Operator::Mul | Operator::Div => 2u8,
+            Operator::Pow => 3u8,
+        }
+    }
+
+    exec fn need_pop(op1: &Self, op2: &Self) -> bool
+        returns
+            Operator::spec_need_pop(*op1, *op2),
+    {
+        let p1 = op1.precedence();
+        let p2 = op2.precedence();
+        p1 > p2 || p1 == p2 && p1 != 3
+    }
+
+    exec fn apply_op(&self, left: i128, right: i128) -> Option<i128>
+        returns
+            self.spec_apply_op(left, right),
+    {
+        match self {
+            Operator::Add => left.checked_add(right),
+            Operator::Sub => left.checked_sub(right),
+            Operator::Mul => left.checked_mul(right),
+            Operator::Div => left.checked_div(right),
+            Operator::Pow => i128_checked_pow(left, right),
         }
     }
 }
 
-spec fn spec_apply_op(left: i128, right: i128, op: Operator) -> (res: Option<i128>) {
-    match op {
-        Operator::Add => left.checked_add(right),
-        Operator::Sub => left.checked_sub(right),
-        Operator::Mul => left.checked_mul(right),
-        Operator::Div => left.checked_div(right),
-        Operator::Pow => spec_i128_checked_pow(left, right),
-    }
+enum Expr {
+    Base(i128),
+    Op(Operator, Box<Expr>, Box<Expr>),
 }
 
-exec fn precedence(op: &Operator) -> (res: u8)
-    returns
-        spec_precedence(*op),
-{
-    match op {
-        Operator::Add => 1,
-        Operator::Sub => 1,
-        Operator::Mul => 2,
-        Operator::Div => 2,
-        Operator::Pow => 3,
+// These functions appear in the specification
+impl Expr {
+    // Operator sequence of the infix expression
+    spec fn operator(self) -> Seq<Operator>
+        decreases self,
+    {
+        match self {
+            Expr::Base(_) => seq![],
+            Expr::Op(op, left, right) => left.operator().push(op) + right.operator(),
+        }
     }
-}
 
-exec fn need_pop(op1: &Operator, op2: &Operator) -> (res: bool)
-    ensures
-        op2 == Operator::Add ==> res == true,
-        res == spec_need_pop(*op1, *op2),
-{
-    let p1 = precedence(op1);
-    let p2 = precedence(op2);
-    if p1 != p2 {
-        p1 > p2
-    } else {
-        match op1 {
-            Operator::Pow => false,
-            _ => true,
+    // Operand sequence of the infix expression
+    spec fn operand(self) -> Seq<i128>
+        decreases self,
+    {
+        match self {
+            Expr::Base(n) => seq![n],
+            Expr::Op(_, left, right) => left.operand() + right.operand(),
+        }
+    }
+
+    // Evaluate the expression and return None if overflow occurs in any step.
+    spec fn eval(self) -> Option<i128>
+        decreases self,
+    {
+        match self {
+            Expr::Base(n) => Some(n),
+            Expr::Op(op, left, right) => match (left.eval(), right.eval()) {
+                (Some(left), Some(right)) => op.spec_apply_op(left, right),
+                _ => None,
+            },
+        }
+    }
+
+    // Precedence of the expression
+    spec fn root_precedence(&self) -> u8
+        decreases self,
+    {
+        match self {
+            Expr::Base(_) => 4,
+            Expr::Op(op, _, _) => op.spec_precedence(),
+        }
+    }
+
+    // Check if the expression satisfies the precedence rules
+    // These conditions make sure that the expression has no brackets
+    spec fn satisfy_precedence(self) -> bool
+        decreases self,
+    {
+        match self {
+            Expr::Base(_) => true,
+            Expr::Op(op, left, right) => {
+                left.satisfy_precedence() && right.satisfy_precedence() && if op == Operator::Pow {
+                    left.root_precedence() > op.spec_precedence() && right.root_precedence()
+                        >= op.spec_precedence()
+                } else {
+                    left.root_precedence() >= op.spec_precedence() && right.root_precedence()
+                        > op.spec_precedence()
+                }
+            },
         }
     }
 }
 
-exec fn apply_op(left: i128, right: i128, op: Operator) -> (res: Option<i128>)
-    ensures
-        res == spec_apply_op(left, right, op),
-{
-    match op {
-        Operator::Add => left.checked_add(right),
-        Operator::Sub => left.checked_sub(right),
-        Operator::Mul => left.checked_mul(right),
-        Operator::Div => left.checked_div(right),
-        Operator::Pow => i128_checked_pow(left, right),
+// These are auxiliary functions and lemmas
+impl Expr {
+    // Constructor
+    spec fn mk(op: Operator, left: Expr, right: Expr) -> Expr {
+        Expr::Op(op, Box::new(left), Box::new(right))
+    }
+
+    // Evaluate the leftmost step of the expression
+    // return Err(None) if overflow occurs in that step
+    // return Err(Some(n)) if the expression is a single number n
+    // return Ok(expr_cur) if the expression is evaluated to expr_cur in that step.
+    spec fn eval_once(self) -> Result<Expr, Option<i128>>
+        decreases self,
+    {
+        match self {
+            Expr::Base(n) => Err(Some(n)),
+            Expr::Op(op, left, right) => {
+                match left.eval_once() {
+                    Err(None) => Err(None),
+                    Err(Some(left_value)) => {
+                        match right.eval_once() {
+                            Err(None) => Err(None),
+                            Err(Some(right_value)) => {
+                                match op.spec_apply_op(left_value, right_value) {
+                                    None => Err(None),
+                                    Some(res) => Ok(Expr::Base(res)),
+                                }
+                            },
+                            Ok(right) => Ok(Expr::mk(op, Expr::Base(left_value), right)),
+                        }
+                    },
+                    Ok(left) => Ok(Expr::mk(op, left, *right)),
+                }
+            },
+        }
+    }
+
+    // eval_once() preserves eval() and satisfy_precedence()
+    proof fn lemma_eval_once(&self)
+        ensures
+            self.eval_once() matches Ok(res) ==> self.eval() == res.eval() && (
+            self.satisfy_precedence() ==> res.satisfy_precedence()),
+            self.eval_once() matches Err(res) ==> self.eval() == res,
+        decreases self,
+    {
+        if let Expr::Op(_, left, right) = self {
+            left.lemma_eval_once();
+            right.lemma_eval_once();
+        }
+    }
+
+    // The length of operator sequence plus one equals the length of operand sequence
+    proof fn lemma_len(&self)
+        ensures
+            self.operator().len() + 1 == self.operand().len(),
+        decreases self,
+    {
+        if let Expr::Op(_, left, right) = self {
+            left.lemma_len();
+            right.lemma_len();
+        }
+    }
+
+    // Properties of Expr::Base(n)
+    proof fn lemma_base(n: i128)
+        ensures
+            Expr::Base(n).operator() == seq![],
+            Expr::Base(n).operand() == seq![n],
+            Expr::Base(n).eval() == Some(n),
+            Expr::Base(n).eval_once() == Err(Some(n)),
+            Expr::Base(n).satisfy_precedence(),
+    {
+    }
+
+    // Append a new operator and operand to the expression
+    spec fn append(self, operator: Operator, operand: i128) -> Expr
+        decreases self,
+    {
+        match self {
+            Expr::Base(_) => Expr::mk(operator, self, Expr::Base(operand)),
+            Expr::Op(op, left, right) => {
+                if Operator::spec_need_pop(op, operator) {
+                    Expr::mk(operator, self, Expr::Base(operand))
+                } else {
+                    Expr::mk(op, *left, right.append(operator, operand))
+                }
+            },
+        }
+    }
+
+    // append() has desired effects on operator and operand sequences, and preserves satisfy_precedence()
+    proof fn lemma_append(self, operator: Operator, operand: i128)
+        ensures
+            self.append(operator, operand).operator() == self.operator().push(operator),
+            self.append(operator, operand).operand() == self.operand().push(operand),
+            self.satisfy_precedence() ==> self.append(operator, operand).satisfy_precedence(),
+        decreases self,
+    {
+        Expr::lemma_base(operand);
+        if let Expr::Op(_, _, right) = self {
+            right.lemma_append(operator, operand);
+        }
     }
 }
 
-// This part defines complex functions on operator stack.
-// - stack_condition(Seq<Operator>) to state the invariant condition of stack
-// - .lemma_operator_type(k: int) to prove that the operator at index k has the correct precedence. (PowExpr & MulDivExpr)
-// - .lemma_stack_num(op: Operator) to prove that if an expression's operator sequence plus a new operator op satisfies stack_condition, then the expression is a single number. (MulDivExpr & AddSubExpr)
+// Construct the expression tree
+spec fn construct_from(operator: Seq<Operator>, operand: Seq<i128>) -> Expr
+    recommends
+        operator.len() + 1 == operand.len(),
+    decreases operator.len(),
+{
+    if operator.len() == 0 {
+        Expr::Base(operand[0])
+    } else {
+        construct_from(operator.drop_last(), operand.drop_last()).append(
+            operator.last(),
+            operand.last(),
+        )
+    }
+}
+
+// Correctness of construct_from:
+// From operator and operand sequences, construct_from() produces an expression that flattens to the same pair of sequences and satisfies the precedence rules.
+proof fn lemma_construct_from(operator: Seq<Operator>, operand: Seq<i128>)
+    requires
+        operator.len() + 1 == operand.len(),
+    ensures
+        construct_from(operator, operand).operator() == operator,
+        construct_from(operator, operand).operand() == operand,
+        construct_from(operator, operand).satisfy_precedence(),
+    decreases operator.len(),
+{
+    if operator.len() == 0 {
+        assert(operator == seq![]);
+        assert(operand == seq![operand[0]]);
+    } else {
+        lemma_construct_from(operator.drop_last(), operand.drop_last());
+        construct_from(operator.drop_last(), operand.drop_last()).lemma_append(
+            operator.last(),
+            operand.last(),
+        );
+        operator.lemma_add_last_back();
+        operand.lemma_add_last_back();
+    }
+}
+
+// The invariant condition of stack
 spec fn stack_condition(seq: Seq<Operator>) -> bool {
-    forall|i: int| 0 <= i < seq.len() - 1 ==> !#[trigger] spec_need_pop(seq[i], seq[i + 1])
+    forall|i: int|
+        0 <= i < seq.len() - 1 ==> !#[trigger] Operator::spec_need_pop(seq[i], seq[i + 1])
 }
 
-impl PowExpr {
-    proof fn lemma_operator_type(self, k: int)
-        requires
-            0 <= k < self.operator().len(),
-        ensures
-            spec_precedence(self.operator()[k]) > 2,
-        decreases self,
-    {
-        match self {
-            PowExpr::Base(_) => {},
-            PowExpr::Pow(_, right) => {
-                if k > 0 {
-                    right.lemma_operator_type(k - 1);
-                }
-            },
-        }
-    }
-}
-
-impl MulDivExpr {
-    proof fn lemma_operator_type(self, k: int)
-        requires
-            0 <= k < self.operator().len(),
-        ensures
-            spec_precedence(self.operator()[k]) > 1,
-        decreases self,
-    {
-        match self {
-            MulDivExpr::Factor(factor) => {
-                factor.lemma_operator_type(k);
-            },
-            MulDivExpr::Mul(left, right) => {
-                if k < left.operator().len() {
-                    left.lemma_operator_type(k);
-                } else if k == left.operator().len() {
-                } else {
-                    right.lemma_operator_type(k - left.operator().len() - 1);
-                }
-            },
-            MulDivExpr::Div(left, right) => {
-                if k < left.operator().len() {
-                    left.lemma_operator_type(k);
-                } else if k == left.operator().len() {
-                } else {
-                    right.lemma_operator_type(k - left.operator().len() - 1);
-                }
-            },
-        }
-    }
-
-    proof fn lemma_stack_num(self, op: Operator)
-        requires
-            spec_precedence(op) <= 2,
-            stack_condition(self.operator().push(op)),
-        ensures
-            self matches MulDivExpr::Factor(PowExpr::Base(_)),
-    {
-        if (self.operator().len() > 0) {
-            self.lemma_operator_type(self.operator().len() - 1);
-            assert(spec_need_pop(
-                self.operator().push(op)[self.operator().len() - 1],
-                self.operator().push(op)[(self.operator().len() - 1) + 1],
-            ));
-        }
-    }
-}
-
-impl AddSubExpr {
-    proof fn lemma_stack_num(self, op: Operator)
-        requires
-            spec_precedence(op) == 1,
-            stack_condition(self.operator().push(op)),
-        ensures
-            self matches AddSubExpr::Term(MulDivExpr::Factor(PowExpr::Base(_))),
-    {
-        if (self.operator().len() > 0) {
-            assert(spec_need_pop(
-                self.operator().push(op)[self.operator().len() - 1],
-                self.operator().push(op)[(self.operator().len() - 1) + 1],
-            ));
-        }
-    }
-}
-
-// This lemma proves that a subrange of a sequence satisfying stack_condition
-// also satisfies stack_condition.
-proof fn lemma_stack_condition_subrange(seq: Seq<Operator>, start: int, end: int)
+// Skip preserves stack_condition
+proof fn lemma_stack_condition_skip(seq: Seq<Operator>, start: int)
     requires
         stack_condition(seq),
-        0 <= start <= end <= seq.len(),
+        0 <= start <= seq.len(),
     ensures
-        stack_condition(seq.subrange(start, end)),
+        stack_condition(seq.skip(start)),
 {
     assert forall|i: int|
-        0 <= i < seq.subrange(start, end).len() - 1 implies !#[trigger] spec_need_pop(
-        seq.subrange(start, end)[i],
-        seq.subrange(start, end)[i + 1],
+        0 <= i < seq.skip(start).len() - 1 implies !#[trigger] Operator::spec_need_pop(
+        seq.skip(start)[i],
+        seq.skip(start)[i + 1],
     ) by {
-        assert(seq.subrange(start, end)[i + 1] == seq[start + i + 1]);
+        assert(seq.skip(start)[i + 1] == seq[start + i + 1]);
     }
 }
 
-spec fn some_spec(expr: AddSubExpr, operator: Seq<Operator>, operand: Seq<i128>) -> bool {
-    expr.operator() == operator && expr.operand() == operand
-}
-
-// This part defines the main lemmas connecting a stack reduction and an expression reduction.
-// Each one basically says: the first index in expr.operator() that needs to pop corresponds to expr.eval_once()
-// _merge functions are used to prevent an oversized proof tree, and merge similar proof
-proof fn lemma_reduce_pow(expr: PowExpr, k: int)
+// !spec_need_pop is transitive, so a sequence satisfying stack_condition is "monotone".
+proof fn stack_condition_transitivity(seq: Seq<Operator>, x: int, y: int)
     requires
-        0 <= k < expr.operator().len(),
-        stack_condition(expr.operator().subrange(0, k + 1)),
-        k + 1 == expr.operator().len() || spec_need_pop(expr.operator()[k], expr.operator()[k + 1]),
+        0 <= x < y < seq.len(),
+        stack_condition(seq),
     ensures
-        match spec_apply_op(expr.operand()[k], expr.operand()[k + 1], expr.operator()[k]) {
-            None => expr.eval_once() matches Err(None),
-            Some(num) => expr.eval_once() matches Ok(expr2) && expr2.operator()
-                == expr.operator().subrange(0, k).add(
-                expr.operator().subrange(k + 1, expr.operator().len() as int),
-            ) && expr2.operand() == expr.operand().subrange(0, k).add(seq![num]).add(
-                expr.operand().subrange(k + 2, expr.operand().len() as int),
-            ),
-        },
-    decreases expr,
+        !Operator::spec_need_pop(seq[x], seq[y]),
+    decreases y - x,
 {
-    match expr {
-        PowExpr::Base(base) => {},
-        PowExpr::Pow(left, right) => {
-            if k != 0 {
-                let k2 = k - 1;
-                assert(right.operator().subrange(0, k2 + 1) == expr.operator().subrange(
-                    0,
-                    k + 1,
-                ).subrange(1, k + 1));
-                right.lemma_len();
-                lemma_reduce_pow(*right, k - 1);
-            }
-        },
+    assert(!Operator::spec_need_pop(seq[x], seq[x + 1]));
+    if x + 1 != y {
+        stack_condition_transitivity(seq, x + 1, y);
     }
 }
 
-proof fn lemma_reduce_muldiv_merge(
-    left: MulDivExpr,
-    right: PowExpr,
-    k: int,
-    op: Operator,
+// The expected relation between expr and expr.eval_once()
+spec fn reduce_aux_relation(
     operator: Seq<Operator>,
     operand: Seq<i128>,
-    eval_once: Result<MulDivExpr, Option<i128>>,
-)
-    requires
-        0 <= k < operator.len(),
-        stack_condition(operator.subrange(0, k + 1)),
-        k + 1 == operator.len() || spec_need_pop(operator[k], operator[k + 1]),
-        operator == left.operator().add(seq![op]).add(right.operator()),
-        operand == left.operand().add(right.operand()),
-        left.eval_once() matches Err(None) ==> eval_once matches Err(None),
-        left.eval_once() matches Err(Some(n1)) ==> right.eval_once() matches Err(Some(n2))
-            ==> spec_apply_op(n1, n2, op) is None ==> eval_once matches Err(None),
-        left.eval_once() matches Err(Some(n1)) ==> right.eval_once() matches Err(Some(n2))
-            ==> spec_apply_op(n1, n2, op) matches Some(n3) ==> eval_once == Ok::<
-            MulDivExpr,
-            Option<i128>,
-        >(MulDivExpr::from_num(n3)),
-        left.eval_once() matches Err(Some(n1)) ==> right.eval_once() matches Err(None)
-            ==> eval_once matches Err(None),
-        left.eval_once() matches Err(Some(n1)) ==> right.eval_once() matches Ok(right2)
-            ==> eval_once matches Ok(expr2) && expr2.operator() == seq![op].add(right2.operator())
-            && expr2.operand() == seq![n1].add(right2.operand()),
-        left.eval_once() matches Ok(left2) ==> eval_once matches Ok(expr2) && expr2.operator()
-            == left2.operator().add(seq![op]).add(right.operator()) && expr2.operand()
-            == left2.operand().add(right.operand()),
-        spec_precedence(op) <= 2,
-    ensures
-        match spec_apply_op(operand[k], operand[k + 1], operator[k]) {
-            None => eval_once matches Err(None),
-            Some(num) => eval_once matches Ok(expr2) && expr2.operator() == operator.subrange(
-                0,
-                k,
-            ).add(operator.subrange(k + 1, operator.len() as int)) && expr2.operand()
-                == operand.subrange(0, k).add(seq![num]).add(
-                operand.subrange(k + 2, operand.len() as int),
-            ),
-        },
-    decreases left, 1int,
-{
-    if k < left.operator().len() {
-        assert(left.operator().subrange(0, k + 1) == operator.subrange(0, k + 1));
-        left.lemma_len();
-        lemma_reduce_muldiv(left, k);
-    } else if k == left.operator().len() {
-        assert(left.operator().push(op) == operator.subrange(0, k + 1));
-        left.lemma_stack_num(op);
-    } else {
-        let k2 = k - left.operator().len() - 1;
-        assert(right.operator().subrange(0, k2 + 1) == operator.subrange(0, k + 1).subrange(
-            left.operator().len() + 1 as int,
-            k + 1,
-        ));
-        lemma_stack_condition_subrange(
-            operator.subrange(0, k + 1),
-            left.operator().len() + 1 as int,
-            k + 1,
-        );
-        left.lemma_len();
-        right.lemma_len();
-        lemma_reduce_pow(right, k - left.operator().len() - 1);
-        assert(left.operator().push(op) == operator.subrange(0, left.operator().len() + 1 as int));
-        left.lemma_stack_num(op);
-    }
-}
-
-proof fn lemma_reduce_muldiv(expr: MulDivExpr, k: int)
-    requires
-        0 <= k < expr.operator().len(),
-        stack_condition(expr.operator().subrange(0, k + 1)),
-        k + 1 == expr.operator().len() || spec_need_pop(expr.operator()[k], expr.operator()[k + 1]),
-    ensures
-        match spec_apply_op(expr.operand()[k], expr.operand()[k + 1], expr.operator()[k]) {
-            None => expr.eval_once() matches Err(None),
-            Some(num) => expr.eval_once() matches Ok(expr2) && expr2.operator()
-                == expr.operator().subrange(0, k).add(
-                expr.operator().subrange(k + 1, expr.operator().len() as int),
-            ) && expr2.operand() == expr.operand().subrange(0, k).add(seq![num]).add(
-                expr.operand().subrange(k + 2, expr.operand().len() as int),
-            ),
-        },
-    decreases expr, 0int,
-{
-    match expr {
-        MulDivExpr::Factor(factor) => {
-            lemma_reduce_pow(factor, k);
-        },
-        MulDivExpr::Mul(left, right) => {
-            match (left.eval_once(), right.eval_once()) {
-                (Err(Some(n1)), Ok(right2)) => {
-                    MulDivExpr::lemma_from_num(n1);
-                },
-                _ => {},
-            }
-            assert(left.eval_once() matches Err(Some(n1)) ==> right.eval_once() matches Ok(right2)
-                ==> expr.eval_once() matches Ok(expr2) && expr2.operator() == Seq::empty().push(
-                Operator::Mul,
-            ).add(right2.operator()) && expr2.operand() == seq![n1].add(right2.operand()));
-            lemma_reduce_muldiv_merge(
-                *left,
-                *right,
-                k,
-                Operator::Mul,
-                expr.operator(),
-                expr.operand(),
-                expr.eval_once(),
-            );
-        },
-        MulDivExpr::Div(left, right) => {
-            match (left.eval_once(), right.eval_once()) {
-                (Err(Some(n1)), Ok(right2)) => {
-                    MulDivExpr::lemma_from_num(n1);
-                },
-                _ => {},
-            }
-            assert(left.eval_once() matches Err(Some(n1)) ==> right.eval_once() matches Ok(right2)
-                ==> expr.eval_once() matches Ok(expr2) && expr2.operator() == Seq::empty().push(
-                Operator::Div,
-            ).add(right2.operator()) && expr2.operand() == seq![n1].add(right2.operand()));
-            lemma_reduce_muldiv_merge(
-                *left,
-                *right,
-                k,
-                Operator::Div,
-                expr.operator(),
-                expr.operand(),
-                expr.eval_once(),
-            );
-        },
-    }
-}
-
-#[verifier::rlimit(20)]
-proof fn lemma_reduce_addsub_merge(
-    left: AddSubExpr,
-    right: MulDivExpr,
+    res: Result<Expr, Option<i128>>,
     k: int,
-    op: Operator,
-    operator: Seq<Operator>,
-    operand: Seq<i128>,
-    eval_once: Result<AddSubExpr, Option<i128>>,
-)
-    requires
-        0 <= k < operator.len(),
-        stack_condition(operator.subrange(0, k + 1)),
-        k + 1 == operator.len() || spec_need_pop(operator[k], operator[k + 1]),
-        operator == left.operator().add(seq![op]).add(right.operator()),
-        operand == left.operand().add(right.operand()),
-        left.eval_once() matches Err(None) ==> eval_once matches Err(None),
-        left.eval_once() matches Err(Some(n1)) ==> right.eval_once() matches Err(Some(n2))
-            ==> spec_apply_op(n1, n2, op) is None ==> eval_once matches Err(None),
-        left.eval_once() matches Err(Some(n1)) ==> right.eval_once() matches Err(Some(n2))
-            ==> spec_apply_op(n1, n2, op) matches Some(n3) ==> eval_once == Ok::<
-            AddSubExpr,
-            Option<i128>,
-        >(AddSubExpr::from_num(n3)),
-        left.eval_once() matches Err(Some(n1)) ==> right.eval_once() matches Err(None)
-            ==> eval_once matches Err(None),
-        left.eval_once() matches Err(Some(n1)) ==> right.eval_once() matches Ok(right2)
-            ==> eval_once matches Ok(expr2) && expr2.operator() == seq![op].add(right2.operator())
-            && expr2.operand() == seq![n1].add(right2.operand()),
-        left.eval_once() matches Ok(left2) ==> eval_once matches Ok(expr2) && expr2.operator()
-            == left2.operator().add(seq![op]).add(right.operator()) && expr2.operand()
-            == left2.operand().add(right.operand()),
-        spec_precedence(op) == 1,
-    ensures
-        match spec_apply_op(operand[k], operand[k + 1], operator[k]) {
-            None => eval_once matches Err(None),
-            Some(num) => eval_once matches Ok(expr2) && expr2.operator() == operator.subrange(
-                0,
-                k,
-            ).add(operator.subrange(k + 1, operator.len() as int)) && expr2.operand()
-                == operand.subrange(0, k).add(seq![num]).add(
-                operand.subrange(k + 2, operand.len() as int),
-            ),
-        },
-    decreases left, 1int,
-{
-    if k < left.operator().len() {
-        assert(left.operator().subrange(0, k + 1) == operator.subrange(0, k + 1));
-        left.lemma_len();
-        lemma_reduce_addsub(left, k);
-    } else if k == left.operator().len() {
-        if (k + 1 < operator.len()) {
-            right.lemma_operator_type(0);
+    compute: Option<i128>,
+) -> bool {
+    match compute {
+        None => res matches Err(None),
+        Some(num) => res matches Ok(expr_cur) && expr_cur.operator() == operator.take(k)
+            + operator.skip(k + 1) && expr_cur.operand() == operand.take(k).push(num)
+            + operand.skip(k + 2),
+    }
+}
+
+impl Expr {
+    // If the operator sequence plus high satisfies stack_condition, then high does not pop the root
+    proof fn lemma_left_precedence(self, high: Operator)
+        requires
+            stack_condition(self.operator().push(high)),
+        ensures
+            self matches Expr::Op(op, _, _) ==> !Operator::spec_need_pop(op, high),
+        decreases self,
+    {
+        if let Expr::Op(old, left, right) = self {
+            stack_condition_transitivity(
+                self.operator().push(high),
+                left.operator().len() as int,
+                (left.operator().len() + 1 + right.operator().len()) as int,
+            );
         }
-        assert(left.operator().push(op) == operator.subrange(0, k + 1));
-        left.lemma_stack_num(op);
-    } else {
-        let k2 = k - left.operator().len() - 1;
-        assert(right.operator().subrange(0, k2 + 1) == operator.subrange(0, k + 1).subrange(
-            left.operator().len() + 1 as int,
-            k + 1,
-        ));
-        lemma_stack_condition_subrange(
-            operator.subrange(0, k + 1),
-            left.operator().len() + 1 as int,
-            k + 1,
-        );
-        left.lemma_len();
-        right.lemma_len();
-        lemma_reduce_muldiv(right, k - left.operator().len() - 1);
-        assert(left.operator().push(op) == operator.subrange(0, left.operator().len() + 1 as int));
-        left.lemma_stack_num(op);
     }
-}
 
-proof fn lemma_reduce_addsub(expr: AddSubExpr, k: int)
-    requires
-        0 <= k < expr.operator().len(),
-        stack_condition(expr.operator().subrange(0, k + 1)),
-        k + 1 == expr.operator().len() || spec_need_pop(expr.operator()[k], expr.operator()[k + 1]),
-    ensures
-        match spec_apply_op(expr.operand()[k], expr.operand()[k + 1], expr.operator()[k]) {
-            None => expr.eval_once() matches Err(None),
-            Some(num) => expr.eval_once() matches Ok(expr2) && expr2.operator()
-                == expr.operator().subrange(0, k).add(
-                expr.operator().subrange(k + 1, expr.operator().len() as int),
-            ) && expr2.operand() == expr.operand().subrange(0, k).add(seq![num]).add(
-                expr.operand().subrange(k + 2, expr.operand().len() as int),
+    // If the first operator of expr pops op, then the root of expr pops op
+    proof fn lemma_right_precedence(self, high: Operator)
+        requires
+            self.satisfy_precedence(),
+            self.operator().len() > 0,
+            Operator::spec_need_pop(high, self.operator()[0]),
+        ensures
+            self matches Expr::Op(op, _, _) ==> Operator::spec_need_pop(high, op),
+        decreases self,
+    {
+        if let Expr::Op(op, left, right) = self {
+            if left.operator().len() > 0 {
+                left.lemma_right_precedence(high);
+            }
+        }
+    }
+
+    // The main lemma connecting a stack reduction and an expression reduction, which states that
+    // the first index in operator sequence that needs to pop corresponds to the step eval_once calculates
+    #[verifier::rlimit(30)]
+    proof fn lemma_reduce_aux(self, k: int)
+        requires
+            self.satisfy_precedence(),
+            0 <= k < self.operator().len(),
+            stack_condition(self.operator().take(k + 1)),
+            k + 1 == self.operator().len() || Operator::spec_need_pop(
+                self.operator()[k],
+                self.operator()[k + 1],
             ),
-        },
-    decreases expr, 0int,
-{
-    match expr {
-        AddSubExpr::Term(term) => {
-            lemma_reduce_muldiv(term, k);
-        },
-        AddSubExpr::Add(left, right) => {
-            match (left.eval_once(), right.eval_once()) {
-                (Err(Some(n1)), Ok(right2)) => {
-                    AddSubExpr::lemma_from_num(n1);
-                },
-                _ => {},
-            }
-            assert(left.eval_once() matches Err(Some(n1)) ==> right.eval_once() matches Ok(right2)
-                ==> expr.eval_once() matches Ok(expr2) && expr2.operator() == Seq::empty().push(
-                Operator::Add,
-            ).add(right2.operator()) && expr2.operand() == seq![n1].add(right2.operand()));
-            lemma_reduce_addsub_merge(
-                *left,
-                *right,
+        ensures
+            reduce_aux_relation(
+                self.operator(),
+                self.operand(),
+                self.eval_once(),
                 k,
-                Operator::Add,
-                expr.operator(),
-                expr.operand(),
-                expr.eval_once(),
-            );
-        },
-        AddSubExpr::Sub(left, right) => {
-            match (left.eval_once(), right.eval_once()) {
-                (Err(Some(n1)), Ok(right2)) => {
-                    AddSubExpr::lemma_from_num(n1);
-                },
-                _ => {},
+                self.operator()[k].spec_apply_op(self.operand()[k], self.operand()[k + 1]),
+            ),
+        decreases self,
+    {
+        if let Expr::Op(op, left, right) = self {
+            let left = *left;
+            let right = *right;
+            if k < left.operator().len() {
+                assert(left.operator().take(k + 1) == self.operator().take(k + 1));
+                left.lemma_len();
+                left.lemma_reduce_aux(k);
+                if let Some(num) = self.operator()[k].spec_apply_op(
+                    self.operand()[k],
+                    self.operand()[k + 1],
+                ) {
+                    assert(self.operand().take(k).push(num) + self.operand().skip(k + 2)
+                        == left.operand().take(k).push(num) + left.operand().skip(k + 2)
+                        + right.operand());
+                    assert(self.operator().take(k) + self.operator().skip(k + 1)
+                        == left.operator().take(k) + left.operator().skip(k + 1).push(op)
+                        + right.operator());
+                }
+            } else if k == left.operator().len() {
+                match left {
+                    Expr::Op(_, _, _) => {
+                        assert(left.operator().push(op) == self.operator().take(k + 1));
+                        left.lemma_left_precedence(op);
+                    },
+                    Expr::Base(n) => {
+                        match right {
+                            Expr::Op(_, _, _) => {
+                                right.lemma_right_precedence(op);
+                            },
+                            Expr::Base(m) => {
+                                Expr::lemma_base(n);
+                                Expr::lemma_base(m);
+                                if let Some(num) = self.operator()[k].spec_apply_op(
+                                    self.operand()[k],
+                                    self.operand()[k + 1],
+                                ) {
+                                    assert(self.operator().take(k) + self.operator().skip(k + 1)
+                                        == seq![]);
+                                    assert(self.operand().take(k).push(num) + self.operand().skip(
+                                        k + 2,
+                                    ) == seq![num]);
+                                }
+                            },
+                        }
+                    },
+                }
+            } else {
+                let k2 = k - left.operator().len() - 1;
+                assert(stack_condition(right.operator().take(k2 + 1))) by {
+                    assert(right.operator().take(k2 + 1) == self.operator().take(k + 1).skip(
+                        left.operator().len() + 1 as int,
+                    ));
+                    lemma_stack_condition_skip(
+                        self.operator().take(k + 1),
+                        left.operator().len() + 1 as int,
+                    );
+                }
+                match left {
+                    Expr::Op(_, _, _) => {
+                        assert(left.operator().push(op) == self.operator().take(
+                            left.operator().len() + 1 as int,
+                        ));
+                        left.lemma_left_precedence(op);
+                    },
+                    Expr::Base(n) => {
+                        right.lemma_len();
+                        right.lemma_reduce_aux(k2);
+                        Expr::lemma_base(n);
+                        if let Some(num) = self.operator()[k].spec_apply_op(
+                            self.operand()[k],
+                            self.operand()[k + 1],
+                        ) {
+                            assert(self.operand().take(k).push(num) + self.operand().skip(k + 2)
+                                == left.operand() + (right.operand().take(k2).push(num)
+                                + right.operand().skip(k2 + 2)));
+                            assert(self.operator().take(k) + self.operator().skip(k + 1)
+                                == left.operator().push(op) + (right.operator().take(k2)
+                                + right.operator().skip(k2 + 1)));
+                        }
+                    },
+                }
             }
-            assert(left.eval_once() matches Err(Some(n1)) ==> right.eval_once() matches Ok(right2)
-                ==> expr.eval_once() matches Ok(expr2) && expr2.operator() == Seq::empty().push(
-                Operator::Sub,
-            ).add(right2.operator()) && expr2.operand() == seq![n1].add(right2.operand()));
-            lemma_reduce_addsub_merge(
-                *left,
-                *right,
-                k,
-                Operator::Sub,
-                expr.operator(),
-                expr.operand(),
-                expr.eval_once(),
-            );
-        },
+        }
     }
-}
-
-// This part defines two interface lemmas connecting the proof call in the execution function and the expression reduction lemmas above.
-proof fn lemma_reduce_err(
-    expr: AddSubExpr,
-    num_st: Seq<i128>,
-    op_st: Seq<Operator>,
-    operator: Seq<Operator>,
-    operand: Seq<i128>,
-)
-    requires
-        some_spec(expr, op_st.add(operator), num_st.add(operand)),
-        stack_condition(op_st),
-        op_st.len() + 1 == num_st.len(),
-        num_st.len() >= 2,
-        spec_apply_op(
-            num_st[num_st.len() - 2],
-            num_st[num_st.len() - 1],
-            op_st[op_st.len() - 1],
-        ) is None,
-        operator.len() > 0,
-        spec_need_pop(op_st[op_st.len() - 1], operator[0]),
-    ensures
-        expr.eval_once() matches Err(None),
-{
-    let k = op_st.len() - 1;
-    lemma_reduce_addsub(expr, op_st.len() - 1);
-}
-
-proof fn lemma_reduce_ok(
-    expr: AddSubExpr,
-    num_st: Seq<i128>,
-    op_st: Seq<Operator>,
-    operator: Seq<Operator>,
-    operand: Seq<i128>,
-    num: i128,
-)
-    requires
-        some_spec(expr, op_st.add(operator), num_st.add(operand)),
-        stack_condition(op_st),
-        op_st.len() + 1 == num_st.len(),
-        num_st.len() >= 2,
-        spec_apply_op(num_st[num_st.len() - 2], num_st[num_st.len() - 1], op_st[op_st.len() - 1])
-            == Some(num),
-        operator.len() > 0,
-        spec_need_pop(op_st[op_st.len() - 1], operator[0]),
-    ensures
-        expr.eval_once() matches Ok(expr2) && some_spec(
-            expr2,
-            op_st.subrange(0, op_st.len() - 1).add(operator),
-            num_st.subrange(0, num_st.len() - 2).add(seq![num]).add(operand),
-        ),
-{
-    let k = op_st.len() - 1;
-    lemma_reduce_addsub(expr, op_st.len() - 1);
-    assert(expr.operator().subrange(0, k).add(
-        expr.operator().subrange(k + 1, expr.operator().len() as int),
-    ) == op_st.subrange(0, op_st.len() - 1).add(operator));
-    assert(expr.operand().subrange(0, k).add(seq![num]).add(
-        expr.operand().subrange(k + 2, expr.operand().len() as int),
-    ) == num_st.subrange(0, num_st.len() - 2).add(seq![num]).add(operand));
 }
 
 // This lemma deals with the end of execution.
-proof fn lemma_simple_expr_reverse(expr: AddSubExpr, x: i128)
+proof fn lemma_simple_expr_reverse(expr: Expr, x: i128)
     requires
         expr.operator() == seq![Operator::Add] && expr.operand() == seq![x, 0],
     ensures
         expr.eval() == Some(x),
 {
-    match expr {
-        AddSubExpr::Term(MulDivExpr::Factor(PowExpr::Base(n))) => {
-            assert(expr.operator() == Seq::<Operator>::empty());
-        },
-        AddSubExpr::Term(MulDivExpr::Factor(PowExpr::Pow(left, right))) => {
-            assert(expr.operator() == seq![Operator::Pow].add(right.operator()));
-            assert(expr.operator()[0] == Operator::Pow);
-        },
-        AddSubExpr::Term(MulDivExpr::Mul(left, right)) => {
-            assert(expr.operator() == left.operator().add(seq![Operator::Mul]).add(
-                right.operator(),
-            ));
-            assert(expr.operator()[left.operator().len() as int] == Operator::Mul);
-        },
-        AddSubExpr::Term(MulDivExpr::Div(left, right)) => {
-            assert(expr.operator() == left.operator().add(seq![Operator::Div]).add(
-                right.operator(),
-            ));
-            assert(expr.operator()[left.operator().len() as int] == Operator::Div);
-        },
-        AddSubExpr::Sub(left, right) => {
-            assert(expr.operator() == left.operator().add(seq![Operator::Sub]).add(
-                right.operator(),
-            ));
-            assert(expr.operator()[left.operator().len() as int] == Operator::Sub);
-        },
-        AddSubExpr::Add(left, right) => {
-            left.lemma_no_operator();
-            match *left {
-                AddSubExpr::Term(MulDivExpr::Factor(PowExpr::Base(n1))) => {
-                    match *right {
-                        MulDivExpr::Factor(PowExpr::Base(n2)) => {
-                            assert(expr.operand() == left.operand().add(right.operand()));
-                            assert(x == n1);
-                            assert(0 == n2);
-                            assert(left.eval() == Some(n1));
-                            assert(right.eval() == Some(0 as i128));
-                            assert(expr.eval() == n1.checked_add(0));
-                        },
-                        _ => {
-                            assert(false);
-                        },
-                    }
-                },
-                _ => {},
-            }
-        },
+    if let Expr::Op(op, left, right) = expr {
+        assert(expr.operator().len() == left.operator().len() + 1 + right.operator().len());
+        match (*left, *right) {
+            (Expr::Base(n1), Expr::Base(n2)) => {
+                Expr::lemma_base(n1);
+                Expr::lemma_base(n2);
+                assert(seq![op] == seq![Operator::Add]);
+                assert(seq![op][0] == seq![Operator::Add][0]);
+            },
+            _ => {},
+        }
     }
 }
 
 // This lemma proves the special case of the main result. Its condition is that the last operator is Add and the last operand is 0.
+// In this case, the stack will be easy to analyze at the end of execution, because the last Add operator will pop all the other operators.
 // Most of the execution code goes here.
-exec fn eval_by_stack_a(operator: Vec<Operator>, operand: Vec<i128>) -> (res: Option<i128>)
+exec fn eval_by_stack_a(operator: Vec<Operator>, operand: Vec<i128>) -> Option<i128>
     requires
         operator.len() >= 1,
-        operator.len() == operand.len() - 1,
+        operator.len() + 1 == operand.len(),
         operator@.last() == Operator::Add,
         operand@.last() == 0,
-    ensures
-        forall|expr: AddSubExpr| #[trigger]
-            some_spec(expr, operator@, operand@) ==> res == expr.eval(),
+    returns
+        construct_from(operator@, operand@).eval(),
 {
     let mut num_stack: Vec<i128> = Vec::new();
     let mut op_stack: Vec<Operator> = Vec::new();
-
-    assert forall|expr: AddSubExpr| #[trigger] some_spec(expr, operator@, operand@) implies (exists|
-        expr2: AddSubExpr,
-    | #[trigger]
-        expr2.eval() == expr.eval() && some_spec(
-            expr2,
-            op_stack@.add(operator@.subrange(0, operator.len() as int)),
-            num_stack@.add(operand@.subrange(0, operand.len() as int)),
-        )) by {
-        let expr2 = expr;
-        assert(op_stack@.add(operator@.subrange(0, operator.len() as int)) == operator@);
-        assert(num_stack@.add(operand@.subrange(0, operand.len() as int)) == operand@);
+    let ghost mut expr_cur = construct_from(operator@, operand@);
+    proof {
+        lemma_construct_from(operator@, operand@);
     }
 
-    let mut i = 0;
-    while i < operator.len()
+    for i in 0..operator.len()
         invariant
+            operator.len() + 1 == operand.len(),  // immutable
+            operator@.last() == Operator::Add,  // immutable
+            operand@.last() == 0,  // immutable
             0 <= i <= operator.len(),
-            operator.len() == operand.len() - 1,
             num_stack.len() == op_stack.len(),
-            i == operator.len() ==> num_stack.len() == 1 && op_stack.len() == 1 && op_stack@[0]
-                == Operator::Add,
+            expr_cur.eval() == construct_from(operator@, operand@).eval(),
+            i == operator.len() ==> op_stack.len() == 1 && op_stack@[0] == Operator::Add,
             stack_condition(op_stack@),
-            operator[operator.len() - 1] == Operator::Add,
-            operand[operand.len() - 1] == 0,
-            forall|expr: AddSubExpr| #[trigger]
-                some_spec(expr, operator@, operand@) ==> (exists|expr2: AddSubExpr| #[trigger]
-                    expr2.eval() == expr.eval() && some_spec(
-                        expr2,
-                        op_stack@.add(operator@.subrange(i as int, operator.len() as int)),
-                        num_stack@.add(operand@.subrange(i as int, operand.len() as int)),
-                    )),
+            expr_cur.operator() == op_stack@ + operator@.skip(i as int),
+            expr_cur.operand() == num_stack@ + operand@.skip(i as int),
+            expr_cur.satisfy_precedence(),
         decreases operator.len() - i,
     {
-        let op = operator[i].clone();
-        let ghost old_num_stack = num_stack@;
         num_stack.push(operand[i]);
-
-        assert forall|expr: AddSubExpr| #[trigger] some_spec(expr, operator@, operand@) implies (
-        exists|expr2: AddSubExpr|
-            expr2.eval() == expr.eval() && #[trigger] some_spec(
-                expr2,
-                op_stack@.add(operator@.subrange(i as int, operator.len() as int)),
-                num_stack@.add(operand@.subrange(i + 1, operand.len() as int)),
-            )) by {
-            let expr2 = choose|expr2: AddSubExpr|
-                expr2.eval() == expr.eval() && #[trigger] some_spec(
-                    expr2,
-                    op_stack@.add(operator@.subrange(i as int, operator.len() as int)),
-                    old_num_stack.add(operand@.subrange(i as int, operand.len() as int)),
-                );
-            assert(num_stack@.add(operand@.subrange(i + 1, operand.len() as int))
-                == old_num_stack.add(operand@.subrange(i as int, operand.len() as int)));
-        }
-
-        while !op_stack.is_empty() && need_pop(op_stack.last().unwrap(), &op)
+        while !op_stack.is_empty() && Operator::need_pop(op_stack.last().unwrap(), &operator[i])
             invariant
-                i < operator.len(),
-                op == operator[i as int],
+                i < operator.len(),  // immutable
                 num_stack.len() == op_stack.len() + 1,
                 stack_condition(op_stack@),
-                forall|expr: AddSubExpr| #[trigger]
-                    some_spec(expr, operator@, operand@) ==> (exists|expr2: AddSubExpr|
-                        expr2.eval() == expr.eval() && #[trigger] some_spec(
-                            expr2,
-                            op_stack@.add(operator@.subrange(i as int, operator.len() as int)),
-                            num_stack@.add(operand@.subrange(i + 1, operand.len() as int)),
-                        )),
+                expr_cur.eval() == construct_from(operator@, operand@).eval(),
+                expr_cur.operator() == op_stack@ + operator@.skip(i as int),
+                expr_cur.operand() == num_stack@ + operand@.skip(i + 1),
+                expr_cur.satisfy_precedence(),
             decreases op_stack.len(),
         {
             let ghost old_num_stack = num_stack@;
@@ -1263,125 +636,51 @@ exec fn eval_by_stack_a(operator: Vec<Operator>, operand: Vec<i128>) -> (res: Op
             let right = num_stack.pop().unwrap();
             let left = num_stack.pop().unwrap();
             let op_in_stack = op_stack.pop().unwrap();
-            let res = apply_op(left, right, op_in_stack);
+            let res = op_in_stack.apply_op(left, right);
             if res.is_none() {
-                assert forall|expr: AddSubExpr| #[trigger]
-                    some_spec(expr, operator@, operand@) implies None::<i128> == expr.eval() by {
-                    let expr2 = choose|expr2: AddSubExpr|
-                        expr2.eval() == expr.eval() && #[trigger] some_spec(
-                            expr2,
-                            old_op_stack.add(operator@.subrange(i as int, operator.len() as int)),
-                            old_num_stack.add(operand@.subrange(i + 1, operand.len() as int)),
-                        );
-                    lemma_reduce_err(
-                        expr2,
-                        old_num_stack,
-                        old_op_stack,
-                        operator@.subrange(i as int, operator.len() as int),
-                        operand@.subrange(i + 1, operand.len() as int),
-                    );
-                    expr2.lemma_eval_once();
+                proof {
+                    expr_cur.lemma_reduce_aux(old_op_stack.len() - 1);
+                    expr_cur.lemma_eval_once();
                 }
                 return None;
             }
             num_stack.push(res.unwrap());
-            assert forall|expr: AddSubExpr| #[trigger]
-                some_spec(expr, operator@, operand@) implies (exists|expr2: AddSubExpr| #[trigger]
-                expr2.eval() == expr.eval() && some_spec(
-                    expr2,
-                    op_stack@.add(operator@.subrange(i as int, operator.len() as int)),
-                    num_stack@.add(operand@.subrange(i + 1, operand.len() as int)),
-                )) by {
-                let expr2 = choose|expr2: AddSubExpr|
-                    expr2.eval() == expr.eval() && #[trigger] some_spec(
-                        expr2,
-                        old_op_stack.add(operator@.subrange(i as int, operator.len() as int)),
-                        old_num_stack.add(operand@.subrange(i + 1, operand.len() as int)),
-                    );
-                lemma_reduce_ok(
-                    expr2,
-                    old_num_stack,
-                    old_op_stack,
-                    operator@.subrange(i as int, operator.len() as int),
-                    operand@.subrange(i + 1, operand.len() as int),
-                    res.unwrap(),
-                );
-                match expr2.eval_once() {
-                    Ok(expr3) => {
-                        expr2.lemma_eval_once();
-                        assert(num_stack@.add(operand@.subrange(i + 1, operand.len() as int))
-                            == old_num_stack.subrange(0, old_num_stack.len() - 2).add(
-                            seq![res.unwrap()],
-                        ).add(operand@.subrange(i + 1, operand.len() as int)));
-                    },
-                    Err(_) => {},
+            proof {
+                expr_cur.lemma_reduce_aux(old_op_stack.len() - 1);
+                expr_cur.lemma_eval_once();
+                if let Ok(expr_nxt) = expr_cur.eval_once() {
+                    expr_cur = expr_nxt;
                 }
             }
         }
-        let ghost old_op_stack = op_stack@;
-        op_stack.push(op);
-        assert forall|expr: AddSubExpr| #[trigger] some_spec(expr, operator@, operand@) implies (
-        exists|expr2: AddSubExpr|
-            expr2.eval() == expr.eval() && #[trigger] some_spec(
-                expr2,
-                op_stack@.add(operator@.subrange(i + 1, operator.len() as int)),
-                num_stack@.add(operand@.subrange(i + 1, operand.len() as int)),
-            )) by {
-            let expr2 = choose|expr2: AddSubExpr|
-                expr2.eval() == expr.eval() && some_spec(
-                    expr2,
-                    old_op_stack.add(operator@.subrange(i as int, operator.len() as int)),
-                    num_stack@.add(operand@.subrange(i + 1, operand.len() as int)),
-                );
-            assert(old_op_stack.add(operator@.subrange(i as int, operator.len() as int))
-                == op_stack@.add(operator@.subrange(i + 1, operator.len() as int)));
-        }
-        i += 1;
+        op_stack.push(operator[i]);
     }
-    assert forall|expr: AddSubExpr| #![auto] some_spec(expr, operator@, operand@) implies Some(
-        num_stack@[0],
-    ) == expr.eval() by {
-        let expr2 = choose|expr2: AddSubExpr|
-            expr2.eval() == expr.eval() && #[trigger] some_spec(
-                expr2,
-                op_stack@.add(operator@.subrange(i as int, operator.len() as int)),
-                num_stack@.add(operand@.subrange(i as int, operand.len() as int)),
-            );
-        assert(op_stack@.add(operator@.subrange(i as int, operator.len() as int))
-            == Seq::empty().push(Operator::Add));
-        assert(num_stack@.add(operand@.subrange(i as int, operand.len() as int))
-            == seq!(num_stack@[0], 0));
-        lemma_simple_expr_reverse(expr2, num_stack@[0]);
+    assert(op_stack@ == seq![Operator::Add]);
+    assert(num_stack@.add(operand@.skip(operator.len() as int)) == seq![num_stack@[0], 0]);
+    proof {
+        lemma_simple_expr_reverse(expr_cur, num_stack@[0]);
     }
     num_stack.pop()
 }
 
-// This is the main execution function. It changes general case into special case proved above.
-exec fn eval_by_stack(operator: Vec<Operator>, operand: Vec<i128>) -> (res: Option<i128>)
+// This is the main execution function. It calls special case proved above.
+exec fn eval_by_stack(operator: Vec<Operator>, operand: Vec<i128>) -> Option<i128>
     requires
-        operator.len() == operand.len() - 1,
-    ensures
-        forall|expr: AddSubExpr| #[trigger]
-            some_spec(expr, operator@, operand@) ==> res == expr.eval(),
+        operator.len() + 1 == operand.len(),
+    returns
+        construct_from(operator@, operand@).eval(),
 {
     let mut operator_a = operator;
     operator_a.push(Operator::Add);
     let mut operand_a = operand;
     operand_a.push(0);
-    let zero = MulDivExpr::Factor(PowExpr::Base(0));
-    assert forall|expr: AddSubExpr|
-        #![auto]
-        some_spec(expr, operator@, operand@) implies AddSubExpr::Add(
-        Box::new(expr),
-        Box::new(zero),
-    ).eval() == expr.eval() && some_spec(
-        AddSubExpr::Add(Box::new(expr), Box::new(zero)),
-        operator_a@,
-        operand_a@,
-    ) by {
-        assert(AddSubExpr::Add(Box::new(expr), Box::new(zero)).operator() == operator_a@);
-        assert(AddSubExpr::Add(Box::new(expr), Box::new(zero)).operand() == operand_a@);
+    let ghost expr_a = construct_from(operator_a@, operand_a@);
+    proof {
+        lemma_construct_from(operator_a@, operand_a@);
+        Expr::lemma_base(0);
     }
+    assert(operator_a@.drop_last() == operator@);
+    assert(operand_a@.drop_last() == operand@);
     eval_by_stack_a(operator_a, operand_a)
 }
 
