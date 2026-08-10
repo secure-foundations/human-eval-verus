@@ -221,6 +221,12 @@ impl Expr {
     }
 }
 
+enum EvalOnceResult {
+    Single(i128),
+    Overflow,
+    Next(Expr),
+}
+
 // These are auxiliary functions and lemmas
 impl Expr {
     // Constructor
@@ -229,30 +235,32 @@ impl Expr {
     }
 
     // Evaluate the leftmost step of the expression
-    // return Err(None) if overflow occurs in that step
-    // return Err(Some(n)) if the expression is a single number n
-    // return Ok(expr_cur) if the expression is evaluated to expr_cur in that step.
-    spec fn eval_once(self) -> Result<Expr, Option<i128>>
+    // return Overflow if overflow occurs in that step
+    // return Single(n) if the expression is a single number n
+    // return Next(expr_cur) if the expression is evaluated to expr_cur in that step.
+    spec fn eval_once(self) -> EvalOnceResult
         decreases self,
     {
+        use Expr::*;
+        use EvalOnceResult::*;
         match self {
-            Expr::Base(n) => Err(Some(n)),
-            Expr::Op(op, left, right) => {
+            Base(n) => Single(n),
+            Op(op, left, right) => {
                 match left.eval_once() {
-                    Err(None) => Err(None),
-                    Err(Some(left_value)) => {
+                    Single(left_value) => {
                         match right.eval_once() {
-                            Err(None) => Err(None),
-                            Err(Some(right_value)) => {
+                            Single(right_value) => {
                                 match op.spec_apply_op(left_value, right_value) {
-                                    None => Err(None),
-                                    Some(res) => Ok(Expr::Base(res)),
+                                    None => Overflow,
+                                    Some(res) => Next(Base(res)),
                                 }
                             },
-                            Ok(right) => Ok(Expr::mk(op, Expr::Base(left_value), right)),
+                            Overflow => Overflow,
+                            Next(right) => Next(Self::mk(op, Base(left_value), right)),
                         }
                     },
-                    Ok(left) => Ok(Expr::mk(op, left, *right)),
+                    Overflow => Overflow,
+                    Next(left) => Next(Self::mk(op, left, *right)),
                 }
             },
         }
@@ -261,9 +269,10 @@ impl Expr {
     // eval_once() preserves eval() and satisfy_precedence()
     proof fn lemma_eval_once(&self)
         ensures
-            self.eval_once() matches Ok(res) ==> self.eval() == res.eval() && (
+            self.eval_once() matches EvalOnceResult::Next(res) ==> self.eval() == res.eval() && (
             self.satisfy_precedence() ==> res.satisfy_precedence()),
-            self.eval_once() matches Err(res) ==> self.eval() == res,
+            self.eval_once() matches EvalOnceResult::Single(n) ==> self.eval() == Some(n),
+            self.eval_once() matches EvalOnceResult::Overflow ==> self.eval() is None,
         decreases self,
     {
         if let Expr::Op(_, left, right) = self {
@@ -290,7 +299,7 @@ impl Expr {
             Expr::Base(n).operator() == seq![],
             Expr::Base(n).operand() == seq![n],
             Expr::Base(n).eval() == Some(n),
-            Expr::Base(n).eval_once() == Err(Some(n)),
+            Expr::Base(n).eval_once() == EvalOnceResult::Single(n),
             Expr::Base(n).satisfy_precedence(),
     {
     }
@@ -409,15 +418,16 @@ proof fn stack_condition_transitivity(seq: Seq<Operator>, x: int, y: int)
 spec fn reduce_aux_relation(
     operator: Seq<Operator>,
     operand: Seq<i128>,
-    res: Result<Expr, Option<i128>>,
+    res: EvalOnceResult,
     k: int,
     compute: Option<i128>,
 ) -> bool {
     match compute {
-        None => res matches Err(None),
-        Some(num) => res matches Ok(expr_cur) && expr_cur.operator() == operator.take(k)
-            + operator.skip(k + 1) && expr_cur.operand() == operand.take(k).push(num)
-            + operand.skip(k + 2),
+        None => res matches EvalOnceResult::Overflow,
+        Some(num) => res matches EvalOnceResult::Next(expr_cur) && expr_cur.operator()
+            == operator.take(k) + operator.skip(k + 1) && expr_cur.operand() == operand.take(
+            k,
+        ).push(num) + operand.skip(k + 2),
     }
 }
 
@@ -648,7 +658,7 @@ exec fn eval_by_stack_a(operator: Vec<Operator>, operand: Vec<i128>) -> Option<i
             proof {
                 expr_cur.lemma_reduce_aux(old_op_stack.len() - 1);
                 expr_cur.lemma_eval_once();
-                if let Ok(expr_nxt) = expr_cur.eval_once() {
+                if let EvalOnceResult::Next(expr_nxt) = expr_cur.eval_once() {
                     expr_cur = expr_nxt;
                 }
             }
