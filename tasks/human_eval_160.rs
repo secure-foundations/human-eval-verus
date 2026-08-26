@@ -12,12 +12,12 @@ use vstd::prelude::*;
 Specification definitions to inspect
 * spec_i128_checked_pow, Operator::spec_apply_op, and Expr::eval evaluates an expression tree.
 * Operator::spec_precedence, Expr::root_precedence, and Expr::satisfy_precedence specify the precedence rules. An expression is valid if it satisfies the precedence rules.
-* Expr::operator and Expr::operand flatten an expression tree into operator and operand sequences.
+* Expr::operators and Expr::operands flatten an expression tree into operator and operand sequences.
 * construct_from is a spec function that constructs an expression tree from operator and operand sequences.
 * In lemma_construct_from, it is proved that the result satisfies the precedence rules, and
-* (operator, operand) --construct_from--> expr --(Expr::operator, Expr::operand)--> (operator, operand)
+* (operators, operands) --construct_from--> expr --(Expr::operators, Expr::operands)--> (operators, operands)
 * This two properties gurantee that construct_from gives the desired expression we want to evaluate.
-* The linear-time execution function eval_by_stack is verified to return construct_from(operator@, operand@).eval() for every valid input.
+* The linear-time execution function eval_by_stack is verified to return construct_from(operators@, operands@).eval() for every valid input.
 */
 
 verus! {
@@ -159,22 +159,22 @@ enum Expr {
 // These functions appear in the specification
 impl Expr {
     // Operator sequence of the infix expression
-    spec fn operator(self) -> Seq<Operator>
+    spec fn operators(self) -> Seq<Operator>
         decreases self,
     {
         match self {
             Expr::Base(_) => seq![],
-            Expr::Op(op, left, right) => left.operator().push(op) + right.operator(),
+            Expr::Op(op, left, right) => left.operators().push(op) + right.operators(),
         }
     }
 
     // Operand sequence of the infix expression
-    spec fn operand(self) -> Seq<i128>
+    spec fn operands(self) -> Seq<i128>
         decreases self,
     {
         match self {
             Expr::Base(n) => seq![n],
-            Expr::Op(_, left, right) => left.operand() + right.operand(),
+            Expr::Op(_, left, right) => left.operands() + right.operands(),
         }
     }
 
@@ -284,7 +284,7 @@ impl Expr {
     // The length of operator sequence plus one equals the length of operand sequence
     proof fn lemma_len(&self)
         ensures
-            self.operator().len() + 1 == self.operand().len(),
+            self.operators().len() + 1 == self.operands().len(),
         decreases self,
     {
         if let Expr::Op(_, left, right) = self {
@@ -296,8 +296,8 @@ impl Expr {
     // Properties of Expr::Base(n)
     proof fn lemma_base(n: i128)
         ensures
-            Expr::Base(n).operator() == seq![],
-            Expr::Base(n).operand() == seq![n],
+            Expr::Base(n).operators() == seq![],
+            Expr::Base(n).operands() == seq![n],
             Expr::Base(n).eval() == Some(n),
             Expr::Base(n).eval_once() == EvalOnceResult::Single(n),
             Expr::Base(n).satisfy_precedence(),
@@ -323,8 +323,8 @@ impl Expr {
     // append() has desired effects on operator and operand sequences, and preserves satisfy_precedence()
     proof fn lemma_append(self, operator: Operator, operand: i128)
         ensures
-            self.append(operator, operand).operator() == self.operator().push(operator),
-            self.append(operator, operand).operand() == self.operand().push(operand),
+            self.append(operator, operand).operators() == self.operators().push(operator),
+            self.append(operator, operand).operands() == self.operands().push(operand),
             self.satisfy_precedence() ==> self.append(operator, operand).satisfy_precedence(),
         decreases self,
     {
@@ -336,40 +336,40 @@ impl Expr {
 }
 
 // Construct the expression tree
-spec fn construct_from(operator: Seq<Operator>, operand: Seq<i128>) -> Expr
+spec fn construct_from(operators: Seq<Operator>, operands: Seq<i128>) -> Expr
     recommends
-        operator.len() + 1 == operand.len(),
-    decreases operator.len(),
+        operators.len() + 1 == operands.len(),
+    decreases operators.len(),
 {
-    if operator.len() == 0 {
-        Expr::Base(operand[0])
+    if operators.len() == 0 {
+        Expr::Base(operands[0])
     } else {
-        construct_from(operator.drop_last(), operand.drop_last()).append(
-            operator.last(),
-            operand.last(),
+        construct_from(operators.drop_last(), operands.drop_last()).append(
+            operators.last(),
+            operands.last(),
         )
     }
 }
 
 // Correctness of construct_from:
 // From operator and operand sequences, construct_from() produces an expression that flattens to the same pair of sequences and satisfies the precedence rules.
-proof fn lemma_construct_from(operator: Seq<Operator>, operand: Seq<i128>)
+proof fn lemma_construct_from(operators: Seq<Operator>, operands: Seq<i128>)
     requires
-        operator.len() + 1 == operand.len(),
+        operators.len() + 1 == operands.len(),
     ensures
-        construct_from(operator, operand).operator() == operator,
-        construct_from(operator, operand).operand() == operand,
-        construct_from(operator, operand).satisfy_precedence(),
-    decreases operator.len(),
+        construct_from(operators, operands).operators() == operators,
+        construct_from(operators, operands).operands() == operands,
+        construct_from(operators, operands).satisfy_precedence(),
+    decreases operators.len(),
 {
-    if operator.len() == 0 {
-        assert(operator == seq![]);
-        assert(operand == seq![operand[0]]);
+    if operators.len() == 0 {
+        assert(operators == seq![]);
+        assert(operands == seq![operands[0]]);
     } else {
-        lemma_construct_from(operator.drop_last(), operand.drop_last());
-        construct_from(operator.drop_last(), operand.drop_last()).lemma_append(
-            operator.last(),
-            operand.last(),
+        lemma_construct_from(operators.drop_last(), operands.drop_last());
+        construct_from(operators.drop_last(), operands.drop_last()).lemma_append(
+            operators.last(),
+            operands.last(),
         );
     }
 }
@@ -397,18 +397,18 @@ proof fn stack_condition_transitivity(seq: Seq<Operator>, x: int, y: int)
 
 // The expected relation between expr and expr.eval_once()
 spec fn reduce_aux_relation(
-    operator: Seq<Operator>,
-    operand: Seq<i128>,
+    operators: Seq<Operator>,
+    operands: Seq<i128>,
     res: EvalOnceResult,
     k: int,
     compute: Option<i128>,
 ) -> bool {
     match compute {
         None => res matches EvalOnceResult::Overflow,
-        Some(num) => res matches EvalOnceResult::Next(expr_cur) && expr_cur.operator()
-            == operator.take(k) + operator.skip(k + 1) && expr_cur.operand() == operand.take(
+        Some(num) => res matches EvalOnceResult::Next(expr_cur) && expr_cur.operators()
+            == operators.take(k) + operators.skip(k + 1) && expr_cur.operands() == operands.take(
             k,
-        ).push(num) + operand.skip(k + 2),
+        ).push(num) + operands.skip(k + 2),
     }
 }
 
@@ -417,14 +417,14 @@ impl Expr {
     proof fn lemma_right_precedence(self, high: Operator)
         requires
             self.satisfy_precedence(),
-            self.operator().len() > 0,
-            Operator::spec_need_pop(high, self.operator()[0]),
+            self.operators().len() > 0,
+            Operator::spec_need_pop(high, self.operators()[0]),
         ensures
             self matches Expr::Op(op, _, _) ==> Operator::spec_need_pop(high, op),
         decreases self,
     {
         if let Expr::Op(op, left, right) = self {
-            if left.operator().len() > 0 {
+            if left.operators().len() > 0 {
                 left.lemma_right_precedence(high);
             }
         }
@@ -436,54 +436,54 @@ impl Expr {
     proof fn lemma_reduce_aux(self, k: int)
         requires
             self.satisfy_precedence(),
-            0 <= k < self.operator().len(),
-            stack_condition(self.operator().take(k + 1)),
-            k + 1 == self.operator().len() || Operator::spec_need_pop(
-                self.operator()[k],
-                self.operator()[k + 1],
+            0 <= k < self.operators().len(),
+            stack_condition(self.operators().take(k + 1)),
+            k + 1 == self.operators().len() || Operator::spec_need_pop(
+                self.operators()[k],
+                self.operators()[k + 1],
             ),
         ensures
             reduce_aux_relation(
-                self.operator(),
-                self.operand(),
+                self.operators(),
+                self.operands(),
                 self.eval_once(),
                 k,
-                self.operator()[k].spec_apply_op(self.operand()[k], self.operand()[k + 1]),
+                self.operators()[k].spec_apply_op(self.operands()[k], self.operands()[k + 1]),
             ),
         decreases self,
     {
         if let Expr::Op(op, left, right) = self {
             let left = *left;
             let right = *right;
-            if k < left.operator().len() {
-                assert(left.operator().take(k + 1) == self.operator().take(k + 1));
+            if k < left.operators().len() {
+                assert(left.operators().take(k + 1) == self.operators().take(k + 1));
                 left.lemma_len();
                 left.lemma_reduce_aux(k);
-                if let Some(num) = self.operator()[k].spec_apply_op(
-                    self.operand()[k],
-                    self.operand()[k + 1],
+                if let Some(num) = self.operators()[k].spec_apply_op(
+                    self.operands()[k],
+                    self.operands()[k + 1],
                 ) {
-                    assert(self.operand().take(k).push(num) + self.operand().skip(k + 2)
-                        == left.operand().take(k).push(num) + left.operand().skip(k + 2)
-                        + right.operand());
-                    assert(self.operator().take(k) + self.operator().skip(k + 1)
-                        == left.operator().take(k) + left.operator().skip(k + 1).push(op)
-                        + right.operator());
+                    assert(self.operands().take(k).push(num) + self.operands().skip(k + 2)
+                        == left.operands().take(k).push(num) + left.operands().skip(k + 2)
+                        + right.operands());
+                    assert(self.operators().take(k) + self.operators().skip(k + 1)
+                        == left.operators().take(k) + left.operators().skip(k + 1).push(op)
+                        + right.operators());
                 }
             } else {
                 if left matches Expr::Op(_, _, _) {
-                    assert(left.operator().push(op) == self.operator().take(
-                        left.operator().len() + 1 as int,
+                    assert(left.operators().push(op) == self.operators().take(
+                        left.operators().len() + 1 as int,
                     ));
                     if let Expr::Op(old, ll, lr) = left {
                         stack_condition_transitivity(
-                            left.operator().push(op),
-                            ll.operator().len() as int,
-                            (ll.operator().len() + 1 + lr.operator().len()) as int,
+                            left.operators().push(op),
+                            ll.operators().len() as int,
+                            (ll.operators().len() + 1 + lr.operators().len()) as int,
                         );
                     }
                 }
-                if k == left.operator().len() {
+                if k == left.operators().len() {
                     if let Expr::Base(n) = left {
                         match right {
                             Expr::Op(_, _, _) => {
@@ -492,13 +492,13 @@ impl Expr {
                             Expr::Base(m) => {
                                 Expr::lemma_base(n);
                                 Expr::lemma_base(m);
-                                if let Some(num) = self.operator()[k].spec_apply_op(
-                                    self.operand()[k],
-                                    self.operand()[k + 1],
+                                if let Some(num) = self.operators()[k].spec_apply_op(
+                                    self.operands()[k],
+                                    self.operands()[k + 1],
                                 ) {
-                                    assert(self.operator().take(k) + self.operator().skip(k + 1)
+                                    assert(self.operators().take(k) + self.operators().skip(k + 1)
                                         == seq![]);
-                                    assert(self.operand().take(k).push(num) + self.operand().skip(
+                                    assert(self.operands().take(k).push(num) + self.operands().skip(
                                         k + 2,
                                     ) == seq![num]);
                                 }
@@ -507,34 +507,34 @@ impl Expr {
                     }
                 } else {
                     if let Expr::Base(n) = left {
-                        let k2 = k - left.operator().len() - 1;
-                        assert(stack_condition(right.operator().take(k2 + 1))) by {
-                            let seq = right.operator().take(k2 + 1);
+                        let k2 = k - left.operators().len() - 1;
+                        assert(stack_condition(right.operators().take(k2 + 1))) by {
+                            let seq = right.operators().take(k2 + 1);
                             assert forall|i: int|
                                 0 <= i < seq.len() - 1 implies !#[trigger] Operator::spec_need_pop(
                                 seq[i],
                                 seq[i + 1],
                             ) by {
-                                assert(seq[i] == self.operator().take(k + 1)[left.operator().len()
+                                assert(seq[i] == self.operators().take(k + 1)[left.operators().len()
                                     + 1 + i]);
-                                assert(seq[i + 1] == self.operator().take(
+                                assert(seq[i + 1] == self.operators().take(
                                     k + 1,
-                                )[left.operator().len() + 1 + i + 1]);
+                                )[left.operators().len() + 1 + i + 1]);
                             }
                         }
                         right.lemma_len();
                         right.lemma_reduce_aux(k2);
                         Expr::lemma_base(n);
-                        if let Some(num) = self.operator()[k].spec_apply_op(
-                            self.operand()[k],
-                            self.operand()[k + 1],
+                        if let Some(num) = self.operators()[k].spec_apply_op(
+                            self.operands()[k],
+                            self.operands()[k + 1],
                         ) {
-                            assert(self.operand().take(k).push(num) + self.operand().skip(k + 2)
-                                == left.operand() + (right.operand().take(k2).push(num)
-                                + right.operand().skip(k2 + 2)));
-                            assert(self.operator().take(k) + self.operator().skip(k + 1)
-                                == left.operator().push(op) + (right.operator().take(k2)
-                                + right.operator().skip(k2 + 1)));
+                            assert(self.operands().take(k).push(num) + self.operands().skip(k + 2)
+                                == left.operands() + (right.operands().take(k2).push(num)
+                                + right.operands().skip(k2 + 2)));
+                            assert(self.operators().take(k) + self.operators().skip(k + 1)
+                                == left.operators().push(op) + (right.operators().take(k2)
+                                + right.operators().skip(k2 + 1)));
                         }
                     }
                 }
@@ -546,46 +546,46 @@ impl Expr {
 // This lemma proves the special case of the main result. Its condition is that the last operator is Add and the last operand is 0.
 // In this case, the stack will be easy to analyze at the end of execution, because the last Add operator will pop all the other operators.
 // Most of the execution code goes here.
-exec fn eval_by_stack_a(operator: Vec<Operator>, operand: Vec<i128>) -> Option<i128>
+exec fn eval_by_stack_a(operators: Vec<Operator>, operands: Vec<i128>) -> Option<i128>
     requires
-        operator.len() >= 1,
-        operator.len() + 1 == operand.len(),
-        operator@.last() == Operator::Add,
-        operand@.last() == 0,
+        operators.len() >= 1,
+        operators.len() + 1 == operands.len(),
+        operators@.last() == Operator::Add,
+        operands@.last() == 0,
     returns
-        construct_from(operator@, operand@).eval(),
+        construct_from(operators@, operands@).eval(),
 {
     let mut num_stack: Vec<i128> = Vec::new();
     let mut op_stack: Vec<Operator> = Vec::new();
-    let ghost mut expr_cur = construct_from(operator@, operand@);
+    let ghost mut expr_cur = construct_from(operators@, operands@);
     proof {
-        lemma_construct_from(operator@, operand@);
+        lemma_construct_from(operators@, operands@);
     }
 
-    for i in 0..operator.len()
+    for i in 0..operators.len()
         invariant
-            operator.len() + 1 == operand.len(),  // immutable
-            operator@.last() == Operator::Add,  // immutable
-            operand@.last() == 0,  // immutable
-            0 <= i <= operator.len(),
+            operators.len() + 1 == operands.len(),  // immutable
+            operators@.last() == Operator::Add,  // immutable
+            operands@.last() == 0,  // immutable
+            0 <= i <= operators.len(),
             num_stack.len() == op_stack.len(),
-            expr_cur.eval() == construct_from(operator@, operand@).eval(),
-            i == operator.len() ==> op_stack.len() == 1 && op_stack@[0] == Operator::Add,
+            expr_cur.eval() == construct_from(operators@, operands@).eval(),
+            i == operators.len() ==> op_stack.len() == 1 && op_stack@[0] == Operator::Add,
             stack_condition(op_stack@),
-            expr_cur.operator() == op_stack@ + operator@.skip(i as int),
-            expr_cur.operand() == num_stack@ + operand@.skip(i as int),
+            expr_cur.operators() == op_stack@ + operators@.skip(i as int),
+            expr_cur.operands() == num_stack@ + operands@.skip(i as int),
             expr_cur.satisfy_precedence(),
-        decreases operator.len() - i,
+        decreases operators.len() - i,
     {
-        num_stack.push(operand[i]);
-        while !op_stack.is_empty() && Operator::need_pop(op_stack.last().unwrap(), &operator[i])
+        num_stack.push(operands[i]);
+        while !op_stack.is_empty() && Operator::need_pop(op_stack.last().unwrap(), &operators[i])
             invariant
-                i < operator.len(),  // immutable
+                i < operators.len(),  // immutable
                 num_stack.len() == op_stack.len() + 1,
                 stack_condition(op_stack@),
-                expr_cur.eval() == construct_from(operator@, operand@).eval(),
-                expr_cur.operator() == op_stack@ + operator@.skip(i as int),
-                expr_cur.operand() == num_stack@ + operand@.skip(i + 1),
+                expr_cur.eval() == construct_from(operators@, operands@).eval(),
+                expr_cur.operators() == op_stack@ + operators@.skip(i as int),
+                expr_cur.operands() == num_stack@ + operands@.skip(i + 1),
                 expr_cur.satisfy_precedence(),
             decreases op_stack.len(),
         {
@@ -609,12 +609,16 @@ exec fn eval_by_stack_a(operator: Vec<Operator>, operand: Vec<i128>) -> Option<i
                 }
             }
         }
-        op_stack.push(operator[i]);
+        op_stack.push(operators[i]);
     }
     proof {
         if let Expr::Op(op, left, right) = expr_cur {
-            assert(num_stack@.add(operand@.skip(operator.len() as int)) == seq![num_stack@[0], 0]);
-            assert(expr_cur.operator().len() == left.operator().len() + 1 + right.operator().len());
+            assert(num_stack@.add(operands@.skip(operators.len() as int)) == seq![
+                num_stack@[0],
+                0,
+            ]);
+            assert(expr_cur.operators().len() == left.operators().len() + 1
+                + right.operators().len());
             match (*left, *right) {
                 (Expr::Base(n1), Expr::Base(n2)) => {
                     Expr::lemma_base(n1);
@@ -630,24 +634,24 @@ exec fn eval_by_stack_a(operator: Vec<Operator>, operand: Vec<i128>) -> Option<i
 }
 
 // This is the main execution function. It calls special case proved above.
-exec fn eval_by_stack(operator: Vec<Operator>, operand: Vec<i128>) -> Option<i128>
+exec fn eval_by_stack(operators: Vec<Operator>, operands: Vec<i128>) -> Option<i128>
     requires
-        operator.len() + 1 == operand.len(),
+        operators.len() + 1 == operands.len(),
     returns
-        construct_from(operator@, operand@).eval(),
+        construct_from(operators@, operands@).eval(),
 {
-    let mut operator_a = operator;
-    operator_a.push(Operator::Add);
-    let mut operand_a = operand;
-    operand_a.push(0);
-    let ghost expr_a = construct_from(operator_a@, operand_a@);
+    let mut operators_a = operators;
+    operators_a.push(Operator::Add);
+    let mut operands_a = operands;
+    operands_a.push(0);
+    let ghost expr_a = construct_from(operators_a@, operands_a@);
     proof {
-        lemma_construct_from(operator_a@, operand_a@);
+        lemma_construct_from(operators_a@, operands_a@);
         Expr::lemma_base(0);
     }
-    assert(operator_a@.drop_last() == operator@);
-    assert(operand_a@.drop_last() == operand@);
-    eval_by_stack_a(operator_a, operand_a)
+    assert(operators_a@.drop_last() == operators@);
+    assert(operands_a@.drop_last() == operands@);
+    eval_by_stack_a(operators_a, operands_a)
 }
 
 } // verus!
