@@ -91,7 +91,7 @@ enum Operator {
 // This part defines three helper functions and their specifications counterparts:
 // precedence, to get the precedence of an operator. It returns 1 for + and -, 2 for * and /, and 3 for ^.
 // need_pop, to determine whether the operator on the top of the stack should be popped when a new operator is encountered.
-// apply_op, to apply an operator to two operand and return the result, or None if overflow occurs.
+// apply_op, to apply an operator to two operands and return the result, or None if overflow occurs.
 impl Operator {
     spec fn spec_precedence(self) -> u8 {
         match self {
@@ -281,7 +281,7 @@ impl Expr {
         }
     }
 
-    // The length of operator sequence plus one equals the length of operand sequence
+    // The length of the operator sequence plus one equals the length of the operand sequence
     proof fn lemma_len(&self)
         ensures
             self.operators().len() + 1 == self.operands().len(),
