@@ -279,6 +279,8 @@ proof fn lemma_less_than_step_even<const N: usize>(
         extra_item,
     ] =~= alternate_path_) by {
         if path_less_than(path, alternate_path_.subrange(0, path.len() as int)) {
+            // The following assertion was added to make the proof more stable:
+            assert(alternate_path_.subrange(0, path.len() as int).len() == path.len());
         } else {
             if (alternate_path_[path.len() as int] > extra_item) {
             } else {
