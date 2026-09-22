@@ -18,12 +18,12 @@ proof fn lemma_increasing_sum(s: Seq<nat>, i: int, j: int)
     requires
         0 <= i <= j <= s.len(),
     ensures
-        spec_sum(s.subrange(0, i)) <= spec_sum(s.subrange(0, j)),
+        spec_sum(s[..i]) <= spec_sum(s[..j]),
     decreases j - i,
 {
     if (i < j) {
-        assert(spec_sum(s.subrange(0, j - 1)) <= spec_sum(s.subrange(0, j))) by {
-            assert(s.subrange(0, j).drop_last() == s.subrange(0, j - 1));
+        assert(spec_sum(s[..j - 1]) <= spec_sum(s[..j])) by {
+            assert(s[..j].drop_last() == s[..j - 1]);
         }
         lemma_increasing_sum(s, i, j - 1);
     }
@@ -42,25 +42,25 @@ fn checked_total_str_len(lst: &Vec<&str>) -> (ret: Option<usize>)
     let mut sum: usize = 0;
     for i in 0..lst.len()
         invariant
-            sum == lst@.subrange(0, i as int).map_values(|s: &str| s@.len()).fold_left(
+            sum == lst@[..i].map_values(|s: &str| s@.len()).fold_left(
                 0,
                 |x: int, y| x + y,
             ),
             spec_sum(lens) == sum,
-            lens =~= lst@.map_values(|s: &str| s@.len()).take(i as int),
-            lens =~= lst@.take(i as int).map_values(|s: &str| s@.len()),
+            lens =~= lst@.map_values(|s: &str| s@.len())[..i],
+            lens =~= lst@[..i].map_values(|s: &str| s@.len()),
     {
         let x = lst[i].unicode_len();
         proof {
             assert(lens.push(x as nat).drop_last() == lens);
             lens = lens.push(x as nat);
-            assert(lens =~= lst@.map_values(|s: &str| s@.len()).take(i + 1));
+            assert(lens =~= lst@.map_values(|s: &str| s@.len())[..i + 1]);
 
             lemma_increasing_sum(lst@.map_values(|s: &str| s@.len()), i + 1, lst@.len() as int);
             assert(total_str_len(lst@) >= spec_sum(lens)) by {
                 assert(lst@.map_values(|s: &str| s@.len()) =~= lst@.map_values(
                     |s: &str| s@.len(),
-                ).take(lst@.len() as int));
+                )[..lst@.len()]);
             }
             if x + sum > usize::MAX {
                 assert(sum.checked_add(x).is_none());
@@ -68,11 +68,9 @@ fn checked_total_str_len(lst: &Vec<&str>) -> (ret: Option<usize>)
             }
         }
         sum = sum.checked_add(x)?;
-        assert(lst@.take(i + 1).map_values(|s: &str| s@.len()).drop_last() == lst@.take(
-            i as int,
-        ).map_values(|s: &str| s@.len()));
+        assert(lst@[..i + 1].map_values(|s: &str| s@.len()).drop_last() == lst@[..i].map_values(|s: &str| s@.len()));
     }
-    assert(lst@ == lst@.subrange(0, lst.len() as int));
+    assert(lst@ == lst@[..lst.len()]);
     return Some(sum);
 }
 

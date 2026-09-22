@@ -64,7 +64,7 @@ fn solution(lst: Vec<i32>) -> (out: i64)
             acc <= (idx as int) * (i32::MAX as int),
             acc >= (idx as int) * (i32::MIN as int),
             acc as int == odd_even_pos_sum_from(
-                lst@.subrange(0, idx as int).map_values(|x| x as int),
+                lst@[..idx].map_values(|x| x as int),
                 0,
             ),
         decreases lst.len() - idx,
@@ -73,18 +73,18 @@ fn solution(lst: Vec<i32>) -> (out: i64)
             acc = acc + (lst[idx] as i64);
         }
         proof {
-            let prefix = lst@.subrange(0, idx as int).map_values(|x| x as int);
-            let next = lst@.subrange(idx as int, idx + 1).map_values(|x| x as int);
+            let prefix = lst@[..idx].map_values(|x| x as int);
+            let next = lst@[idx..idx + 1].map_values(|x| x as int);
 
             assert(next.len() == 1);
-            assert(lst@.subrange(0, idx + 1).map_values(|x| x as int) == prefix + next);
+            assert(lst@[..idx + 1].map_values(|x| x as int) == prefix + next);
 
             lemma_extend_sum(prefix, next, 0);
         }
         idx = idx + 1;
     }
 
-    assert(lst@.map_values(|x| x as int) == lst@.subrange(0, idx as int).map_values(|x| x as int));
+    assert(lst@.map_values(|x| x as int) == lst@[..idx].map_values(|x| x as int));
     acc
 }
 

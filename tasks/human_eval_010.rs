@@ -1,212 +1,89 @@
 /*
 ### ID
-HumanEval/10
+HumanEval/9
 */
 /*
 ### VERUS BEGIN
 */
 use vstd::prelude::*;
-use vstd::slice::slice_subrange;
 
 verus! {
 
-spec fn spec_is_palindrome(string: Seq<char>) -> bool {
-    string == string.reverse()
+spec fn seq_max(a: Seq<i32>) -> i32
+    decreases a.len(),
+{
+    if a.len() == 0 {
+        i32::MIN
+    } else if a.last() > seq_max(a.drop_last()) {
+        a.last()
+    } else {
+        seq_max(a.drop_last())
+    }
 }
 
-fn is_palindrome(string: &[char]) -> (result: bool)
+fn rolling_max(numbers: Vec<i32>) -> (result: Vec<i32>)
     ensures
-        result <==> spec_is_palindrome(string@),
+        result.len() == numbers.len(),  // result vector should have the same length as input
+        forall|i: int| 0 <= i < numbers.len() ==> result[i] == seq_max(numbers@[..i + 1]),
 {
-    let len: usize = string.len();
-    let mut i: usize = 0;
-    while i < len
+    let mut max_so_far = i32::MIN;
+    let mut result = Vec::with_capacity(numbers.len());
+    for pos in 0..numbers.len()
         invariant
-            len == string.len(),
-            0 <= i <= len,
-            forall|j: int| 0 <= j < i ==> #[trigger] string[j] == string[len - 1 - j],
-        decreases len - i,
+            result.len() == pos,
+            max_so_far == seq_max(numbers@[..pos]),
+            forall|i: int| 0 <= i < pos ==> result[i] == seq_max(numbers@[..i + 1]),
     {
-        if string[i] != string[len - 1 - i] {
-            return false;
+        let number = numbers[pos];
+        if number > max_so_far {
+            max_so_far = number;
         }
-        i += 1;
+        result.push(max_so_far);
+        assert(numbers@[..pos + 1].drop_last() =~= numbers@[..pos]);
     }
-    assert(string@ =~= string@.reverse());
-    true
-}
-
-proof fn palidrome_sandwich(a: Seq<char>, b: Seq<char>)
-    requires
-        spec_is_palindrome(b),
-    ensures
-        spec_is_palindrome((a + b) + a.reverse()),
-{
-    assert(((a + b) + a.reverse()).reverse() == a + b + a.reverse());
-}
-
-proof fn palidrome_sandwich_reverse(a: Seq<char>, i: int)
-    requires
-        spec_is_palindrome(a),
-        0 <= i <= a.len() - i,
-    ensures
-        spec_is_palindrome(a.subrange(i, a.len() - i)),
-{
-    assert(a.subrange(i, a.len() - i) =~= a.subrange(i, a.len() - i).reverse());
-}
-
-fn reverse(string: &[char]) -> (result: Vec<char>)
-    ensures
-        result.len() == string.len(),
-        forall|i: int| 0 <= i < string.len() ==> result[i] == string[string.len() - 1 - i],
-{
-    let mut reversed = Vec::new();
-    let mut i = string.len();
-    while i > 0
-        invariant
-            0 <= i <= string.len(),
-            reversed.len() == string.len() - i,
-            forall|j: int| 0 <= j < reversed.len() ==> reversed[j] == string[string.len() - 1 - j],
-        decreases i,
-    {
-        i -= 1;
-        reversed.push(string[i].clone());
-    }
-    reversed
-}
-
-fn make_palindrome(string: Vec<char>) -> (result: Vec<char>)
-    ensures
-        result.len() >= string.len(),
-        result@.subrange(0, string@.len() as int) == string@,
-        spec_is_palindrome(result@),
-        forall|s: Seq<char>|
-            #![auto]
-            spec_is_palindrome(s) && s.len() >= string.len() as int && s.subrange(
-                0,
-                string@.len() as int,
-            ) == string@ ==> result@.len() <= s.len(),
-{
-    let len = string.len();
-    let mut beginning_of_suffix = 0;
-
-    while beginning_of_suffix < len && !is_palindrome(
-        slice_subrange(string.as_slice(), beginning_of_suffix, len),
-    )
-        invariant
-            len == string.len(),
-            0 <= beginning_of_suffix <= len,
-            forall|bos: int|
-                #![auto]
-                0 <= bos < beginning_of_suffix ==> !spec_is_palindrome(
-                    string@.subrange(bos, len as int),
-                ),
-        decreases len - beginning_of_suffix,
-    {
-        beginning_of_suffix += 1;
-    }
-
-    if !(beginning_of_suffix < len) {
-        assert(string@.subrange(len as int, len as int) =~= Seq::<char>::empty());
-    }
-    let mut ret = string.clone();
-    let mut app = reverse(slice_subrange(&string, 0, beginning_of_suffix));
-    ret.append(&mut app);
-
-    assert(ret@ == (string@.subrange(0, beginning_of_suffix as int) + string@.subrange(
-        beginning_of_suffix as int,
-        len as int,
-    )) + string@.subrange(0, beginning_of_suffix as int).reverse());
-    proof {
-        palidrome_sandwich(
-            string@.subrange(0, beginning_of_suffix as int),
-            string@.subrange(beginning_of_suffix as int, len as int),
-        );
-    }
-    assert forall|s: Seq<char>|
-        #![auto]
-        spec_is_palindrome(s) && s.len() >= len as int && s.subrange(0, string@.len() as int)
-            == string@ implies ret@.len() <= s.len() by {
-        if (ret@.len() > s.len()) {
-            palidrome_sandwich_reverse(s, s.len() - len);
-            assert(s.subrange(s.len() - len, len as int) == s.subrange(
-                0,
-                string@.len() as int,
-            ).subrange(s.len() - len, len as int));
-            // contradicts with the instantialization of (0 <= bos < beginning_of_suffix ==> !spec_is_palindrome(string@.subrange(bos, len as int)))
-            // by taking bos = s.len() - len
-        }
-    }
-    ret
+    result
 }
 
 } // verus!
+fn main() {}
+
 /*
 ### VERUS END
 */
-pub fn main() {
-    assert_eq!(
-        make_palindrome(vec!['c', 'a', 't']),
-        vec!['c', 'a', 't', 'a', 'c']
-    );
-    assert_eq!(
-        make_palindrome(vec!['c', 'a', 't', 'a']),
-        vec!['c', 'a', 't', 'a', 'c']
-    );
-    assert_eq!(make_palindrome(vec![]), vec![]);
-    assert_eq!(make_palindrome(vec!['x']), vec!['x']);
-    assert_eq!(
-        make_palindrome(vec!['x', 'y', 'z']),
-        vec!['x', 'y', 'z', 'y', 'x']
-    );
-    assert_eq!(make_palindrome(vec!['x', 'y', 'x']), vec!['x', 'y', 'x']);
-    assert_eq!(
-        make_palindrome(vec!['j', 'e', 'r', 'r', 'y']),
-        vec!['j', 'e', 'r', 'r', 'y', 'r', 'r', 'e', 'j']
-    );
-    println!("All tests passed!");
-}
 
 /*
 ### PROMPT
+from typing import List, Tuple
 
 
-def is_palindrome(string: str) -> bool:
-    """ Test if given string is a palindrome """
-    return string == string[::-1]
-
-
-def make_palindrome(string: str) -> str:
-    """ Find the shortest palindrome that begins with a supplied string.
-    Algorithm idea is simple:
-    - Find the longest postfix of supplied string that is a palindrome.
-    - Append to the end of the string reverse of a string prefix that comes before the palindromic suffix.
-    >>> make_palindrome('')
-    ''
-    >>> make_palindrome('cat')
-    'catac'
-    >>> make_palindrome('cata')
-    'catac'
+def rolling_max(numbers: List[int]) -> List[int]:
+    """ From a given list of integers, generate a list of rolling maximum element found until given moment
+    in the sequence.
+    >>> rolling_max([1, 2, 3, 2, 3, 4, 2])
+    [1, 2, 3, 3, 3, 4, 4]
     """
 
 */
 
 /*
 ### ENTRY POINT
-make_palindrome
+rolling_max
 */
 
 /*
 ### CANONICAL SOLUTION
-    if not string:
-        return ''
+    running_max = None
+    result = []
 
-    beginning_of_suffix = 0
+    for n in numbers:
+        if running_max is None:
+            running_max = n
+        else:
+            running_max = max(running_max, n)
 
-    while not is_palindrome(string[beginning_of_suffix:]):
-        beginning_of_suffix += 1
+        result.append(running_max)
 
-    return string + string[:beginning_of_suffix][::-1]
+    return result
 
 */
 
@@ -221,10 +98,9 @@ METADATA = {
 
 
 def check(candidate):
-    assert candidate('') == ''
-    assert candidate('x') == 'x'
-    assert candidate('xyz') == 'xyzyx'
-    assert candidate('xyx') == 'xyx'
-    assert candidate('jerry') == 'jerryrrej'
+    assert candidate([]) == []
+    assert candidate([1, 2, 3, 4]) == [1, 2, 3, 4]
+    assert candidate([4, 3, 2, 1]) == [4, 4, 4, 4]
+    assert candidate([3, 2, 3, 100, 3]) == [3, 3, 3, 100, 100]
 
 */

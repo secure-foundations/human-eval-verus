@@ -107,10 +107,10 @@ proof fn lemma_how_to_update_running_sum(s: Seq<int>, i: int)
     requires
         0 <= i < s.len(),
     ensures
-        sum(s.take(i + 1)) == sum(s.take(i)) + s[i],
+        sum(s[..i + 1]) == sum(s[..i]) + s[i],
 {
-    let q1 = s.take(i);
-    let q2 = s.take(i + 1);
+    let q1 = s[..i];
+    let q2 = s[..i + 1];
     assert(q2.last() == s[i]);
     assert(q2.drop_last() == q1);
 }
@@ -321,8 +321,8 @@ fn compute_mean_of_i32s(numbers: &[i32]) -> (result: i32)
     let numbers_len: usize = numbers.len();
     for i in 0..numbers_len
         invariant
-            quotient == sum(nums.take(i as int)) / numbers_len as int,
-            remainder == sum(nums.take(i as int)) % numbers_len as int,
+            quotient == sum(nums[..i]) / numbers_len as int,
+            remainder == sum(nums[..i]) % numbers_len as int,
             numbers_len == numbers.len(),
             nums == numbers@.map(|_index, n: i32| n as int),
     {
@@ -345,12 +345,12 @@ fn compute_mean_of_i32s(numbers: &[i32]) -> (result: i32)
         proof {
             lemma_how_to_update_running_sum(nums, i as int);
             lemma_sum_ratio_bound(
-                nums.take(i + 1),
+                nums[..i + 1],
                 numbers_len as int,
                 i32::MIN as int,
                 i32::MAX as int,
             );
-            lemma_how_to_add_then_divide(sum(nums.take(i as int)), n as int, numbers_len as int);
+            lemma_how_to_add_then_divide(sum(nums[..i]), n as int, numbers_len as int);
         }
 
         let (q, r) = divide_i32_by_usize(n, numbers_len);
@@ -369,7 +369,7 @@ fn compute_mean_of_i32s(numbers: &[i32]) -> (result: i32)
             quotient += q;
         }
     }
-    assert(nums == nums.take(nums.len() as int));
+    assert(nums == nums[..nums.len()]);
     quotient
 }
 
@@ -436,8 +436,8 @@ pub fn mean_absolute_deviation(numbers: &[i32]) -> (result: u32)
     let numbers_len: usize = numbers.len();
     for i in 0..numbers_len
         invariant
-            quotient == sum(deviations.take(i as int)) / numbers_len as int,
-            remainder == sum(deviations.take(i as int)) % numbers_len as int,
+            quotient == sum(deviations[..i]) / numbers_len as int,
+            remainder == sum(deviations[..i]) % numbers_len as int,
             numbers_len == numbers.len(),
             numbers_mean == mean(numbers@.map(|_index, n: i32| n as int)),
             deviations == numbers@.map(|_index, n: i32| n as int).map(
@@ -463,13 +463,13 @@ pub fn mean_absolute_deviation(numbers: &[i32]) -> (result: u32)
         proof {
             lemma_how_to_update_running_sum(deviations, i as int);
             lemma_sum_ratio_bound(
-                deviations.take(i + 1),
+                deviations[..i + 1],
                 numbers_len as int,
                 u32::MIN as int,
                 u32::MAX as int,
             );
             lemma_how_to_add_then_divide(
-                sum(deviations.take(i as int)),
+                sum(deviations[..i]),
                 n as int,
                 numbers_len as int,
             );
@@ -492,7 +492,7 @@ pub fn mean_absolute_deviation(numbers: &[i32]) -> (result: u32)
             quotient += q;
         }
     }
-    assert(deviations == deviations.take(deviations.len() as int));
+    assert(deviations == deviations[..deviations.len()]);
     quotient
 }
 

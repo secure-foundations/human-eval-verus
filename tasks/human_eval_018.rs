@@ -16,9 +16,9 @@ pub closed spec fn how_many_times(string: Seq<char>, substring: Seq<char>) -> na
     if (string.len() == 0) {
         0
     } else if substring.is_prefix_of(string) {
-        1 + how_many_times(string.skip(1), substring)
+        1 + how_many_times(string[1..], substring)
     } else {
-        how_many_times(string.skip(1), substring)
+        how_many_times(string[1..], substring)
     }
 }
 
@@ -28,20 +28,20 @@ proof fn lemma_step_subrange(substring: Seq<char>, string: Seq<char>)
         substring.len() > 0,
         string.len() >= substring.len(),
     ensures
-        (substring[0] == string.subrange(0, substring.len() as int)[0] && (substring.skip(1)
-            =~= string.skip(1).subrange(0, substring.skip(1).len() as int))) ==> (substring
-            =~= string.subrange(0, substring.len() as int)),
+        (substring[0] == string[..substring.len()][0] && (substring[1..]
+            =~= string[1..][..substring[1..].len()])) ==> (substring
+            =~= string[..substring.len()]),
     decreases substring.len(),
 {
-    if (substring[0] == string.subrange(0, substring.len() as int)[0] && (substring.skip(1)
-        =~= string.skip(1).subrange(0, substring.skip(1).len() as int))) {
+    if (substring[0] == string[..substring.len()][0] && (substring[1..]
+        =~= string[1..][..substring[1..].len()])) {
         assert forall|i: int| 0 <= i < substring.len() implies #[trigger] substring[i]
-            == string.subrange(0, substring.len() as int)[i] by {
+            == string[..substring.len()][i] by {
             if i == 0 {
             } else {
                 assert(forall|j: int|
-                    (0 <= #[trigger] (j + 0) < substring.len() - 1) ==> substring.skip(1)[j]
-                        == string.skip(1).subrange(0, substring.skip(1).len() as int)[j]);
+                    (0 <= #[trigger] (j + 0) < substring.len() - 1) ==> substring[1..][j]
+                        == string[1..][..substring[1..].len()][j]);
                 assert(0 <= #[trigger] (i - 1 + 0) < substring.len() - 1);
             }
         }
@@ -63,8 +63,8 @@ fn is_prefix(substring: Vec<char>, string: Vec<char>) -> (b: bool)
         invariant
             0 <= current_substring.len() <= current_string.len(),
             substring.len() <= string.len(),
-            (substring@ =~= string@.subrange(0, substring@.len() as int)) == (current_substring@
-                =~= current_string@.subrange(0, current_substring@.len() as int)),
+            (substring@ =~= string@[..substring@.len()]) == (current_substring@
+                =~= current_string@[..current_substring@.len()]),
         decreases current_substring.len(),
     {
         if (current_substring[0] != current_string[0]) {
@@ -75,12 +75,9 @@ fn is_prefix(substring: Vec<char>, string: Vec<char>) -> (b: bool)
 
         let substring_first = current_substring.remove(0);
         let string_first = current_string.remove(0);
-        assert((old_substring@ =~= old_string@.subrange(0, old_substring@.len() as int)) <== (
-        old_substring@[0] == old_string@.subrange(0, old_substring@.len() as int)[0] && (
-        old_substring@.skip(1) =~= old_string@.skip(1).subrange(
-            0,
-            old_substring@.skip(1).len() as int,
-        )))) by { lemma_step_subrange(old_substring@, old_string@) };
+        assert((old_substring@ =~= old_string@[..old_substring@.len()]) <== (
+        old_substring@[0] == old_string@[..old_substring@.len()][0] && (
+        old_substring@[1..] =~= old_string@[1..][..old_substring@[1..].len()]))) by { lemma_step_subrange(old_substring@, old_string@) };
     }
     return true;
 }
@@ -94,7 +91,7 @@ proof fn lemma_how_many_times_zero(string: Seq<char>, substring: Seq<char>)
 {
     if string.len() == 0 {
     } else {
-        lemma_how_many_times_zero(string.skip(1), substring)
+        lemma_how_many_times_zero(string[1..], substring)
     }
 }
 

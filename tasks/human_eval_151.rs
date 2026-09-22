@@ -56,7 +56,7 @@ fn double_the_difference(v: Vec<i32>) -> (out: Option<u64>)
         invariant
             sq@ as int == 1,
             s@ as int == double_the_difference_spec(
-                v@.take(i as int).map_values(|x: i32| x as int),
+                v@[..i].map_values(|x: i32| x as int),
             ),
     {
         if (v[i] > 0 && v[i] % 2 == 1) {
@@ -65,17 +65,17 @@ fn double_the_difference(v: Vec<i32>) -> (out: Option<u64>)
             s = s.add_checked(&stemp);
         }
         assert(s@ as int == double_the_difference_spec(
-            v@.take((i + 1) as int).map_values(|x: i32| x as int),
+            v@[..i + 1].map_values(|x: i32| x as int),
         )) by {
-            let prev_slice = v@.take(i as int).map_values(|x: i32| x as int);
-            let cur_slice = v@.take((i + 1) as int).map_values(|x: i32| x as int);
+            let prev_slice = v@[..i].map_values(|x: i32| x as int);
+            let cur_slice = v@[..i + 1].map_values(|x: i32| x as int);
             let singleton_vi_seq = seq![cur_slice[i as int]];
             assert(prev_slice + singleton_vi_seq =~= cur_slice);
             lemma_double_the_difference_spec_concat(prev_slice, singleton_vi_seq);
             reveal_with_fuel(double_the_difference_spec, 2);
         };
     };
-    assert(v@.take(v.len() as int) == v@);
+    assert(v@[..v.len()] == v@);
     return s.to_option();
 }
 

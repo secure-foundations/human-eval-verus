@@ -38,20 +38,20 @@ fn vowels_count(s: &str) -> (ret: u32)
     let mut i = 0;
     for i in 0..len
         invariant
-            ctr == vowels(s@.subrange(0, i as int)).len(),
+            ctr == vowels(s@[..i]).len(),
             ctr <= i <= s@.len() == len <= u32::MAX,
             ctr < u32::MAX || is_vowel(s@.last()),
     {
         let c = s.get_char(i);
         reveal_with_fuel(Seq::filter, 2);
-        assert(s@.subrange(0, i + 1 as int).drop_last() =~= s@.subrange(0, i as int));
+        assert(s@[..i + 1].drop_last() =~= s@[..i]);
         if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' || c == 'A' || c == 'E' || c
             == 'I' || c == 'O' || c == 'U') {
             ctr += 1;
         }
     }
     assert(ctr == vowels(s@).len()) by {
-        assert(s@.subrange(0, len as int) =~= s@);
+        assert(s@[..len] =~= s@);
     }
     let c = s.get_char(len - 1);
     if (c == 'y' || c == 'Y') {

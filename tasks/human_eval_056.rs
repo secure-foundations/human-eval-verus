@@ -43,23 +43,23 @@ fn correct_bracketing(brackets: &str) -> (ret: bool)
 
     while i < brackets.unicode_len()
         invariant
-            (stack_size as int, b) == spec_bracketing_helper(brackets@.subrange(0, i as int)),
+            (stack_size as int, b) == spec_bracketing_helper(brackets@[..i]),
             stack_size <= i <= brackets@.len() <= i32::MAX,
             stack_size >= -i >= -brackets@.len() >= i32::MIN,
         decreases brackets@.len() - i,
     {
         let c = brackets.get_char(i);
-        let ghost prev = spec_bracketing_helper(brackets@.subrange(0, i as int));
+        let ghost prev = spec_bracketing_helper(brackets@[..i]);
         if (c == '<') {
             stack_size += 1;
         } else if (c == '>') {
             b = b && stack_size > 0;
             stack_size -= 1;
         }
-        assert(brackets@.subrange(0, i + 1 as int).drop_last() =~= brackets@.subrange(0, i as int));
+        assert(brackets@[..i + 1].drop_last() =~= brackets@[..i]);
         i += 1;
     }
-    assert(brackets@ =~= brackets@.subrange(0, i as int));
+    assert(brackets@ =~= brackets@[..i]);
     b && stack_size == 0
 }
 

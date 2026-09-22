@@ -61,7 +61,7 @@ pub fn parse_nested_parens(s: &str) -> (res: Option<Vec<usize>>)
     let mut max_depth = 0;
     let mut all_depths = vec![];
 
-    assert(s@.skip(0) == s@);
+    assert(s@[0..] == s@);
     assert(all_depths@.map_values(|d| d as int) =~= Seq::<int>::empty());
 
     for i in 0..s_len
@@ -69,7 +69,7 @@ pub fn parse_nested_parens(s: &str) -> (res: Option<Vec<usize>>)
             i <= s_len == s@.len() <= usize::MAX,
             0 <= depth <= max_depth <= i,
             spec_nested_parens_helper(s@, 0, 0, seq![]) == spec_nested_parens_helper(
-                s@.skip(i as int),
+                s@[i..],
                 depth as int,
                 max_depth as int,
                 all_depths@.map_values(|d| d as int),
@@ -77,7 +77,7 @@ pub fn parse_nested_parens(s: &str) -> (res: Option<Vec<usize>>)
     {
         let c = s.get_char(i);  // Not the best performance-wise
 
-        assert(s@.skip(i as int).drop_first() == s@.skip(i + 1));
+        assert(s@[i..].drop_first() == s@[i + 1..]);
 
         if c == ' ' && depth == 0 && max_depth != 0 {
             // Push and map_values commute
@@ -100,7 +100,7 @@ pub fn parse_nested_parens(s: &str) -> (res: Option<Vec<usize>>)
         }
     }
 
-    assert(s@.skip(s_len as int).len() == 0);
+    assert(s@[s_len..].len() == 0);
 
     if depth != 0 {
         return None;

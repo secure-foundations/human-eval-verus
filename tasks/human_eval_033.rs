@@ -16,7 +16,7 @@ spec fn count<T>(s: Seq<T>, x: T) -> int
     if s.len() == 0 {
         0
     } else {
-        count(s.skip(1), x) + if s[0] == x {
+        count(s[1..], x) + if s[0] == x {
             1int
         } else {
             0int
@@ -52,12 +52,12 @@ proof fn lemma_update_effect_on_count<T>(s: Seq<T>, i: int, v: T, x: T)
         return;
     }
     if i == 0 {
-        assert(s.update(i, v) =~= seq![v] + s.skip(1));
-        assert(s.update(i, v).skip(1) =~= s.skip(1));
+        assert(s.update(i, v) =~= seq![v] + s[1..]);
+        assert(s.update(i, v)[1..] =~= s[1..]);
     } else {
-        assert(s.update(i, v) =~= seq![s[0]] + s.skip(1).update(i - 1, v));
-        assert(s.update(i, v).skip(1) =~= s.skip(1).update(i - 1, v));
-        lemma_update_effect_on_count(s.skip(1), i - 1, v, x);
+        assert(s.update(i, v) =~= seq![s[0]] + s[1..].update(i - 1, v));
+        assert(s.update(i, v)[1..] =~= s[1..].update(i - 1, v));
+        lemma_update_effect_on_count(s[1..], i - 1, v, x);
     }
 }
 

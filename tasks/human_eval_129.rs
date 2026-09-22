@@ -278,9 +278,9 @@ proof fn lemma_less_than_step_even<const N: usize>(
         )) implies (path_less_than(path + seq![extra_item], alternate_path_) || path + seq![
         extra_item,
     ] =~= alternate_path_) by {
-        if path_less_than(path, alternate_path_.subrange(0, path.len() as int)) {
+        if path_less_than(path, alternate_path_[..path.len()]) {
             // The following assertion was added to make the proof more stable:
-            assert(alternate_path_.subrange(0, path.len() as int).len() == path.len());
+            assert(alternate_path_[..path.len()].len() == path.len());
         } else {
             if (alternate_path_[path.len() as int] > extra_item) {
             } else {
@@ -336,10 +336,10 @@ proof fn lemma_less_than_step_odd<const N: usize>(
     ] =~= alternate_path_) by {
         assert(is_valid_path::<N>(
             grid@.map_values(|row: [u8; N]| row@.map_values(|item| item as int)),
-            alternate_path_.subrange(0, path.len() as int),
+            alternate_path_[..path.len()],
         ));
 
-        if path_less_than(path, alternate_path_.subrange(0, path.len() as int)) {
+        if path_less_than(path, alternate_path_[..path.len()]) {
         } else {
             let m = alternate_path_[(path.len() - 1) as int];
             let n = alternate_path_[(path.len() + 0) as int];
@@ -427,7 +427,7 @@ pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
             path.append(&mut next_item);
             proof {
                 lemma_less_than_step_even(
-                    path@.map_values(|j: u8| j as int).subrange(0, path.len() - 1),
+                    path@.map_values(|j: u8| j as int)[..path.len() - 1],
                     grid,
                     1 as int,
                 );
@@ -438,7 +438,7 @@ pub fn min_path<const N: usize>(grid: [[u8; N]; N], k: u8) -> (path: Vec<u8>)
 
             proof {
                 lemma_less_than_step_odd(
-                    path@.map_values(|j: u8| j as int).subrange(0, path.len() - 1),
+                    path@.map_values(|j: u8| j as int)[..path.len() - 1],
                     grid,
                     smallest as int,
                     ones_coordinates.0 as int,
