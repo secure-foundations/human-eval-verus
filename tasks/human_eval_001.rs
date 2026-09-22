@@ -42,7 +42,7 @@ pub open spec fn is_balanced_group(input: Seq<char>) -> bool {
     &&& input.len() > 0
     &&& nesting_level(input) == 0
     &&& forall|i| 0 <= i < input.len() ==> is_paren_char(#[trigger] input[i])
-    &&& forall|i| 0 < i < input.len() ==> nesting_level(#[trigger] input.take(i)) > 0
+    &&& forall|i: int| 0 < i < input.len() ==> nesting_level(#[trigger] input[..i]) > 0
 }
 
 /// A sequence of characters is a sequence of balanced groups of
@@ -50,7 +50,7 @@ pub open spec fn is_balanced_group(input: Seq<char>) -> bool {
 /// a non-negative nesting level.
 pub open spec fn is_sequence_of_balanced_groups(input: Seq<char>) -> bool {
     &&& nesting_level(input) == 0
-    &&& forall|i| 0 < i < input.len() ==> nesting_level(#[trigger] input.take(i)) >= 0
+    &&& forall|i: int| 0 < i < input.len() ==> nesting_level(#[trigger] input[..i]) >= 0
 }
 
 pub open spec fn vecs_to_seqs<T>(s: Seq<Vec<T>>) -> Seq<Seq<T>> {
@@ -61,15 +61,15 @@ pub open spec fn remove_nonparens(s: Seq<char>) -> Seq<char> {
     s.filter(|c| is_paren_char(c))
 }
 
-/// This proof specifies the relationship between `remove_nonparens(s.take(pos + 1))`
-/// and `remove_nonparens(s.take(pos))`.
+/// This proof specifies the relationship between `remove_nonparens(s[..pos + 1])`
+/// and `remove_nonparens(s[..pos])`.
 proof fn lemma_remove_nonparens_maintained_by_push(s: Seq<char>, pos: int)
     requires
         0 <= pos < s.len(),
     ensures
         ({
-            let s1 = remove_nonparens(s.take(pos as int));
-            let s2 = remove_nonparens(s.take((pos + 1) as int));
+            let s1 = remove_nonparens(s[..pos]);
+            let s2 = remove_nonparens(s[..pos + 1]);
             if is_paren_char(s[pos]) {
                 s2 == s1.push(s[pos])
             } else {
@@ -79,7 +79,7 @@ proof fn lemma_remove_nonparens_maintained_by_push(s: Seq<char>, pos: int)
     decreases pos,
 {
     reveal(Seq::filter);
-    assert(s.take((pos + 1) as int).drop_last() =~= s.take(pos as int));
+    assert(s[..pos + 1].drop_last() =~= s[..pos]);
     if pos != 0 {
         lemma_remove_nonparens_maintained_by_push(s, pos - 1);
     }
@@ -112,7 +112,7 @@ fn separate_paren_groups(input: &Vec<char>) -> (groups: Vec<Vec<char>>)
     let ghost mut ghost_groups: Seq<Seq<char>> = Seq::empty();
     proof {
         assert(vecs_to_seqs(groups@) =~= ghost_groups);
-        assert(remove_nonparens(input@.take(0)) =~= Seq::<char>::empty());
+        assert(remove_nonparens(input@[..0]) =~= Seq::<char>::empty());
         assert(ghost_groups.flatten() + current_group@ =~= Seq::<char>::empty());
     }
     let mut current_nesting_level: usize = 0;
@@ -120,17 +120,17 @@ fn separate_paren_groups(input: &Vec<char>) -> (groups: Vec<Vec<char>>)
         invariant
             input_len == input.len(),
             ghost_groups == vecs_to_seqs(groups@),
-            ghost_groups.flatten() + current_group@ == remove_nonparens(input@.take(pos as int)),
+            ghost_groups.flatten() + current_group@ == remove_nonparens(input@[..pos]),
             forall|i: int|
                 #![trigger groups[i]]
                 0 <= i < ghost_groups.len() ==> is_balanced_group(ghost_groups[i]),
-            current_nesting_level == nesting_level(input@.take(pos as int)),
+            current_nesting_level == nesting_level(input@[..pos]),
             current_nesting_level == nesting_level(current_group@),
             current_nesting_level <= pos,  // this bound lets us prove that increments can't overflow a `usize`
             current_group@.len() == 0 <==> current_nesting_level == 0,
             forall|i| 0 <= i < current_group@.len() ==> is_paren_char(#[trigger] current_group@[i]),
-            forall|i|
-                0 < i < current_group@.len() ==> nesting_level(#[trigger] current_group@.take(i))
+            forall|i: int|
+                0 < i < current_group@.len() ==> nesting_level(#[trigger] current_group@[..i])
                     > 0,
             is_sequence_of_balanced_groups(input@),
     {
@@ -138,8 +138,8 @@ fn separate_paren_groups(input: &Vec<char>) -> (groups: Vec<Vec<char>>)
         let ghost prev_groups = ghost_groups;
         let c = input[pos];
         proof {
-            assert(input@.take((pos + 1) as int) == input@.take(pos as int).push(c));
-            assert(input@.take((pos + 1) as int).drop_last() == input@.take(pos as int));
+            assert(input@[..pos + 1] == input@[..pos].push(c));
+            assert(input@[..pos + 1].drop_last() == input@[..pos]);
             lemma_remove_nonparens_maintained_by_push(input@, pos as int);
         }
         if c == '(' {
@@ -148,20 +148,16 @@ fn separate_paren_groups(input: &Vec<char>) -> (groups: Vec<Vec<char>>)
             assert(current_group@.drop_last() == prev_group);
             assert(ghost_groups.flatten() + current_group@ =~= (ghost_groups.flatten()
                 + prev_group).push('('));
-            assert(forall|i|
-                0 < i < prev_group.len() ==> #[trigger] current_group@.take(i) == prev_group.take(
-                    i,
-                ));
+            assert(forall|i: int|
+                0 < i < prev_group.len() ==> #[trigger] current_group@[..i] == prev_group[..i]);
         } else if c == ')' {
             current_nesting_level = current_nesting_level - 1;
             current_group.push(')');
             assert(current_group@.drop_last() == prev_group);
             assert(ghost_groups.flatten() + current_group@ =~= (ghost_groups.flatten()
                 + prev_group).push(')'));
-            assert(forall|i|
-                0 < i < prev_group.len() ==> #[trigger] current_group@.take(i) == prev_group.take(
-                    i,
-                ));
+            assert(forall|i: int|
+                0 < i < prev_group.len() ==> #[trigger] current_group@[..i] == prev_group[..i]);
             // We can tell whether the current group we just assembled is balanced
             // by checking whether `current_nesting_level` is zero. In that case,
             // it's done and we can add it to `groups`.
@@ -180,12 +176,12 @@ fn separate_paren_groups(input: &Vec<char>) -> (groups: Vec<Vec<char>>)
                 groups.push(current_group);
                 current_group = Vec::<char>::new();
                 assert(ghost_groups.flatten() + current_group@ =~= remove_nonparens(
-                    input@.take((pos + 1) as int),
+                    input@[..pos + 1],
                 ));
             }
         }
     }
-    assert(input@.take(input_len as int) =~= input@);
+    assert(input@[..input_len] =~= input@);
     assert(ghost_groups.flatten() + current_group@ == ghost_groups.flatten());
     groups
 }

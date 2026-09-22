@@ -36,19 +36,16 @@ fn count_frequency(elements: &Vec<i64>, key: i64) -> (frequency: usize)
         invariant
             0 <= index <= elements.len(),
             0 <= counter <= index,
-            count_frequency_spec(elements@.subrange(0, index as int), key) == counter,
+            count_frequency_spec(elements@[..index], key) == counter,
         decreases elements.len() - index,
     {
         if (elements[index] == key) {
             counter += 1;
         }
         index += 1;
-        assert(elements@.subrange(0, index - 1 as int) == elements@.subrange(
-            0,
-            index as int,
-        ).drop_last());
+        assert(elements@[..index - 1] == elements@[..index].drop_last());
     }
-    assert(elements@ == elements@.subrange(0, elements_length as int));
+    assert(elements@ == elements@[..elements_length]);
     counter
 }
 
@@ -60,24 +57,24 @@ fn remove_duplicates(numbers: &Vec<i64>) -> (unique_numbers: Vec<i64>)
 {
     let ghost numbers_length = numbers.len();
     let mut unique_numbers: Vec<i64> = Vec::new();
-    assert(numbers@.take(0int).filter(|x: i64| count_frequency_spec(numbers@, x) == 1) == Seq::<
+    assert(numbers@[..0int].filter(|x: i64| count_frequency_spec(numbers@, x) == 1) == Seq::<
         i64,
     >::empty());
 
     for index in 0..numbers.len()
         invariant
             0 <= index <= numbers.len(),
-            unique_numbers@ == numbers@.take(index as int).filter(
+            unique_numbers@ == numbers@[..index].filter(
                 |x: i64| count_frequency_spec(numbers@, x) == 1,
             ),
     {
         if count_frequency(&numbers, numbers[index]) == 1 {
             unique_numbers.push(numbers[index]);
         }
-        assert(numbers@.take((index + 1) as int).drop_last() == numbers@.take(index as int));
+        assert(numbers@[..index + 1].drop_last() == numbers@[..index]);
         reveal(Seq::filter);
     }
-    assert(numbers@ == numbers@.take(numbers_length as int));
+    assert(numbers@ == numbers@[..numbers_length]);
     unique_numbers
 }
 

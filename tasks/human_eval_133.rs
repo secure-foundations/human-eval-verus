@@ -49,7 +49,7 @@ fn sum_squares(v: Vec<i32>) -> (out: Option<u64>)
     for i in 0..v.len()
         invariant
             sq@ as int == 1,
-            s@ as int == sum_squares_spec(v@.take(i as int).map_values(|x: i32| x as int)),
+            s@ as int == sum_squares_spec(v@[..i].map_values(|x: i32| x as int)),
     {
         let vi: u64 = if v[i] >= 0 {
             v[i] as u64
@@ -61,19 +61,19 @@ fn sum_squares(v: Vec<i32>) -> (out: Option<u64>)
         let stemp = stemp.mul_value(vi);
         s = s.add_checked(&stemp);
 
-        assert(s@ as int == sum_squares_spec(v@.take((i + 1) as int).map_values(|x: i32| x as int)))
+        assert(s@ as int == sum_squares_spec(v@[..i + 1].map_values(|x: i32| x as int)))
             by {
             broadcast use lemma_mul_cancels_negatives;
 
-            let prev_slice = v@.take(i as int).map_values(|x: i32| x as int);
-            let cur_slice = v@.take((i + 1) as int).map_values(|x: i32| x as int);
+            let prev_slice = v@[..i].map_values(|x: i32| x as int);
+            let cur_slice = v@[..i + 1].map_values(|x: i32| x as int);
             let singleton_vi_seq = seq![cur_slice[i as int]];
             assert(prev_slice + singleton_vi_seq =~= cur_slice);
             lemma_sum_squares_spec_concat(prev_slice, singleton_vi_seq);
             reveal_with_fuel(sum_squares_spec, 2);
         }
     };
-    assert(v@.take(v.len() as int) == v@);
+    assert(v@[..v.len()] == v@);
     return s.to_option();
 }
 

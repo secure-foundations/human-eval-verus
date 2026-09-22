@@ -16,19 +16,19 @@ pub open spec fn spec_parse_music(s: Seq<char>) -> Option<Seq<int>>
     if s.len() == 0 {
         Some(seq![])
     } else if s.len() >= 2 && s[0] == 'o' && s[1] == '|' {
-        if let Some(rest) = spec_parse_music(s.skip(2)) {
+        if let Some(rest) = spec_parse_music(s[2..]) {
             Some(seq![2] + rest)
         } else {
             None
         }
     } else if s.len() >= 2 && s[0] == '.' && s[1] == '|' {
-        if let Some(rest) = spec_parse_music(s.skip(2)) {
+        if let Some(rest) = spec_parse_music(s[2..]) {
             Some(seq![1] + rest)
         } else {
             None
         }
     } else if s.len() != 0 && s[0] == 'o' {
-        if let Some(rest) = spec_parse_music(s.skip(1)) {
+        if let Some(rest) = spec_parse_music(s[1..]) {
             Some(seq![4] + rest)
         } else {
             None
@@ -50,26 +50,26 @@ pub fn parse_music(s: &str) -> (res: Option<Vec<u8>>)
     let mut beats = vec![];
     let mut i = 0;
 
-    assert(s@.skip(0) == s@);
+    assert(s@[0..] == s@);
 
     while i < s_len
         invariant
             s_len == s@.len(),
             0 <= i <= s_len,
             spec_parse_music(s@) matches Some(all_beats) ==> {
-                &&& spec_parse_music(s@.skip(i as int)) matches Some(rest)
+                &&& spec_parse_music(s@[i..]) matches Some(rest)
                 &&& all_beats =~= beats@.map_values(|b| b as int) + rest
             },
-            spec_parse_music(s@.skip(i as int)) matches Some(rest) ==> spec_parse_music(
+            spec_parse_music(s@[i..]) matches Some(rest) ==> spec_parse_music(
                 s@,
             ) matches Some(all_beats),
-            spec_parse_music(s@.skip(i as int)) is None ==> spec_parse_music(s@) is None,
+            spec_parse_music(s@[i..]) is None ==> spec_parse_music(s@) is None,
         decreases s_len - i,
     {
         let c = s.get_char(i);
 
-        assert(s@.skip(i as int).skip(1) == s@.skip(i + 1));
-        assert(s@.len() >= i + 2 ==> s@.skip(i as int).skip(2) == s@.skip(i + 2));
+        assert(s@[i..][1..] == s@[i + 1..]);
+        assert(s@.len() >= i + 2 ==> s@[i..][2..] == s@[i + 2..]);
 
         if c == ' ' {
             i += 1;

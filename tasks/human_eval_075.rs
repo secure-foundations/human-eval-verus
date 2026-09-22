@@ -33,6 +33,7 @@ fn prime(p: u32) -> (ret: bool)
     true
 }
 
+#[verifier::spinoff_prover]
 fn checked_mul_thrice(x: u32, y: u32, z: u32) -> (ret: Option<u32>)
     ensures
         ret.is_some() ==> ret.unwrap() == x * y * z,

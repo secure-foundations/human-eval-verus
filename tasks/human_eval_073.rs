@@ -10,7 +10,7 @@ use vstd::prelude::*;
 verus! {
 
 spec fn zip_halves<T>(v: Seq<T>) -> (ret: Seq<(T, T)>) {
-    v.take((v.len() / 2) as int).zip_with(v.skip(((v.len() + 1) / 2) as int).reverse())
+    v[..v.len() / 2].zip_with(v[(v.len() + 1) / 2..].reverse())
 }
 
 spec fn diff(s: Seq<(i32, i32)>) -> int {
@@ -37,7 +37,7 @@ fn smallest_change(v: Vec<i32>) -> (change: usize)
         invariant
             ans <= i <= v@.len() / 2 < usize::MAX,
             ans == diff(zipped),
-            zipped =~= zip_halves(v@).take(i as int),
+            zipped =~= zip_halves(v@)[..i],
     {
         proof {
             let ghost pair = (v[i as int], v[v.len() - i - 1]);
@@ -49,7 +49,7 @@ fn smallest_change(v: Vec<i32>) -> (change: usize)
             ans += 1;
         }
     }
-    assert(zip_halves(v@).take((v@.len() / 2) as int) =~= zip_halves(v@));
+    assert(zip_halves(v@)[..v@.len() / 2] =~= zip_halves(v@));
     ans
 }
 

@@ -33,6 +33,7 @@ proof fn sum_bound(numbers: Seq<u32>)
 
 /// Implementation.  We leave the consequences of an intermediate
 /// overflow during the product calculation underspecified.
+#[verifier::spinoff_prover]
 fn sum_product(numbers: Vec<u32>) -> (result: (u64, Option<u32>))
     requires
         numbers.len() < u32::MAX,
@@ -42,7 +43,7 @@ fn sum_product(numbers: Vec<u32>) -> (result: (u64, Option<u32>))
             None =>   // Computing the product overflowed at some point
             exists|i|
                 #![auto]
-                0 <= i < numbers.len() && product(numbers@.subrange(0, i)) * numbers[i] as int
+                0 <= i < numbers.len() && product(numbers@[..i]) * numbers[i] as int
                     > u32::MAX,
             Some(v) => v == product(numbers@),
         },
@@ -52,25 +53,25 @@ fn sum_product(numbers: Vec<u32>) -> (result: (u64, Option<u32>))
     for index in 0..numbers.len()
         invariant
             numbers.len() < u32::MAX,
-            sum_value == sum(numbers@.take(index as int)),
-            prod_value matches Some(v) ==> v == product(numbers@.take(index as int)),
+            sum_value == sum(numbers@[..index]),
+            prod_value matches Some(v) ==> v == product(numbers@[..index]),
             match prod_value {
                 None =>   // Computing the product overflowed at some point
                 exists|i|
                     #![auto]
-                    0 <= i < index && product(numbers@.subrange(0, i)) * numbers[i] as int
+                    0 <= i < index && product(numbers@[..i]) * numbers[i] as int
                         > u32::MAX,
-                Some(v) => v == product(numbers@.take(index as int)),
+                Some(v) => v == product(numbers@[..index]),
             },
             index <= numbers.len(),
             index >= 0,
     {
         proof {
-            sum_bound(numbers@.take(index as int));
+            sum_bound(numbers@[..index]);
             assert(sum_value <= index * u32::MAX);
         }
-        assert(numbers@.take(index as int + 1).drop_last() =~= numbers@.take(index as int));
-        assert(numbers[index as int] == numbers@.take(index as int + 1).last());
+        assert(numbers@[..index + 1].drop_last() =~= numbers@[..index]);
+        assert(numbers[index as int] == numbers@[..index + 1].last());
         sum_value += numbers[index] as u64;
         prod_value =
         match prod_value {
@@ -78,7 +79,7 @@ fn sum_product(numbers: Vec<u32>) -> (result: (u64, Option<u32>))
             None => None,
         };
     }
-    assert(numbers@.take(numbers@.len() as int) =~= numbers@);
+    assert(numbers@[..numbers@.len()] =~= numbers@);
     (sum_value, prod_value)
 }
 

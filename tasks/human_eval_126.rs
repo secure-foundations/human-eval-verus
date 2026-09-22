@@ -43,10 +43,10 @@ proof fn lemma_3eq_row_count_eq_greater_3(v: Seq<int>, i: int)
     // decompose the array v into 3 parts: vp3 (until the 3 equal ) v3 (three equal) vsf (the final part)
     // after proving count on v3 is 3, it follows that for all is 3 or greater (with concatenations lemmas)
     let val = v[i as int];
-    let vsn = v.subrange(0, (i + 1) as int);
-    let vsf = v.subrange((i + 1) as int, v.len() as int);
-    let v3 = v.subrange((i - 2) as int, (i + 1) as int);
-    let vp3 = v.subrange(0, (i - 2) as int);
+    let vsn = v[..i + 1];
+    let vsf = v[i + 1..];
+    let v3 = v[i - 2..i + 1];
+    let vp3 = v[..i - 2];
     assert(count(v3, val as int) == 3) by {
         reveal_with_fuel(count, 4);
     };
@@ -85,7 +85,7 @@ proof fn lemma_first_part_count_0(v: Seq<int>, w: int)
 {
     if (v.len() == 0) {
     } else {
-        let tail = v.subrange(1 as int, v.len() as int);
+        let tail = v[1..];
         let head = seq![v[0]];
         assert(v == head + tail);
         lemma_not_contains_eq_count_0(tail, w);
@@ -101,7 +101,7 @@ proof fn lemma_last_part_count_0(v: Seq<int>, w: int)
 {
     if (v.len() == 0) {
     } else {
-        let tail = v.subrange(1 as int, v.len() as int);
+        let tail = v[1..];
         let head = seq![v[0]];
         assert(v == head + tail);
         lemma_not_contains_eq_count_0(tail, w);

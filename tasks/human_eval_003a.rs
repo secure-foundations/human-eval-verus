@@ -16,7 +16,7 @@ pub open spec fn sum(s: Seq<int>) -> int
     if s.len() == 0 {
         0
     } else {
-        s[0] + sum(s.skip(1))
+        s[0] + sum(s[1..])
     }
 }
 
@@ -27,7 +27,7 @@ pub open spec fn sum_other_way(s: Seq<int>) -> int
     if s.len() == 0 {
         0
     } else {
-        s[s.len() - 1] + sum_other_way(s.take(s.len() - 1))
+        s[s.len() - 1] + sum_other_way(s[..s.len() - 1])
     }
 }
 
@@ -37,46 +37,46 @@ proof fn lemma_sum_equals_sum_other_way(s: Seq<int>)
     decreases s.len(),
 {
     if s.len() == 1 {
-        assert(sum(s.skip(1)) == 0);
-        assert(sum_other_way(s.take(s.len() - 1)) == 0);
+        assert(sum(s[1..]) == 0);
+        assert(sum_other_way(s[..s.len() - 1]) == 0);
     } else if s.len() > 1 {
-        let ss = s.skip(1);
+        let ss = s[1..];
         lemma_sum_equals_sum_other_way(ss);
-        assert(sum_other_way(ss) == ss[ss.len() - 1] + sum_other_way(ss.take(ss.len() - 1)));
-        lemma_sum_equals_sum_other_way(ss.take(ss.len() - 1));
-        assert(ss.take(ss.len() - 1) == s.take(s.len() - 1).skip(1));
-        lemma_sum_equals_sum_other_way(s.take(s.len() - 1));
+        assert(sum_other_way(ss) == ss[ss.len() - 1] + sum_other_way(ss[..ss.len() - 1]));
+        lemma_sum_equals_sum_other_way(ss[..ss.len() - 1]);
+        assert(ss[..ss.len() - 1] == s[..s.len() - 1][1..]);
+        lemma_sum_equals_sum_other_way(s[..s.len() - 1]);
     }
 }
 
 fn below_zero(operations: Vec<i32>) -> (result: bool)
     requires
         forall|i: int|
-            0 <= i <= operations@.len() ==> sum(operations@.take(i).map(|_idx, j: i32| j as int))
+            0 <= i <= operations@.len() ==> sum((#[trigger] operations@[..i]).map(|_idx, j: i32| j as int))
                 <= i32::MAX,
     ensures
         result <==> exists|i: int|
-            0 <= i <= operations@.len() && sum(operations@.take(i).map(|_idx, j: i32| j as int))
+            0 <= i <= operations@.len() && sum((#[trigger] operations@[..i]).map(|_idx, j: i32| j as int))
                 < 0,
 {
     let mut s = 0i32;
     for k in 0..operations.len()
         invariant
-            s == sum(operations@.take(k as int).map(|_idx, j: i32| j as int)),
+            s == sum(operations@[..k].map(|_idx, j: i32| j as int)),
             forall|i: int|
                 0 <= i <= operations@.len() ==> sum(
-                    operations@.take(i).map(|_idx, j: i32| j as int),
+                    (#[trigger] operations@[..i]).map(|_idx, j: i32| j as int),
                 ) <= i32::MAX,
             forall|i: int|
-                0 <= i <= k ==> sum(operations@.take(i).map(|_idx, j: i32| j as int)) >= 0,
+                0 <= i <= k ==> sum((#[trigger] operations@[..i]).map(|_idx, j: i32| j as int)) >= 0,
     {
         assert(s + operations@[k as int] == sum(
-            operations@.take(k + 1).map(|_idx, j: i32| j as int),
+            operations@[..k + 1].map(|_idx, j: i32| j as int),
         )) by {
-            let q1 = operations@.take(k as int).map(|_idx, j: i32| j as int);
-            let q2 = operations@.take(k + 1).map(|_idx, j: i32| j as int);
+            let q1 = operations@[..k].map(|_idx, j: i32| j as int);
+            let q2 = operations@[..k + 1].map(|_idx, j: i32| j as int);
             assert(q2[q2.len() - 1] == operations@[k as int] as int);
-            assert(q2.take(q2.len() - 1) == q1);
+            assert(q2[..q2.len() - 1] == q1);
             lemma_sum_equals_sum_other_way(q1);
             lemma_sum_equals_sum_other_way(q2);
         }
