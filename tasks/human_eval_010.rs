@@ -134,11 +134,20 @@ fn make_palindrome(string: Vec<char>) -> (result: Vec<char>)
 ### VERUS END
 */
 pub fn main() {
-    assert_eq!(make_palindrome(vec!['c', 'a', 't']), vec!['c', 'a', 't', 'a', 'c']);
-    assert_eq!(make_palindrome(vec!['c', 'a', 't', 'a']), vec!['c', 'a', 't', 'a', 'c']);
+    assert_eq!(
+        make_palindrome(vec!['c', 'a', 't']),
+        vec!['c', 'a', 't', 'a', 'c']
+    );
+    assert_eq!(
+        make_palindrome(vec!['c', 'a', 't', 'a']),
+        vec!['c', 'a', 't', 'a', 'c']
+    );
     assert_eq!(make_palindrome(vec![]), vec![]);
     assert_eq!(make_palindrome(vec!['x']), vec!['x']);
-    assert_eq!(make_palindrome(vec!['x', 'y', 'z']), vec!['x', 'y', 'z', 'y', 'x']);
+    assert_eq!(
+        make_palindrome(vec!['x', 'y', 'z']),
+        vec!['x', 'y', 'z', 'y', 'x']
+    );
     assert_eq!(make_palindrome(vec!['x', 'y', 'x']), vec!['x', 'y', 'x']);
     assert_eq!(
         make_palindrome(vec!['j', 'e', 'r', 'r', 'y']),

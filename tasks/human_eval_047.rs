@@ -8,7 +8,7 @@ HumanEval/47
 */
 use vstd::arithmetic::div_mod::*;
 use vstd::calc;
-use vstd::multiset::{Multiset, lemma_update_same};
+use vstd::multiset::{lemma_update_same, Multiset};
 use vstd::prelude::*;
 use vstd::seq_lib::{lemma_multiset_commutative, to_multiset_remove};
 

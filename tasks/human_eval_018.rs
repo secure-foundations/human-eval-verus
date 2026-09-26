@@ -139,7 +139,10 @@ fn main() {
     // 0
     println!("{:?}", how_many_times_impl(vec!['a', 'a', 'a'], vec!['a']));
     // 3
-    println!("{:?}", how_many_times_impl(vec!['a', 'a', 'a', 'a'], vec!['a', 'a']));
+    println!(
+        "{:?}",
+        how_many_times_impl(vec!['a', 'a', 'a', 'a'], vec!['a', 'a'])
+    );
     // 3
 }
 
