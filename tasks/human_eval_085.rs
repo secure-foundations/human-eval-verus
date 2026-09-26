@@ -25,7 +25,7 @@ pub open spec fn add_odd_evens(lst: Seq<u32>) -> int
     if (lst.len() < 2) {
         0
     } else {
-        odd_or_zero(lst[1]) + add_odd_evens(lst.skip(2))
+        odd_or_zero(lst[1]) + add_odd_evens(lst[2..])
     }
 }
 
@@ -42,22 +42,22 @@ fn add(lst: Vec<u32>) -> (sum: u64)
     let mut sum: u64 = 0;
     let mut i = 1;
     proof {
-        assert(lst@ =~= lst@.skip(0));
+        assert(lst@ =~= lst@[0..]);
     }
     while (i < lst.len())
         invariant
             1 <= i <= lst.len() + 1,
             0 < lst.len() < u32::MAX,
             sum <= (u32::MAX) * i,
-            sum == add_odd_evens(lst@) - add_odd_evens(lst@.skip(i - 1 as int)),
+            sum == add_odd_evens(lst@) - add_odd_evens(lst@[i - 1..]),
         decreases lst.len() + 2 - i,
     {
         if (lst[i] % 2 == 0) {
             sum += lst[i] as u64;
         }
         proof {
-            // proves: add_odd_evens(lst@.skip(i - 1)) == odd_or_zero(lst[i]) + add_odd_evens(lst@.skip(i + 1))
-            assert(lst@.skip(i - 1 as int).skip(2) =~= lst@.skip(i + 1 as int));
+            // proves: add_odd_evens(lst@[i - 1..]) == odd_or_zero(lst[i]) + add_odd_evens(lst@[i + 1..])
+            assert(lst@[i - 1..][2..] =~= lst@[i + 1..]);
         }
         i += 2;
     }

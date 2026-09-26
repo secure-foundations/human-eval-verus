@@ -39,27 +39,24 @@ fn digit_sum(text: &[char]) -> (sum: u128)
     while index < text.len()
         invariant
             0 <= index <= text.len(),
-            count_uppercase_sum(text@.subrange(0, index as int)) == sum,
+            count_uppercase_sum(text@[..index]) == sum,
             forall|j: int|
                 0 <= j <= index ==> (u64::MIN * index <= (count_uppercase_sum(
-                    #[trigger] text@.subrange(0, j),
+                    #[trigger] text@[..j],
                 )) <= u64::MAX * index),
             u64::MIN * index <= sum <= u64::MAX * index,
         decreases text@.len() - index,
     {
         if (text[index] >= 'A' && text[index] <= 'Z') {
-            assert(text@.subrange(0, index as int) =~= text@.subrange(
-                0,
-                (index + 1) as int,
-            ).drop_last());
+            assert(text@[..index] =~= text@[..index + 1].drop_last());
             sum = sum + text[index] as u128;
         }
         index += 1;
-        assert(text@.subrange(0, index - 1 as int) == text@.subrange(0, index as int).drop_last());
+        assert(text@[..index - 1] == text@[..index].drop_last());
 
     }
     assert(index == text@.len());
-    assert(text@ == text@.subrange(0, index as int));
+    assert(text@ == text@[..index]);
     sum
 }
 

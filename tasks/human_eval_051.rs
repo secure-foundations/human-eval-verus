@@ -32,19 +32,19 @@ fn remove_vowels(str: &[char]) -> (str_without_vowels: Vec<char>)
 {
     let ghost str_length = str.len();
     let mut str_without_vowels: Vec<char> = Vec::new();
-    assert(str@.take(0int).filter(|x: char| !is_vowel_spec(x)) == Seq::<char>::empty());
+    assert(str@[..0int].filter(|x: char| !is_vowel_spec(x)) == Seq::<char>::empty());
 
     for index in 0..str.len()
         invariant
-            str_without_vowels@ == str@.take(index as int).filter(|x: char| !is_vowel_spec(x)),
+            str_without_vowels@ == str@[..index].filter(|x: char| !is_vowel_spec(x)),
     {
         if !is_vowel(str[index]) {
             str_without_vowels.push(str[index]);
         }
-        assert(str@.take((index + 1) as int).drop_last() == str@.take(index as int));
+        assert(str@[..index + 1].drop_last() == str@[..index]);
         reveal(Seq::filter);
     }
-    assert(str@ == str@.take(str_length as int));
+    assert(str@ == str@[..str_length]);
     str_without_vowels
 }
 

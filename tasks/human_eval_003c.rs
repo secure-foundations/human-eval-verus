@@ -16,13 +16,13 @@ pub open spec fn sum(s: Seq<int>) -> int
     if s.len() == 0 {
         0
     } else {
-        s[0] + sum(s.skip(1))
+        s[0] + sum(s[1..])
     }
 }
 
 // This function is also part of the specification
 pub open spec fn first_n(s: Seq<i32>, n: int) -> Seq<int> {
-    s.take(n).map(|_idx, j: i32| j as int)
+    s[..n].map(|_idx, j: i32| j as int)
 }
 
 // This function is used by the proof
@@ -42,14 +42,14 @@ proof fn lemma_sum_equals_sum_other_way(s: Seq<int>)
     decreases s.len(),
 {
     if s.len() == 1 {
-        assert(sum(s.skip(1)) == 0);
+        assert(sum(s[1..]) == 0);
         assert(sum_other_way(s.drop_last()) == 0);
     } else if s.len() > 1 {
-        let ss = s.skip(1);
+        let ss = s[1..];
         lemma_sum_equals_sum_other_way(ss);
         assert(sum_other_way(ss) == ss.last() + sum_other_way(ss.drop_last()));
         lemma_sum_equals_sum_other_way(ss.drop_last());
-        assert(ss.drop_last() == s.drop_last().skip(1));
+        assert(ss.drop_last() == s.drop_last()[1..]);
         lemma_sum_equals_sum_other_way(s.drop_last());
     }
 }

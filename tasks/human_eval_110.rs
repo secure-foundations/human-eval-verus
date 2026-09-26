@@ -282,18 +282,18 @@ proof fn swap_influence_on_counts(lst1: Seq<int>, lst2: Seq<int>, i: int, j: int
 {
     reveal_with_fuel(count_odd, 2);
 
-    let lst1_beg = lst1.subrange(0, i);
+    let lst1_beg = lst1[..i];
     let lst1_med = seq![lst1[i]];
-    let lst1_end = lst1.subrange(i + 1, lst1.len() as int);
+    let lst1_end = lst1[i + 1..];
     assert(lst1 == lst1_beg + lst1_med + lst1_end);
     count_odd_concat(lst1_beg, lst1_med);
     count_odd_concat(lst1_beg + lst1_med, lst1_end);
     count_even_concat(lst1_beg, lst1_med);
     count_even_concat(lst1_beg + lst1_med, lst1_end);
 
-    let lst2_beg = lst2.subrange(0, j);
+    let lst2_beg = lst2[..j];
     let lst2_med = seq![lst2[j]];
-    let lst2_end = lst2.subrange(j + 1, lst2.len() as int);
+    let lst2_end = lst2[j + 1..];
     assert(lst2 == lst2_beg + lst2_med + lst2_end);
     count_odd_concat(lst2_beg, lst2_med);
     count_odd_concat(lst2_beg + lst2_med, lst2_end);
@@ -301,36 +301,30 @@ proof fn swap_influence_on_counts(lst1: Seq<int>, lst2: Seq<int>, i: int, j: int
     count_even_concat(lst2_beg + lst2_med, lst2_end);
 
     let lswap_0 = swap(lst1, lst2, (i, j)).0;
-    let lswap_0_beg = swap(lst1, lst2, (i, j)).0.subrange(0, i);
+    let lswap_0_beg = swap(lst1, lst2, (i, j)).0[..i];
     let lswap_0_med = seq![swap(lst1, lst2, (i, j)).0[i]];
-    let lswap_0_end = swap(lst1, lst2, (i, j)).0.subrange(i + 1, lst1.len() as int);
+    let lswap_0_end = swap(lst1, lst2, (i, j)).0[i + 1..lst1.len()];
     assert(lswap_0 == lswap_0_beg + lswap_0_med + lswap_0_end);
     count_odd_concat(lswap_0_beg, lswap_0_med);
     count_odd_concat(lswap_0_beg + lswap_0_med, lswap_0_end);
     count_even_concat(lswap_0_beg, lswap_0_med);
     count_even_concat(lswap_0_beg + lswap_0_med, lswap_0_end);
-    assert(swap(lst1, lst2, (i, j)).0.subrange(0, i) == lst1.subrange(0, i));
+    assert(swap(lst1, lst2, (i, j)).0[..i] == lst1[..i]);
     assert(seq![swap(lst1, lst2, (i, j)).0[i]] == seq![lst2[j]]);
-    assert(swap(lst1, lst2, (i, j)).0.subrange(i + 1, lst1.len() as int) == lst1.subrange(
-        i + 1,
-        lst1.len() as int,
-    ));
+    assert(swap(lst1, lst2, (i, j)).0[i + 1..lst1.len()] == lst1[i + 1..]);
 
     let lswap_1 = swap(lst1, lst2, (i, j)).1;
-    let lswap_1_beg = swap(lst1, lst2, (i, j)).1.subrange(0, j);
+    let lswap_1_beg = swap(lst1, lst2, (i, j)).1[..j];
     let lswap_1_med = seq![swap(lst1, lst2, (i, j)).1[j]];
-    let lswap_1_end = swap(lst1, lst2, (i, j)).1.subrange(j + 1, lst2.len() as int);
+    let lswap_1_end = swap(lst1, lst2, (i, j)).1[j + 1..lst2.len()];
     assert(lswap_1 == lswap_1_beg + lswap_1_med + lswap_1_end);
     count_odd_concat(lswap_1_beg, lswap_1_med);
     count_odd_concat(lswap_1_beg + lswap_1_med, lswap_1_end);
     count_even_concat(lswap_1_beg, lswap_1_med);
     count_even_concat(lswap_1_beg + lswap_1_med, lswap_1_end);
-    assert(swap(lst1, lst2, (i, j)).1.subrange(0, j) == lst2.subrange(0, j));
+    assert(swap(lst1, lst2, (i, j)).1[..j] == lst2[..j]);
     assert(seq![swap(lst1, lst2, (i, j)).1[j]] == seq![lst1[i]]);
-    assert(swap(lst1, lst2, (i, j)).1.subrange(j + 1, lst2.len() as int) == lst2.subrange(
-        j + 1,
-        lst2.len() as int,
-    ));
+    assert(swap(lst1, lst2, (i, j)).1[j + 1..lst2.len()] == lst2[j + 1..]);
 
 }
 
@@ -408,15 +402,15 @@ fn exchange(lst1: Vec<i32>, lst2: Vec<i32>) -> (out: bool)
     for i in 0..lst1.len()
         invariant
             odd_count <= i <= lst1.len() <= i32::MAX,
-            odd_count == count_odd(lst1@.subrange(0, i as int).map_values(|x| x as int)),
+            odd_count == count_odd(lst1@[..i].map_values(|x| x as int)),
     {
         if lst1[i] % 2 != 0 {
             odd_count += 1;
         }
         proof {
             reveal_with_fuel(count_odd, 2);
-            let l_p_1 = lst1@.subrange(0, (i + 1) as int).map_values(|x| x as int);
-            let l_1 = lst1@.subrange(0, i as int).map_values(|x| x as int);
+            let l_p_1 = lst1@[..i + 1].map_values(|x| x as int);
+            let l_1 = lst1@[..i].map_values(|x| x as int);
             let last = seq![lst1[i as int] as int];
             assert(l_p_1 == l_1 + last);
             count_odd_concat(l_1, last);
@@ -426,15 +420,15 @@ fn exchange(lst1: Vec<i32>, lst2: Vec<i32>) -> (out: bool)
     for i in 0..lst2.len()
         invariant
             even_count <= i <= lst2.len() <= i32::MAX,
-            even_count == count_even(lst2@.subrange(0, i as int).map_values(|x| x as int)),
+            even_count == count_even(lst2@[..i].map_values(|x| x as int)),
     {
         if lst2[i] % 2 == 0 {
             even_count += 1;
         }
         proof {
             reveal_with_fuel(count_even, 2);
-            let l_p_1 = lst2@.subrange(0, (i + 1) as int).map_values(|x| x as int);
-            let l_1 = lst2@.subrange(0, i as int).map_values(|x| x as int);
+            let l_p_1 = lst2@[..i + 1].map_values(|x| x as int);
+            let l_1 = lst2@[..i].map_values(|x| x as int);
             let last = seq![lst2[i as int] as int];
             assert(l_p_1 == l_1 + last);
             count_even_concat(l_1, last);
@@ -442,8 +436,8 @@ fn exchange(lst1: Vec<i32>, lst2: Vec<i32>) -> (out: bool)
     }
 
     proof {
-        assert(lst2@.subrange(0, lst2.len() as int) == lst2@);
-        assert(lst1@.subrange(0, lst1.len() as int) == lst1@);
+        assert(lst2@[..lst2.len()] == lst2@);
+        assert(lst1@[..lst1.len()] == lst1@);
     }
 
     if even_count >= odd_count {

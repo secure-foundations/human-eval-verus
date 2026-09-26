@@ -94,7 +94,7 @@ pub open spec fn spec_find_largest_prime_so_far(s: Seq<nat>, i: nat) -> nat
     if i <= 0 {
         0
     } else {
-        let first_i = s.take(i as int);  // first i numbers
+        let first_i = s[..i];  // first i numbers
 
         // largest of the first i-i numbers in the list
         let largest_in_front = spec_find_largest_prime_so_far(s, (i - 1) as nat);

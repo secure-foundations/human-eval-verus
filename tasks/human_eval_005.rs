@@ -69,7 +69,7 @@ proof fn intersperse_quantified_is_spec(numbers: Seq<u64>, delimiter: u64, inter
         intersperse_quantified_is_spec(
             numbers.drop_last(),
             delimiter,
-            interspersed.take(interspersed.len() - 2),
+            interspersed[..interspersed.len() - 2],
         );
         intersperse_spec_len(numbers, delimiter);
         assert_seqs_equal!(is == interspersed, i => {
@@ -111,7 +111,7 @@ pub fn intersperse(numbers: Vec<u64>, delimiter: u64) -> (result: Vec<u64>)
             result.push(numbers[index]);
             result.push(delimiter);
             index += 1;
-            //assert(numbers@.subrange(0, index as int).drop_last() =~= numbers@.subrange(0, index as int - 1));
+            //assert(numbers@[..index].drop_last() =~= numbers@[..index - 1]);
         }
         result.push(numbers[numbers.len() - 1]);
         proof {

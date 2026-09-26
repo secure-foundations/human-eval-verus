@@ -89,19 +89,16 @@ fn special_filter(numbers: &Vec<i32>) -> (count: usize)
         invariant
             0 <= index <= numbers.len(),
             0 <= counter <= index,
-            counter == special_filter_spec(numbers@.subrange(0, index as int)),
+            counter == special_filter_spec(numbers@[..index]),
         decreases numbers.len() - index,
     {
         if (is_valid_element(numbers[index])) {
             counter += 1;
         }
         index += 1;
-        assert(numbers@.subrange(0, index - 1 as int) == numbers@.subrange(
-            0,
-            index as int,
-        ).drop_last());
+        assert(numbers@[..index - 1] == numbers@[..index].drop_last());
     }
-    assert(numbers@ == numbers@.subrange(0, numbers_length as int));
+    assert(numbers@ == numbers@[..numbers_length]);
     counter
 }
 

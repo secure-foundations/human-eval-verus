@@ -12,7 +12,7 @@ verus! {
 /// Specification for taking the sum of the elements with at most
 /// two digits from the first k elements of a sequence
 pub open spec fn add_elements_spec(arr: Seq<i32>, k: nat) -> int {
-    arr.take(k as int).fold_left(
+    arr[..k].fold_left(
         0,
         |acc: int, x: i32|
             {
@@ -40,7 +40,7 @@ fn add_elements(arr: Vec<i32>, k: u32) -> (result: i64)
             i32::MIN * i <= res <= i32::MAX * i,
             res == add_elements_spec(arr@, i as nat),
     {
-        assert(arr@.take(i as int + 1).drop_last() =~= arr@.take(i as int));
+        assert(arr@[..i + 1].drop_last() =~= arr@[..i]);
         if -99 <= arr[i as usize] && arr[i as usize] <= 99 {
             res += arr[i as usize] as i64;
         }
