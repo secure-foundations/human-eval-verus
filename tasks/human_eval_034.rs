@@ -16,9 +16,9 @@ proof fn swap_preserves_multiset_helper(s: Seq<i32>, i: int, j: int)
     requires
         0 <= i < j < s.len(),
     ensures
-        (s[..j + 1]).to_multiset() =~= s[..i].to_multiset().add(
-            s[i + 1..j].to_multiset(),
-        ).insert(s.index(j)).insert(s.index(i)),
+        (s[..j + 1]).to_multiset() =~= s[..i].to_multiset().add(s[i + 1..j].to_multiset()).insert(
+            s.index(j),
+        ).insert(s.index(i)),
 {
     let fst = s[..i];
     let snd = s[i + 1..j];

@@ -130,8 +130,7 @@ fn separate_paren_groups(input: &Vec<char>) -> (groups: Vec<Vec<char>>)
             current_group@.len() == 0 <==> current_nesting_level == 0,
             forall|i| 0 <= i < current_group@.len() ==> is_paren_char(#[trigger] current_group@[i]),
             forall|i: int|
-                0 < i < current_group@.len() ==> nesting_level(#[trigger] current_group@[..i])
-                    > 0,
+                0 < i < current_group@.len() ==> nesting_level(#[trigger] current_group@[..i]) > 0,
             is_sequence_of_balanced_groups(input@),
     {
         let ghost prev_group = current_group@;

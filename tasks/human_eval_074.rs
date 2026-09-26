@@ -42,10 +42,7 @@ fn checked_total_str_len(lst: &Vec<&str>) -> (ret: Option<usize>)
     let mut sum: usize = 0;
     for i in 0..lst.len()
         invariant
-            sum == lst@[..i].map_values(|s: &str| s@.len()).fold_left(
-                0,
-                |x: int, y| x + y,
-            ),
+            sum == lst@[..i].map_values(|s: &str| s@.len()).fold_left(0, |x: int, y| x + y),
             spec_sum(lens) == sum,
             lens =~= lst@.map_values(|s: &str| s@.len())[..i],
             lens =~= lst@[..i].map_values(|s: &str| s@.len()),
@@ -68,7 +65,9 @@ fn checked_total_str_len(lst: &Vec<&str>) -> (ret: Option<usize>)
             }
         }
         sum = sum.checked_add(x)?;
-        assert(lst@[..i + 1].map_values(|s: &str| s@.len()).drop_last() == lst@[..i].map_values(|s: &str| s@.len()));
+        assert(lst@[..i + 1].map_values(|s: &str| s@.len()).drop_last() == lst@[..i].map_values(
+            |s: &str| s@.len(),
+        ));
     }
     assert(lst@ == lst@[..lst.len()]);
     return Some(sum);

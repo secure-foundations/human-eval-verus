@@ -21,8 +21,7 @@ spec fn sum(s: Seq<i64>) -> int
 
 fn below_zero(operation: &[i64]) -> (r: bool)
     ensures
-        r <==> !(forall|i: int|
-            0 <= i <= operation.len() ==> sum(#[trigger] operation@[..i]) >= 0),
+        r <==> !(forall|i: int| 0 <= i <= operation.len() ==> sum(#[trigger] operation@[..i]) >= 0),
 {
     // We use i128 since it allows us to have sufficiently large numbers without overflowing.
     let mut s = 0i128;

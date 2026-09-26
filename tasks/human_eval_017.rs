@@ -60,9 +60,9 @@ pub fn parse_music(s: &str) -> (res: Option<Vec<u8>>)
                 &&& spec_parse_music(s@[i..]) matches Some(rest)
                 &&& all_beats =~= beats@.map_values(|b| b as int) + rest
             },
-            spec_parse_music(s@[i..]) matches Some(rest) ==> spec_parse_music(
-                s@,
-            ) matches Some(all_beats),
+            spec_parse_music(s@[i..]) matches Some(rest) ==> spec_parse_music(s@) matches Some(
+                all_beats,
+            ),
             spec_parse_music(s@[i..]) is None ==> spec_parse_music(s@) is None,
         decreases s_len - i,
     {

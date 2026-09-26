@@ -35,8 +35,7 @@ fn all_prefixes(s: &Vec<u8>) -> (prefixes: Vec<Vec<u8>>)
     {
         let ghost pre_prefix = prefix;
         prefix.push(s[i]);
-        assert(pre_prefix@[..i] == pre_prefix@ && prefix@[..i]
-            == pre_prefix@[..i]);
+        assert(pre_prefix@[..i] == pre_prefix@ && prefix@[..i] == pre_prefix@[..i]);
         assert(prefix@[..i] == s@[..i]);
         assert(prefix[i as int] == s@[..i + 1].index(i as int));
 
@@ -44,9 +43,7 @@ fn all_prefixes(s: &Vec<u8>) -> (prefixes: Vec<Vec<u8>>)
             #![auto]
             0 <= j < i + 1 ==> prefix@.index(j) == prefix@[..i + 1].index(j));
         assert(prefix@ == prefix@[..i + 1]);
-        assert(forall|j: int|
-            #![auto]
-            0 <= j < i + 1 ==> prefix@.index(j) == s@[..i + 1].index(j));
+        assert(forall|j: int| #![auto] 0 <= j < i + 1 ==> prefix@.index(j) == s@[..i + 1].index(j));
         assert(prefix@ == s@[..i + 1]);
 
         prefixes.push(prefix.clone());

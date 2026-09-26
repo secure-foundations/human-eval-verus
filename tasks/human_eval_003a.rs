@@ -52,12 +52,14 @@ proof fn lemma_sum_equals_sum_other_way(s: Seq<int>)
 fn below_zero(operations: Vec<i32>) -> (result: bool)
     requires
         forall|i: int|
-            0 <= i <= operations@.len() ==> sum((#[trigger] operations@[..i]).map(|_idx, j: i32| j as int))
-                <= i32::MAX,
+            0 <= i <= operations@.len() ==> sum(
+                (#[trigger] operations@[..i]).map(|_idx, j: i32| j as int),
+            ) <= i32::MAX,
     ensures
         result <==> exists|i: int|
-            0 <= i <= operations@.len() && sum((#[trigger] operations@[..i]).map(|_idx, j: i32| j as int))
-                < 0,
+            0 <= i <= operations@.len() && sum(
+                (#[trigger] operations@[..i]).map(|_idx, j: i32| j as int),
+            ) < 0,
 {
     let mut s = 0i32;
     for k in 0..operations.len()
@@ -68,11 +70,11 @@ fn below_zero(operations: Vec<i32>) -> (result: bool)
                     (#[trigger] operations@[..i]).map(|_idx, j: i32| j as int),
                 ) <= i32::MAX,
             forall|i: int|
-                0 <= i <= k ==> sum((#[trigger] operations@[..i]).map(|_idx, j: i32| j as int)) >= 0,
+                0 <= i <= k ==> sum((#[trigger] operations@[..i]).map(|_idx, j: i32| j as int))
+                    >= 0,
     {
-        assert(s + operations@[k as int] == sum(
-            operations@[..k + 1].map(|_idx, j: i32| j as int),
-        )) by {
+        assert(s + operations@[k as int] == sum(operations@[..k + 1].map(|_idx, j: i32| j as int)))
+            by {
             let q1 = operations@[..k].map(|_idx, j: i32| j as int);
             let q2 = operations@[..k + 1].map(|_idx, j: i32| j as int);
             assert(q2[q2.len() - 1] == operations@[k as int] as int);

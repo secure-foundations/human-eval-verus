@@ -468,11 +468,7 @@ pub fn mean_absolute_deviation(numbers: &[i32]) -> (result: u32)
                 u32::MIN as int,
                 u32::MAX as int,
             );
-            lemma_how_to_add_then_divide(
-                sum(deviations[..i]),
-                n as int,
-                numbers_len as int,
-            );
+            lemma_how_to_add_then_divide(sum(deviations[..i]), n as int, numbers_len as int);
         }
 
         let q: u32 = (n as usize / numbers_len) as u32;

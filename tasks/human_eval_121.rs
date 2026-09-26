@@ -63,10 +63,7 @@ fn solution(lst: Vec<i32>) -> (out: i64)
             0 <= idx <= lst.len(),
             acc <= (idx as int) * (i32::MAX as int),
             acc >= (idx as int) * (i32::MIN as int),
-            acc as int == odd_even_pos_sum_from(
-                lst@[..idx].map_values(|x| x as int),
-                0,
-            ),
+            acc as int == odd_even_pos_sum_from(lst@[..idx].map_values(|x| x as int), 0),
         decreases lst.len() - idx,
     {
         if idx % 2 == 0 && lst[idx] % 2 != 0 {

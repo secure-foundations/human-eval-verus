@@ -43,8 +43,7 @@ fn sum_product(numbers: Vec<u32>) -> (result: (u64, Option<u32>))
             None =>   // Computing the product overflowed at some point
             exists|i|
                 #![auto]
-                0 <= i < numbers.len() && product(numbers@[..i]) * numbers[i] as int
-                    > u32::MAX,
+                0 <= i < numbers.len() && product(numbers@[..i]) * numbers[i] as int > u32::MAX,
             Some(v) => v == product(numbers@),
         },
 {
@@ -59,8 +58,7 @@ fn sum_product(numbers: Vec<u32>) -> (result: (u64, Option<u32>))
                 None =>   // Computing the product overflowed at some point
                 exists|i|
                     #![auto]
-                    0 <= i < index && product(numbers@[..i]) * numbers[i] as int
-                        > u32::MAX,
+                    0 <= i < index && product(numbers@[..i]) * numbers[i] as int > u32::MAX,
                 Some(v) => v == product(numbers@[..index]),
             },
             index <= numbers.len(),

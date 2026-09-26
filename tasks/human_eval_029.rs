@@ -20,13 +20,9 @@ fn filter_by_prefix(strings: Vec<Vec<char>>, prefix: Vec<char>) -> (res: Vec<Vec
     let mut result = Vec::new();
     for i in 0..strings.len()
         invariant
-            to_seq(result) == to_seq(strings)[..i].filter(
-                |s: Seq<char>| prefix@.is_prefix_of(s),
-            ),
+            to_seq(result) == to_seq(strings)[..i].filter(|s: Seq<char>| prefix@.is_prefix_of(s)),
     {
-        assert(to_seq(strings)[..i + 1] == to_seq(strings)[..i].push(
-            strings[i as int]@,
-        ));
+        assert(to_seq(strings)[..i + 1] == to_seq(strings)[..i].push(strings[i as int]@));
         proof {
             to_seq(strings)[..i].lemma_filter_push(
                 strings[i as int]@,
@@ -38,8 +34,14 @@ fn filter_by_prefix(strings: Vec<Vec<char>>, prefix: Vec<char>) -> (res: Vec<Vec
             assert(strings[i as int]@[..0] == prefix@[..0]);
             for j in 0..prefix.len()
                 invariant
-                    prefix@.is_prefix_of(strings[i as int]@) ==> to_seq(strings)[..i + 1].filter(|s: Seq<char>| prefix@.is_prefix_of(s)) == to_seq(strings)[..i].filter(|s: Seq<char>| prefix@.is_prefix_of(s)).push(strings[i as int]@),
-                    !prefix@.is_prefix_of(strings[i as int]@) ==> to_seq(strings)[..i + 1].filter(|s: Seq<char>| prefix@.is_prefix_of(s)) == to_seq(strings)[..i].filter(|s: Seq<char>| prefix@.is_prefix_of(s)),
+                    prefix@.is_prefix_of(strings[i as int]@) ==> to_seq(strings)[..i + 1].filter(
+                        |s: Seq<char>| prefix@.is_prefix_of(s),
+                    ) == to_seq(strings)[..i].filter(|s: Seq<char>| prefix@.is_prefix_of(s)).push(
+                        strings[i as int]@,
+                    ),
+                    !prefix@.is_prefix_of(strings[i as int]@) ==> to_seq(strings)[..i + 1].filter(
+                        |s: Seq<char>| prefix@.is_prefix_of(s),
+                    ) == to_seq(strings)[..i].filter(|s: Seq<char>| prefix@.is_prefix_of(s)),
                     0 <= i < strings.len(),
                     strings[i as int].len() >= prefix.len(),
                     flag == (strings[i as int]@[..j] == prefix@[..j]),
@@ -51,8 +53,7 @@ fn filter_by_prefix(strings: Vec<Vec<char>>, prefix: Vec<char>) -> (res: Vec<Vec
                     if (flag) {
                         assert(strings[i as int]@[..j + 1] == prefix@[..j + 1]);
                     } else {
-                        assert(strings[i as int]@[..j]
-                            == strings[i as int]@[..j + 1][..j]);
+                        assert(strings[i as int]@[..j] == strings[i as int]@[..j + 1][..j]);
                         assert(prefix@[..j] == prefix@[..j + 1][..j]);
                     }
                 }

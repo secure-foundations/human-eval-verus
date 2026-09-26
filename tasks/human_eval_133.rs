@@ -61,8 +61,7 @@ fn sum_squares(v: Vec<i32>) -> (out: Option<u64>)
         let stemp = stemp.mul_value(vi);
         s = s.add_checked(&stemp);
 
-        assert(s@ as int == sum_squares_spec(v@[..i + 1].map_values(|x: i32| x as int)))
-            by {
+        assert(s@ as int == sum_squares_spec(v@[..i + 1].map_values(|x: i32| x as int))) by {
             broadcast use lemma_mul_cancels_negatives;
 
             let prev_slice = v@[..i].map_values(|x: i32| x as int);

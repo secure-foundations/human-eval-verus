@@ -55,18 +55,15 @@ fn double_the_difference(v: Vec<i32>) -> (out: Option<u64>)
     for i in 0..v.len()
         invariant
             sq@ as int == 1,
-            s@ as int == double_the_difference_spec(
-                v@[..i].map_values(|x: i32| x as int),
-            ),
+            s@ as int == double_the_difference_spec(v@[..i].map_values(|x: i32| x as int)),
     {
         if (v[i] > 0 && v[i] % 2 == 1) {
             let stemp = sq.mul_value(v[i] as u64);
             let stemp = stemp.mul_value(v[i] as u64);
             s = s.add_checked(&stemp);
         }
-        assert(s@ as int == double_the_difference_spec(
-            v@[..i + 1].map_values(|x: i32| x as int),
-        )) by {
+        assert(s@ as int == double_the_difference_spec(v@[..i + 1].map_values(|x: i32| x as int)))
+            by {
             let prev_slice = v@[..i].map_values(|x: i32| x as int);
             let cur_slice = v@[..i + 1].map_values(|x: i32| x as int);
             let singleton_vi_seq = seq![cur_slice[i as int]];

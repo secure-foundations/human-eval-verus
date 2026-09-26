@@ -82,8 +82,8 @@ fn make_palindrome(string: Vec<char>) -> (result: Vec<char>)
         spec_is_palindrome(result@),
         forall|s: Seq<char>|
             #![auto]
-            spec_is_palindrome(s) && s.len() >= string.len() && s[..string@.len()] == string@ ==>
-            result@.len() <= s.len(),
+            spec_is_palindrome(s) && s.len() >= string.len() && s[..string@.len()] == string@
+                ==> result@.len() <= s.len(),
 {
     let len = string.len();
     let mut beginning_of_suffix = 0;
@@ -113,15 +113,12 @@ fn make_palindrome(string: Vec<char>) -> (result: Vec<char>)
     assert(ret@ == (string@[..beginning_of_suffix] + string@[beginning_of_suffix..len])
         + string@[..beginning_of_suffix].reverse());
     proof {
-        palidrome_sandwich(
-            string@[..beginning_of_suffix],
-            string@[beginning_of_suffix..len],
-        );
+        palidrome_sandwich(string@[..beginning_of_suffix], string@[beginning_of_suffix..len]);
     }
     assert forall|s: Seq<char>|
         #![auto]
-        spec_is_palindrome(s) && s.len() >= len && s[..string@.len()]
-            == string@ implies ret@.len() <= s.len() by {
+        spec_is_palindrome(s) && s.len() >= len && s[..string@.len()] == string@ implies ret@.len()
+        <= s.len() by {
         if (ret@.len() > s.len()) {
             palidrome_sandwich_reverse(s, s.len() - len);
             assert(s[s.len() - len..len] == s[..string@.len()][s.len() - len..len]);
@@ -137,20 +134,11 @@ fn make_palindrome(string: Vec<char>) -> (result: Vec<char>)
 ### VERUS END
 */
 pub fn main() {
-    assert_eq!(
-        make_palindrome(vec!['c', 'a', 't']),
-        vec!['c', 'a', 't', 'a', 'c']
-    );
-    assert_eq!(
-        make_palindrome(vec!['c', 'a', 't', 'a']),
-        vec!['c', 'a', 't', 'a', 'c']
-    );
+    assert_eq!(make_palindrome(vec!['c', 'a', 't']), vec!['c', 'a', 't', 'a', 'c']);
+    assert_eq!(make_palindrome(vec!['c', 'a', 't', 'a']), vec!['c', 'a', 't', 'a', 'c']);
     assert_eq!(make_palindrome(vec![]), vec![]);
     assert_eq!(make_palindrome(vec!['x']), vec!['x']);
-    assert_eq!(
-        make_palindrome(vec!['x', 'y', 'z']),
-        vec!['x', 'y', 'z', 'y', 'x']
-    );
+    assert_eq!(make_palindrome(vec!['x', 'y', 'z']), vec!['x', 'y', 'z', 'y', 'x']);
     assert_eq!(make_palindrome(vec!['x', 'y', 'x']), vec!['x', 'y', 'x']);
     assert_eq!(
         make_palindrome(vec!['j', 'e', 'r', 'r', 'y']),

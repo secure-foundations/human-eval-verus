@@ -29,8 +29,7 @@ proof fn lemma_step_subrange(substring: Seq<char>, string: Seq<char>)
         string.len() >= substring.len(),
     ensures
         (substring[0] == string[..substring.len()][0] && (substring[1..]
-            =~= string[1..][..substring[1..].len()])) ==> (substring
-            =~= string[..substring.len()]),
+            =~= string[1..][..substring[1..].len()])) ==> (substring =~= string[..substring.len()]),
     decreases substring.len(),
 {
     if (substring[0] == string[..substring.len()][0] && (substring[1..]
@@ -75,9 +74,11 @@ fn is_prefix(substring: Vec<char>, string: Vec<char>) -> (b: bool)
 
         let substring_first = current_substring.remove(0);
         let string_first = current_string.remove(0);
-        assert((old_substring@ =~= old_string@[..old_substring@.len()]) <== (
-        old_substring@[0] == old_string@[..old_substring@.len()][0] && (
-        old_substring@[1..] =~= old_string@[1..][..old_substring@[1..].len()]))) by { lemma_step_subrange(old_substring@, old_string@) };
+        assert((old_substring@ =~= old_string@[..old_substring@.len()]) <== (old_substring@[0]
+            == old_string@[..old_substring@.len()][0] && (old_substring@[1..]
+            =~= old_string@[1..][..old_substring@[1..].len()]))) by {
+            lemma_step_subrange(old_substring@, old_string@)
+        };
     }
     return true;
 }
@@ -138,10 +139,7 @@ fn main() {
     // 0
     println!("{:?}", how_many_times_impl(vec!['a', 'a', 'a'], vec!['a']));
     // 3
-    println!(
-        "{:?}",
-        how_many_times_impl(vec!['a', 'a', 'a', 'a'], vec!['a', 'a'])
-    );
+    println!("{:?}", how_many_times_impl(vec!['a', 'a', 'a', 'a'], vec!['a', 'a']));
     // 3
 }
 

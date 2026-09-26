@@ -406,7 +406,8 @@ spec fn reduce_aux_relation(
     match compute {
         None => res matches EvalOnceResult::Overflow,
         Some(num) => res matches EvalOnceResult::Next(expr_cur) && expr_cur.operators()
-            == operators[..k] + operators[k + 1..] && expr_cur.operands() == operands[..k].push(num) + operands[k + 2..],
+            == operators[..k] + operators[k + 1..] && expr_cur.operands() == operands[..k].push(num)
+            + operands[k + 2..],
     }
 }
 
@@ -470,7 +471,8 @@ impl Expr {
                 }
             } else {
                 if left matches Expr::Op(_, _, _) {
-                    assert(left.operators().push(op) == self.operators()[..left.operators().len() + 1]);
+                    assert(left.operators().push(op) == self.operators()[..left.operators().len()
+                        + 1]);
                     if let Expr::Op(old, ll, lr) = left {
                         stack_condition_transitivity(
                             left.operators().push(op),
@@ -494,7 +496,8 @@ impl Expr {
                                 ) {
                                     assert(self.operators()[..k] + self.operators()[k + 1..]
                                         == seq![]);
-                                    assert(self.operands()[..k].push(num) + self.operands()[k + 2..] == seq![num]);
+                                    assert(self.operands()[..k].push(num) + self.operands()[k + 2..]
+                                        == seq![num]);
                                 }
                             },
                         }
@@ -511,7 +514,8 @@ impl Expr {
                             ) by {
                                 assert(seq[i] == self.operators()[..k + 1][left.operators().len()
                                     + 1 + i]);
-                                assert(seq[i + 1] == self.operators()[..k + 1][left.operators().len() + 1 + i + 1]);
+                                assert(seq[i + 1] == self.operators()[..k
+                                    + 1][left.operators().len() + 1 + i + 1]);
                             }
                         }
                         right.lemma_len();
@@ -605,10 +609,7 @@ exec fn eval_by_stack_a(operators: Vec<Operator>, operands: Vec<i128>) -> Option
     }
     proof {
         if let Expr::Op(op, left, right) = expr_cur {
-            assert(num_stack@.add(operands@[operators.len()..]) == seq![
-                num_stack@[0],
-                0,
-            ]);
+            assert(num_stack@.add(operands@[operators.len()..]) == seq![num_stack@[0], 0]);
             assert(expr_cur.operators().len() == left.operators().len() + 1
                 + right.operators().len());
             match (*left, *right) {
