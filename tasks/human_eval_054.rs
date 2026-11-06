@@ -15,6 +15,7 @@ broadcast use axiom_u8_obeys_hash_table_key_model;
 
 fn hash_set_from(s: &Vec<u8>) -> (res: HashSetWithView<u8>)
     ensures
+        res.well_formed(),
         forall|i: int| #![auto] 0 <= i < s.len() ==> res@.contains(s[i]),
         forall|x: int|
             0 <= x < 256 ==> #[trigger] res@.contains(x as u8) ==> #[trigger] s@.contains(x as u8),
@@ -22,6 +23,7 @@ fn hash_set_from(s: &Vec<u8>) -> (res: HashSetWithView<u8>)
     let mut res: HashSetWithView<u8> = HashSetWithView::new();
     for i in 0..s.len()
         invariant
+            res.well_formed(),
             forall|j: int| #![auto] 0 <= j < i ==> res@.contains(s[j]),
             forall|x: int|
                 0 <= x < 256 ==> #[trigger] res@.contains(x as u8) ==> (exists|j: int|
